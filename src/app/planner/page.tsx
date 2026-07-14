@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 
 import { useTripIntentStore } from "@/features/planner/store/tripIntentStore";
-import { generateTripPlan } from "@/features/planner/lib";
+import { generateTripPlan } from "@/features/planner/engine";
 
 import PlannerSidebar from "@/features/planner/components/PlannerSidebar";
 import PlannerCanvas from "@/features/planner/components/PlannerCanvas";
@@ -33,12 +33,10 @@ export default function PlannerPage() {
     setLoading(false);
   };
 
-  // TODO(wave 2, task #8): drop auto-regen, drive generation solely from
-  // the sidebar's Generate button.
   useEffect(() => {
     generate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intent.duration, intent.companions, intent.vibe]);
+  }, []);
 
   const itinerary = useMemo(() => trip?.itinerary ?? [], [trip]);
 
@@ -47,7 +45,7 @@ export default function PlannerPage() {
       <div className="pt-24 pb-20">
         <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-[280px_1fr_340px] gap-6">
           {/* LEFT: FILTERS */}
-          <PlannerSidebar />
+          <PlannerSidebar onGenerate={generate} loading={loading} />
 
           {/* CENTER: MAP + ITINERARY */}
           <PlannerCanvas
