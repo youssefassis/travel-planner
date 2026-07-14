@@ -3,18 +3,26 @@
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { Pencil } from "lucide-react";
 import FlightSearch, {
   FlightSearchFormData,
-  StopsPreference,
 } from "@/features/flights/components/FlightSearch";
+import FlightCard from "@/features/flights/components/FlightCard";
+import RecommendationCard from "@/features/flights/components/RecommendationCard";
+import BookingPanel from "@/features/flights/components/BookingPanel";
 import { searchFlights } from "@/features/flights/lib/searchFlights";
+import { recommendFlights } from "@/features/flights/lib/recommendFlights";
+import {
+  TimeOfDay,
+  departureMinutes,
+  matchesTimeOfDay,
+} from "@/features/flights/lib/format";
 import { FlightOption } from "@/features/flights/types";
 import { getCity } from "@/domain/cities";
 import Container from "@/components/ui/Container";
 import PageHeader from "@/components/ui/PageHeader";
-import Button from "@/components/ui/Button";
 import SegmentedControl from "@/components/ui/SegmentedControl";
-import { fadeInUp, staggerChildren } from "@/components/motion";
+import { staggerChildren } from "@/components/motion";
 
 type SortBy = "price" | "duration" | "departure";
 
@@ -24,93 +32,25 @@ const SORT_OPTIONS: { label: string; value: SortBy }[] = [
   { label: "Earliest", value: "departure" },
 ];
 
-function formatDuration(durationHrs: number): string {
-  const hours = Math.floor(durationHrs);
-  const minutes = Math.round((durationHrs - hours) * 60);
-  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
-}
-
-function stopsLabel(stops: FlightOption["stops"]): string {
-  return stops === 0 ? "Direct" : `${stops} stop${stops > 1 ? "s" : ""}`;
-}
-
-/** "6:30 AM" → minutes since midnight, for departure sorting. */
-function departureMinutes(time: string): number {
-  const match = time.match(/(\d+):(\d+)\s*(AM|PM)/);
-  if (!match) return 0;
-  const [, h, m, period] = match;
-  const hours = (parseInt(h, 10) % 12) + (period === "PM" ? 12 : 0);
-  return hours * 60 + parseInt(m, 10);
-}
-
-const FlightCard = ({
-  flight,
-  travelers,
-}: {
-  flight: FlightOption;
-  travelers: number;
-}) => (
-  <motion.div
-    variants={fadeInUp}
-    whileHover={{ y: -2 }}
-    className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 hover:shadow-lg transition-all"
-  >
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-[1.2fr_1.6fr_1fr_auto] lg:gap-6 items-center">
-      {/* Airline & Duration */}
-      <div>
-        <p className="text-sm text-[var(--muted)] mb-2">Airline</p>
-        <p className="font-semibold text-[var(--fg)]">{flight.airline}</p>
-        <p className="text-xs text-[var(--muted)] mt-2">
-          {formatDuration(flight.durationHrs)}
-        </p>
-      </div>
-
-      {/* Time */}
-      <div>
-        <p className="text-sm text-[var(--muted)] mb-2">Departure → Arrival</p>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="font-semibold text-[var(--fg)]">{flight.departureTime}</p>
-            <p className="text-xs text-[var(--muted)]">Depart</p>
-          </div>
-          <div className="text-[var(--muted)]">→</div>
-          <div>
-            <p className="font-semibold text-[var(--fg)]">{flight.arrivalTime}</p>
-            <p className="text-xs text-[var(--muted)]">Arrive</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Details */}
-      <div>
-        <p className="text-sm text-[var(--muted)] mb-2">Details</p>
-        <p className="font-medium text-[var(--fg)] text-sm">{stopsLabel(flight.stops)}</p>
-        <p className="text-xs text-[var(--muted)] mt-1">
-          {flight.from} → {flight.to}
-        </p>
-      </div>
-
-      {/* Price & Button */}
-      <div className="col-span-2 lg:col-span-1 flex items-center justify-between lg:flex-col lg:items-end gap-3 border-t border-[var(--border)] pt-4 lg:border-0 lg:pt-0">
-        <div>
-          <p className="text-sm text-[var(--muted)] mb-1">Price per person</p>
-          <p className="text-3xl font-serif font-bold text-[var(--primary)]">
-            €{flight.price}
-          </p>
-          {travelers > 1 && (
-            <p className="text-xs text-[var(--muted)] mt-1">
-              €{flight.price * travelers} total for {travelers} travelers
-            </p>
-          )}
-        </div>
-        <Button size="md">Book Now</Button>
-      </div>
-    </div>
-  </motion.div>
-);
+const TIME_OPTIONS: { label: string; value: TimeOfDay }[] = [
+  { label: "Any time", value: "any" },
+  { label: "Morning", value: "morning" },
+  { label: "Afternoon", value: "afternoon" },
+  { label: "Evening", value: "evening" },
+];
 
 function validCityId(id: string | null): string {
   return id && getCity(id) ? id : "";
+}
+
+function formatDateLabel(dateISO: string): string {
+  if (!dateISO) return "flexible dates";
+  const date = new Date(`${dateISO}T12:00:00`);
+  return date.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function FlightsPageContent() {
@@ -118,43 +58,112 @@ function FlightsPageContent() {
   const initialFrom = validCityId(searchParams.get("from"));
   const initialTo = validCityId(searchParams.get("to"));
 
-  const [searchResults, setSearchResults] = useState<FlightOption[] | null>(() =>
+  const [search, setSearch] = useState<FlightSearchFormData | null>(() =>
     initialFrom && initialTo && initialFrom !== initialTo
-      ? searchFlights(initialFrom, initialTo)
+      ? {
+          fromCityId: initialFrom,
+          toCityId: initialTo,
+          travelers: 1,
+          stops: "any",
+          tripType: "oneway",
+          departDate: "",
+          returnDate: "",
+        }
       : null
   );
-  const [travelers, setTravelers] = useState(1);
-  const [stops, setStops] = useState<StopsPreference>("any");
+  const [selectedOutbound, setSelectedOutbound] = useState<FlightOption | null>(null);
+  const [selectedReturn, setSelectedReturn] = useState<FlightOption | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+
   const [sortBy, setSortBy] = useState<SortBy>("price");
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("any");
+  const [airline, setAirline] = useState<string>("all");
 
   const handleSearch = (data: FlightSearchFormData) => {
-    setSearchResults(searchFlights(data.fromCityId, data.toCityId));
-    setTravelers(data.travelers);
-    setStops(data.stops);
+    setSearch(data);
+    setSelectedOutbound(null);
+    setSelectedReturn(null);
+    setBookingOpen(false);
+    setTimeOfDay("any");
+    setAirline("all");
   };
 
-  const visibleResults = useMemo(() => {
-    if (!searchResults) return null;
-    const filtered =
-      stops === "direct"
-        ? searchResults.filter((f) => f.stops === 0)
-        : searchResults;
+  // Which leg is the user currently choosing?
+  const phase: "outbound" | "return" =
+    search?.tripType === "round" && selectedOutbound ? "return" : "outbound";
+
+  const phaseOptions = useMemo(() => {
+    if (!search) return null;
+    const raw =
+      phase === "outbound"
+        ? searchFlights(search.fromCityId, search.toCityId, search.departDate)
+        : searchFlights(search.toCityId, search.fromCityId, search.returnDate);
+    return search.stops === "direct" ? raw.filter((f) => f.stops === 0) : raw;
+  }, [search, phase]);
+
+  const picks = useMemo(
+    () => (phaseOptions ? recommendFlights(phaseOptions) : []),
+    [phaseOptions]
+  );
+
+  const airlines = useMemo(
+    () => (phaseOptions ? [...new Set(phaseOptions.map((f) => f.airline))].sort() : []),
+    [phaseOptions]
+  );
+
+  const listResults = useMemo(() => {
+    if (!phaseOptions) return null;
+    const filtered = phaseOptions.filter(
+      (f) =>
+        matchesTimeOfDay(f.departureTime, timeOfDay) &&
+        (airline === "all" || f.airline === airline)
+    );
     return [...filtered].sort((a, b) => {
       if (sortBy === "duration") return a.durationHrs - b.durationHrs;
       if (sortBy === "departure")
         return departureMinutes(a.departureTime) - departureMinutes(b.departureTime);
       return a.price - b.price;
     });
-  }, [searchResults, stops, sortBy]);
+  }, [phaseOptions, timeOfDay, airline, sortBy]);
+
+  const cheapestId = phaseOptions?.length
+    ? phaseOptions.reduce((a, b) => (a.price <= b.price ? a : b)).id
+    : null;
+  const fastestId = phaseOptions?.length
+    ? phaseOptions.reduce((a, b) => (a.durationHrs <= b.durationHrs ? a : b)).id
+    : null;
+
+  const selectFlight = (flight: FlightOption) => {
+    if (phase === "outbound") {
+      setSelectedOutbound(flight);
+      if (search?.tripType !== "round") setBookingOpen(true);
+    } else {
+      setSelectedReturn(flight);
+      setBookingOpen(true);
+    }
+    setTimeOfDay("any");
+    setAirline("all");
+  };
+
+  const changeOutbound = () => {
+    setSelectedOutbound(null);
+    setSelectedReturn(null);
+    setBookingOpen(false);
+  };
+
+  const phaseHeading = search
+    ? phase === "outbound"
+      ? `${getCity(search.fromCityId)?.name} → ${getCity(search.toCityId)?.name} · ${formatDateLabel(search.departDate)}`
+      : `${getCity(search.toCityId)?.name} → ${getCity(search.fromCityId)?.name} · ${formatDateLabel(search.returnDate)}`
+    : "";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
       <div className="pt-28 md:pt-32 pb-16 sm:pb-20">
         <Container size="wide">
-          {/* Header Section */}
           <PageHeader
             title="Find & book flights"
-            description="Explore the best flight options for your next adventure"
+            description="Tailored picks with the trade-offs explained — decide, don't dig."
           />
 
           {/* Search Form */}
@@ -166,48 +175,156 @@ function FlightsPageContent() {
             />
           </div>
 
-          {/* Results */}
-          {visibleResults && visibleResults.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <h2 className="text-h2 text-[var(--fg)]">
-                  Available Flights
-                  <span className="ml-3 text-small font-sans text-[var(--muted)]">
-                    {visibleResults.length}{" "}
-                    {visibleResults.length === 1 ? "option" : "options"}
-                  </span>
-                </h2>
-                <div className="w-full sm:w-auto sm:min-w-[300px]">
-                  <SegmentedControl
-                    options={SORT_OPTIONS}
-                    value={sortBy}
-                    onChange={setSortBy}
-                  />
-                </div>
-              </div>
-              <motion.div
-                key={`${sortBy}-${stops}`}
-                className="space-y-4"
-                initial="hidden"
-                animate="visible"
-                variants={staggerChildren(0.06)}
+          {/* Selected outbound summary (round trips) */}
+          {search?.tripType === "round" && selectedOutbound && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-wrap items-center justify-between gap-3 mb-8 p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]"
+            >
+              <p className="text-sm text-[var(--fg)]">
+                <span className="text-caption text-[var(--muted)] mr-2">Outbound</span>
+                {selectedOutbound.from} → {selectedOutbound.to} ·{" "}
+                {selectedOutbound.departureTime} · {selectedOutbound.airline} · €
+                {selectedOutbound.price}
+              </p>
+              <button
+                type="button"
+                onClick={changeOutbound}
+                className="flex items-center gap-1.5 text-sm text-[var(--primary)] hover:underline underline-offset-2"
               >
-                {visibleResults.map((flight) => (
-                  <FlightCard key={flight.id} flight={flight} travelers={travelers} />
-                ))}
-              </motion.div>
+                <Pencil className="w-3.5 h-3.5" />
+                Change
+              </button>
             </motion.div>
           )}
 
-          {/* No results */}
-          {visibleResults && visibleResults.length === 0 && (
+          {/* Results */}
+          {phaseOptions && phaseOptions.length > 0 && (
+            <motion.div
+              key={phase}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {/* Top picks */}
+              <div className="mb-10">
+                <h2 className="text-h2 text-[var(--fg)] mb-1">
+                  {phase === "outbound" ? "Our picks" : "Return picks"}
+                </h2>
+                <p className="text-small text-[var(--muted)] mb-6">{phaseHeading}</p>
+                <motion.div
+                  key={`picks-${phase}`}
+                  initial="hidden"
+                  animate="visible"
+                  variants={staggerChildren(0.07)}
+                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+                >
+                  {picks.map((pick) => (
+                    <RecommendationCard
+                      key={pick.flight.id}
+                      pick={pick}
+                      travelers={search?.travelers ?? 1}
+                      onSelect={selectFlight}
+                    />
+                  ))}
+                </motion.div>
+              </div>
+
+              {/* All flights + filters */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h3 className="text-h3 text-[var(--fg)]">
+                  All flights
+                  <span className="ml-2 text-small font-normal text-[var(--muted)]">
+                    {listResults?.length ?? 0} of {phaseOptions.length}
+                  </span>
+                </h3>
+                <div className="w-full lg:w-auto lg:min-w-[300px]">
+                  <SegmentedControl options={SORT_OPTIONS} value={sortBy} onChange={setSortBy} />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                <SegmentedControl
+                  size="sm"
+                  options={TIME_OPTIONS}
+                  value={timeOfDay}
+                  onChange={setTimeOfDay}
+                  className="w-full sm:w-auto"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAirline("all")}
+                    className={`py-1.5 px-3 rounded-full text-xs font-medium transition-all ${
+                      airline === "all"
+                        ? "bg-[var(--primary)] text-white shadow-sm"
+                        : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
+                    }`}
+                  >
+                    All airlines
+                  </button>
+                  {airlines.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => setAirline(name)}
+                      className={`py-1.5 px-3 rounded-full text-xs font-medium transition-all ${
+                        airline === name
+                          ? "bg-[var(--primary)] text-white shadow-sm"
+                          : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {listResults && listResults.length > 0 ? (
+                <motion.div
+                  key={`list-${phase}-${sortBy}-${timeOfDay}-${airline}`}
+                  className="space-y-4"
+                  initial="hidden"
+                  animate="visible"
+                  variants={staggerChildren(0.05)}
+                >
+                  {listResults.map((flight) => {
+                    const badges = [
+                      flight.id === cheapestId ? "Cheapest" : null,
+                      flight.id === fastestId ? "Fastest" : null,
+                    ].filter((b): b is string => b !== null);
+                    return (
+                      <FlightCard
+                        key={flight.id}
+                        flight={flight}
+                        travelers={search?.travelers ?? 1}
+                        badges={badges}
+                        selected={
+                          flight.id === selectedOutbound?.id ||
+                          flight.id === selectedReturn?.id
+                        }
+                        onSelect={selectFlight}
+                      />
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                <p className="text-center py-10 text-[var(--muted)]">
+                  No flights match these filters — loosen the time or airline filter.
+                </p>
+              )}
+            </motion.div>
+          )}
+
+          {/* No results at all */}
+          {phaseOptions && phaseOptions.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center py-16"
             >
               <p className="text-[var(--muted)] text-lg">
-                {stops === "direct" && searchResults && searchResults.length > 0
+                {search?.stops === "direct"
                   ? "No direct flights on this route — try allowing stops."
                   : "No flights found for this route. Try different cities."}
               </p>
@@ -215,19 +332,33 @@ function FlightsPageContent() {
           )}
 
           {/* Empty State */}
-          {!visibleResults && (
+          {!phaseOptions && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center py-16"
             >
               <p className="text-[var(--muted)] text-lg">
-                Enter your flight details above to see available options
+                Enter your flight details above to see tailored recommendations
               </p>
             </motion.div>
           )}
         </Container>
       </div>
+
+      {/* Booking review */}
+      {bookingOpen && selectedOutbound && (
+        <BookingPanel
+          outbound={selectedOutbound}
+          inbound={search?.tripType === "round" ? selectedReturn : null}
+          travelers={search?.travelers ?? 1}
+          onClose={() => {
+            setBookingOpen(false);
+            setSelectedOutbound(null);
+            setSelectedReturn(null);
+          }}
+        />
+      )}
     </div>
   );
 }
