@@ -30,7 +30,13 @@ interface ButtonAsLinkProps extends SharedProps {
 type Props = ButtonAsButtonProps | ButtonAsLinkProps;
 
 const baseStyles =
-  "inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-base cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-base cursor-pointer active:scale-[0.98]";
+
+// Applied instead of the variant style when disabled, so a disabled button
+// reads as a clean neutral control rather than a washed-out, half-opacity
+// version of its color (e.g. a pale, muddy orange).
+const disabledStyles =
+  "bg-[var(--border)] text-[var(--muted)] shadow-none cursor-not-allowed";
 
 const sizeStyles = {
   sm: "px-3.5 py-1.5 text-xs",
@@ -63,7 +69,10 @@ export default function Button({
   asLink = false,
   ...props
 }: Props) {
-  const classes = `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`;
+  const isDisabled = !asLink && (props as ButtonAsButtonProps).disabled;
+  const classes = `${baseStyles} ${sizeStyles[size]} ${
+    isDisabled ? disabledStyles : variantStyles[variant]
+  } ${className}`;
 
   const content = (
     <>

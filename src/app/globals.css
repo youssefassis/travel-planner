@@ -15,6 +15,12 @@
   --card-subtle: #f6f1ec;
   --card-border: rgba(231, 101, 28, 0.06);
 
+  /* Form controls — deliberately more contrast than --card-subtle so
+     inputs/selects read as clickable against both white cards and the
+     page background. */
+  --input-bg: #f4efe7;
+  --input-border: #ddccb8;
+
   /* Brand */
   --primary: #e7651c;
   --primary-dark: #c6531a;
@@ -88,6 +94,9 @@
   --card: #1a1410;
   --card-subtle: #221c16;
   --card-border: rgba(240, 138, 62, 0.1);
+
+  --input-bg: #2b2019;
+  --input-border: #493628;
 
   --primary: #f07a3a;
   --primary-dark: #e7651c;
@@ -270,13 +279,22 @@ p {
 input,
 textarea,
 select {
-  background: var(--card-subtle);
-  border: 1px solid var(--border);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   color: var(--fg);
   font-family: inherit;
   transition: all var(--duration-base);
+}
+
+select {
+  cursor: pointer;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
 }
 
 input:focus,
