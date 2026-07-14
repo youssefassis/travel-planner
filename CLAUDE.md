@@ -17,7 +17,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Architecture
 
-Imports flow one way: `app → features → domain`. `src/components` may be used by all layers. **Features never import each other** — cross-feature integration happens only through URL links (`/stays?city=…&budget=…&nights=…`, `/flights?from=…&to=…`).
+Imports flow one way: `app → features → domain`. `src/components` may be used by all layers. **Features never import each other** — cross-feature integration happens only through URL links (`/stays?city=…&budget=…&nights=…`, `/flights?from=…&to=…`, and into the planner: `/planner?destination=<cityId>&travelers=<solo|couple|group>&budget=<backpacker|comfort|luxury>` — parsed by `features/planner/lib/heroPrefill.ts` to prefill the wizard; share links `?plan=1&…` take precedence).
 
 ```
 src/
@@ -25,7 +25,7 @@ src/
   domain/      Shared vocabulary: types, city dataset, geo helpers
   components/  ui/ primitives, layout/ (Header, Footer), theme/, motion.ts
   features/
-    planner/   engine/ (trip generation), components/, store/ (Zustand), lib/share
+    planner/   engine/ (trip generation), components/ (incl. wizard/), store/ (Zustand), lib/ (share, wizard step machine, heroPrefill)
     flights/   searchFlights + recommendFlights (decision support)
     stays/     adviseStays (neighborhood + accommodation advisor)
     marketing/ Landing-page sections
