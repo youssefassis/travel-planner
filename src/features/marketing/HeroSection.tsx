@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Calendar, Users, Wallet, ArrowRight, Sparkles, X, Loader2 } from "lucide-react";
+import { MapPin, Calendar, Users, Wallet, ArrowRight, Sparkles } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
+import CityAutocomplete from "@/components/ui/CityAutocomplete";
+import { getCity } from "@/domain/cities";
 import { fadeInUp, staggerChildren } from "@/components/motion";
 
 const QUICK_DESTINATIONS = [
-  { emoji: "🇫🇷", city: "Paris" },
-  { emoji: "🎌", city: "Tokyo" },
-  { emoji: "🇪🇦", city: "Spain" },
-  { emoji: "🇲🇦", city: "Morocco" },
+  { emoji: "🇫🇷", cityId: "paris-fr" },
+  { emoji: "🇮🇹", cityId: "rome-it" },
+  { emoji: "🇪🇸", cityId: "barcelona-es" },
+  { emoji: "🇵🇹", cityId: "lisbon-pt" },
 ];
 
 const TRAVELER_OPTIONS = ["Solo", "Friends", "Family"];
@@ -41,73 +43,13 @@ function formatDate(iso: string) {
   return `${d} ${months[parseInt(m) - 1]} ${y}`;
 }
 
-interface Suggestion {
-  id: string;
-  name: string;
-  fullName: string;
-}
-
 export default function HeroSection() {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
-  const [destination, setDestination] = useState("");
+  const [destinationCityId, setDestinationCityId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [travelers, setTravelers] = useState("Solo");
   const [budget, setBudget] = useState("Standard");
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const suggestionRef = useRef<HTMLDivElement>(null);
-
-  // Debounced geocoding fetch
-  useEffect(() => {
-    if (destination.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setIsLoadingSuggestions(true);
-      try {
-        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-        const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(destination)}.json?access_token=${token}&limit=5&types=place,region,country&language=en`,
-        );
-        const data = await res.json();
-        setSuggestions(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (data.features ?? []).map((f: any) => ({
-            id: f.id as string,
-            name: f.text as string,
-            fullName: f.place_name as string,
-          })),
-        );
-        setShowSuggestions(true);
-      } catch {
-        setSuggestions([]);
-      } finally {
-        setIsLoadingSuggestions(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [destination]);
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (suggestionRef.current && !suggestionRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const selectSuggestion = (name: string) => {
-    setDestination(name);
-    setSuggestions([]);
-    setShowSuggestions(false);
-  };
 
   const cycleTravelers = () => {
     const idx = TRAVELER_OPTIONS.indexOf(travelers);
@@ -120,9 +62,10 @@ export default function HeroSection() {
   };
 
   const handleSearch = () => {
-    if (destination) {
+    const city = getCity(destinationCityId);
+    if (city) {
       router.push(
-        `/planner?destination=${encodeURIComponent(destination)}&date=${startDate}&travelers=${travelers.toLowerCase()}&budget=${budget.toLowerCase()}`,
+        `/planner?destination=${encodeURIComponent(city.name)}&date=${startDate}&travelers=${travelers.toLowerCase()}&budget=${budget.toLowerCase()}`,
       );
     }
   };
@@ -186,77 +129,19 @@ export default function HeroSection() {
         {/* ── Search card ── */}
         <motion.div className="w-full max-w-3xl mb-10" variants={itemVariants}>
           <div className="rounded-2xl overflow-hidden shadow-xl border border-[var(--border)] bg-[var(--card)]">
-            {/* Destination row + suggestions */}
-            <div ref={suggestionRef} className="relative">
-              <div className="flex items-center gap-4 px-6 py-5">
-                <div className="shrink-0">
-                  <MapPin className="w-[22px] h-[22px] text-[var(--primary)]" />
-                </div>
-
-                <input
-                  type="text"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  placeholder="Where do you want to go?"
-                  className="flex-1 bg-transparent text-[var(--fg)] text-lg md:text-xl font-medium placeholder-[var(--muted)] border-none outline-none"
-                />
-
-                <AnimatePresence>
-                  {isLoadingSuggestions && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="shrink-0"
-                    >
-                      <Loader2 className="w-4 h-4 text-[var(--muted)] animate-spin" />
-                    </motion.div>
-                  )}
-                  {destination && !isLoadingSuggestions && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.7 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.7 }}
-                      onClick={() => { setDestination(""); setSuggestions([]); setShowSuggestions(false); }}
-                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-[var(--card-subtle)] hover:bg-[var(--border)] text-[var(--fg)] transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </motion.button>
-                  )}
-                </AnimatePresence>
+            {/* Destination row */}
+            <div className="flex items-center gap-4 px-6 py-5">
+              <div className="shrink-0">
+                <MapPin className="w-[22px] h-[22px] text-[var(--primary)]" />
               </div>
-
-              {/* Autocomplete dropdown */}
-              <AnimatePresence>
-                {showSuggestions && suggestions.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                    transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute left-3 right-3 top-full z-50 mt-1 rounded-xl overflow-hidden border border-[var(--border)] shadow-xl bg-[var(--card)]"
-                  >
-                    {suggestions.map((s, i) => (
-                      <motion.button
-                        key={s.id}
-                        initial={{ opacity: 0, x: -6 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        onClick={() => selectSuggestion(s.name)}
-                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-[var(--card-subtle)] transition-colors border-b border-[var(--border)] last:border-0 group"
-                      >
-                        <MapPin className="w-4 h-4 text-[var(--muted)] shrink-0 group-hover:text-[var(--primary)] transition-colors" />
-                        <div className="min-w-0">
-                          <div className="text-[var(--fg)] text-sm font-semibold truncate">{s.name}</div>
-                          <div className="text-[var(--muted)] text-xs truncate">{s.fullName}</div>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <CityAutocomplete
+                id="hero-destination"
+                variant="bare"
+                value={destinationCityId}
+                onChange={setDestinationCityId}
+                placeholder="Where do you want to go?"
+                className="flex-1"
+              />
             </div>
 
             {/* Divider */}
@@ -396,20 +281,24 @@ export default function HeroSection() {
           <span className="text-[var(--muted)] text-xs font-medium tracking-wide mr-1">
             Trending:
           </span>
-          {QUICK_DESTINATIONS.map((dest, i) => (
-            <motion.button
-              key={dest.city}
-              onClick={() => setDestination(dest.city)}
-              className="px-4 py-1.5 rounded-full bg-[var(--card-subtle)] hover:bg-[var(--border)] text-[var(--fg)] text-sm font-medium border border-[var(--border)] transition-colors"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -2 }}
-              transition={{ delay: 0.65 + i * 0.06, duration: 0.35 }}
-            >
-              <span className="mr-1.5">{dest.emoji}</span>
-              {dest.city}
-            </motion.button>
-          ))}
+          {QUICK_DESTINATIONS.map((dest, i) => {
+            const city = getCity(dest.cityId);
+            if (!city) return null;
+            return (
+              <motion.button
+                key={dest.cityId}
+                onClick={() => setDestinationCityId(dest.cityId)}
+                className="px-4 py-1.5 rounded-full bg-[var(--card-subtle)] hover:bg-[var(--border)] text-[var(--fg)] text-sm font-medium border border-[var(--border)] transition-colors"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -2 }}
+                transition={{ delay: 0.65 + i * 0.06, duration: 0.35 }}
+              >
+                <span className="mr-1.5">{dest.emoji}</span>
+                {city.name}
+              </motion.button>
+            );
+          })}
         </motion.div>
 
         {/* Trust strip */}
