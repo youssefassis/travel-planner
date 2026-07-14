@@ -19,7 +19,7 @@ type Props = {
 };
 
 const selectClasses =
-  "w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)] text-sm";
+  "w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] cursor-pointer focus:outline-none focus:border-[var(--primary)] text-sm";
 
 export default function FlightSearch({
   initialFromCityId = "",
