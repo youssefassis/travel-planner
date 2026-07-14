@@ -20,22 +20,18 @@ export default function SectionHeader({
   const alignClass = align === "center" ? "text-center items-center" : "text-left items-start";
 
   return (
-    <div className={`flex flex-col gap-4 mb-16 md:mb-20 ${alignClass} ${className}`}>
+    <div className={`flex flex-col gap-4 mb-12 md:mb-16 ${alignClass} ${className}`}>
       {badge && (
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-sm font-bold tracking-wide uppercase">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-caption">
           {badgeIcon && <span className="w-4 h-4 flex items-center">{badgeIcon}</span>}
           <span>{badge}</span>
         </div>
       )}
 
-      <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--fg)] tracking-tight leading-tight">
-        {title}
-      </h2>
+      <h2 className="text-h1 text-[var(--fg)]">{title}</h2>
 
       {description && (
-        <p className="text-base md:text-lg text-[var(--muted)] font-light max-w-xl">
-          {description}
-        </p>
+        <p className="text-body-lg text-[var(--muted)] max-w-xl">{description}</p>
       )}
     </div>
   );
