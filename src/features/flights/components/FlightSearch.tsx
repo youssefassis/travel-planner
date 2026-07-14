@@ -1,46 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { CITIES } from "@/domain/cities";
 
 export type FlightSearchFormData = {
-  from: string;
-  to: string;
-  departureDate: string;
-  returnDate: string;
-  passengers: number;
-  cabinClass: "economy" | "business" | "first";
+  fromCityId: string;
+  toCityId: string;
 };
 
 type Props = {
+  initialFromCityId?: string;
+  initialToCityId?: string;
   onSearch: (data: FlightSearchFormData) => void;
-  isLoading?: boolean;
 };
 
-export default function FlightSearch({ onSearch, isLoading = false }: Props) {
-  const [form, setForm] = useState<FlightSearchFormData>({
-    from: "",
-    to: "",
-    departureDate: "",
-    returnDate: "",
-    passengers: 1,
-    cabinClass: "economy",
-  });
+const selectClasses =
+  "w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)] text-sm";
 
-  const [isRoundTrip, setIsRoundTrip] = useState(true);
+export default function FlightSearch({
+  initialFromCityId = "",
+  initialToCityId = "",
+  onSearch,
+}: Props) {
+  const [fromCityId, setFromCityId] = useState(initialFromCityId);
+  const [toCityId, setToCityId] = useState(initialToCityId);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === "passengers" ? parseInt(value) : value,
-    }));
-  };
+  const sortedCities = useMemo(
+    () => [...CITIES].sort((a, b) => a.name.localeCompare(b.name)),
+    []
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.from && form.to && form.departureDate) {
-      onSearch(form);
+    if (fromCityId && toCityId && fromCityId !== toCityId) {
+      onSearch({ fromCityId, toCityId });
     }
   };
 
@@ -55,137 +49,68 @@ export default function FlightSearch({ onSearch, isLoading = false }: Props) {
         Search Flights
       </h2>
 
-      {/* Trip Type Toggle */}
-      <div className="flex gap-4 mb-6 sm:mb-8">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            checked={isRoundTrip}
-            onChange={() => setIsRoundTrip(true)}
-            className="w-4 h-4 cursor-pointer"
-          />
-          <span className="text-[var(--fg)] font-medium text-sm">Round trip</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            checked={!isRoundTrip}
-            onChange={() => setIsRoundTrip(false)}
-            className="w-4 h-4 cursor-pointer"
-          />
-          <span className="text-[var(--fg)] font-medium text-sm">One way</span>
-        </label>
-      </div>
-
-      {/* Main search fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {/* From */}
         <div>
-          <label className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2">
+          <label
+            htmlFor="flight-from"
+            className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2"
+          >
             From
           </label>
-          <input
-            type="text"
-            name="from"
-            value={form.from}
-            onChange={handleChange}
-            placeholder="Departure"
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] placeholder-[var(--muted)] focus:outline-none focus:border-[var(--primary)] text-sm"
-          />
-        </div>
-
-        {/* To */}
-        <div>
-          <label className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2">
-            To
-          </label>
-          <input
-            type="text"
-            name="to"
-            value={form.to}
-            onChange={handleChange}
-            placeholder="Destination"
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] placeholder-[var(--muted)] focus:outline-none focus:border-[var(--primary)] text-sm"
-          />
-        </div>
-
-        {/* Departure Date */}
-        <div>
-          <label className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2">
-            Depart
-          </label>
-          <input
-            type="date"
-            name="departureDate"
-            value={form.departureDate}
-            onChange={handleChange}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)] text-sm"
-          />
-        </div>
-
-        {/* Return Date (conditional) */}
-        {isRoundTrip && (
-          <div>
-            <label className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2">
-              Return
-            </label>
-            <input
-              type="date"
-              name="returnDate"
-              value={form.returnDate}
-              onChange={handleChange}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)] text-sm"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Secondary options */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {/* Passengers */}
-        <div>
-          <label className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2">
-            Passengers
-          </label>
           <select
-            name="passengers"
-            value={form.passengers}
-            onChange={handleChange}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)] text-sm"
+            id="flight-from"
+            name="from"
+            value={fromCityId}
+            onChange={(e) => setFromCityId(e.target.value)}
+            className={selectClasses}
           >
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-              <option key={num} value={num}>
-                {num} {num === 1 ? "Passenger" : "Passengers"}
+            <option value="">Departure city</option>
+            {sortedCities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name}, {city.country}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Cabin Class */}
+        {/* To */}
         <div>
-          <label className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2">
-            Class
+          <label
+            htmlFor="flight-to"
+            className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2"
+          >
+            To
           </label>
           <select
-            name="cabinClass"
-            value={form.cabinClass}
-            onChange={handleChange}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)] text-sm"
+            id="flight-to"
+            name="to"
+            value={toCityId}
+            onChange={(e) => setToCityId(e.target.value)}
+            className={selectClasses}
           >
-            <option value="economy">Economy</option>
-            <option value="business">Business</option>
-            <option value="first">First Class</option>
+            <option value="">Destination city</option>
+            {sortedCities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name}, {city.country}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
-      {/* Submit Button */}
+      {fromCityId && fromCityId === toCityId && (
+        <p className="text-sm text-[var(--muted)] mb-4">
+          Departure and destination must be different cities.
+        </p>
+      )}
+
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full btn btn-primary btn-lg text-white font-semibold"
+        disabled={!fromCityId || !toCityId || fromCityId === toCityId}
+        className="w-full btn btn-primary btn-lg text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? "Searching..." : "Search Flights"}
+        Search Flights
       </button>
     </motion.form>
   );

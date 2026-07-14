@@ -1,61 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import FlightSearch, {
   FlightSearchFormData,
 } from "@/features/flights/components/FlightSearch";
+import { searchFlights } from "@/features/flights/lib/searchFlights";
+import { FlightOption } from "@/features/flights/types";
+import { getCity } from "@/domain/cities";
 
-const mockFlights = [
-  {
-    id: "1",
-    airline: "SkyWings",
-    departure: "08:00 AM",
-    arrival: "02:30 PM",
-    duration: "6h 30m",
-    stops: "Direct",
-    price: 450,
-    baggage: "2 bags included",
-  },
-  {
-    id: "2",
-    airline: "AirGlobal",
-    departure: "10:15 AM",
-    arrival: "05:45 PM",
-    duration: "7h 30m",
-    stops: "1 stop",
-    price: 380,
-    baggage: "1 bag included",
-  },
-  {
-    id: "3",
-    airline: "JetStream",
-    departure: "01:30 PM",
-    arrival: "08:00 PM",
-    duration: "6h 30m",
-    stops: "Direct",
-    price: 520,
-    baggage: "2 bags + lounge",
-  },
-  {
-    id: "4",
-    airline: "VoyageAir",
-    departure: "04:00 PM",
-    arrival: "10:15 PM",
-    duration: "6h 15m",
-    stops: "Direct",
-    price: 490,
-    baggage: "2 bags included",
-  },
-];
+function formatDuration(durationHrs: number): string {
+  const hours = Math.floor(durationHrs);
+  const minutes = Math.round((durationHrs - hours) * 60);
+  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+}
 
-const FlightCard = ({
-  flight,
-  index,
-}: {
-  flight: (typeof mockFlights)[0];
-  index: number;
-}) => (
+function stopsLabel(stops: FlightOption["stops"]): string {
+  return stops === 0 ? "Direct" : `${stops} stop${stops > 1 ? "s" : ""}`;
+}
+
+const FlightCard = ({ flight, index }: { flight: FlightOption; index: number }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -68,7 +33,9 @@ const FlightCard = ({
       <div>
         <p className="text-sm text-[var(--muted)] mb-2">Airline</p>
         <p className="font-semibold text-[var(--fg)]">{flight.airline}</p>
-        <p className="text-xs text-[var(--muted)] mt-2">{flight.duration}</p>
+        <p className="text-xs text-[var(--muted)] mt-2">
+          {formatDuration(flight.durationHrs)}
+        </p>
       </div>
 
       {/* Time */}
@@ -76,12 +43,12 @@ const FlightCard = ({
         <p className="text-sm text-[var(--muted)] mb-2">Departure → Arrival</p>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="font-semibold text-[var(--fg)]">{flight.departure}</p>
+            <p className="font-semibold text-[var(--fg)]">{flight.departureTime}</p>
             <p className="text-xs text-[var(--muted)]">Depart</p>
           </div>
           <div className="text-[var(--muted)]">→</div>
           <div>
-            <p className="font-semibold text-[var(--fg)]">{flight.arrival}</p>
+            <p className="font-semibold text-[var(--fg)]">{flight.arrivalTime}</p>
             <p className="text-xs text-[var(--muted)]">Arrive</p>
           </div>
         </div>
@@ -90,8 +57,10 @@ const FlightCard = ({
       {/* Details */}
       <div>
         <p className="text-sm text-[var(--muted)] mb-2">Details</p>
-        <p className="font-medium text-[var(--fg)] text-sm">{flight.stops}</p>
-        <p className="text-xs text-[var(--muted)] mt-1">{flight.baggage}</p>
+        <p className="font-medium text-[var(--fg)] text-sm">{stopsLabel(flight.stops)}</p>
+        <p className="text-xs text-[var(--muted)] mt-1">
+          {flight.from} → {flight.to}
+        </p>
       </div>
 
       {/* Price & Button */}
@@ -99,7 +68,7 @@ const FlightCard = ({
         <div>
           <p className="text-sm text-[var(--muted)] mb-1">Price per person</p>
           <p className="text-3xl font-serif font-bold text-[var(--primary)]">
-            ${flight.price}
+            €{flight.price}
           </p>
         </div>
         <button className="btn btn-primary text-sm text-white">Book Now</button>
@@ -108,16 +77,23 @@ const FlightCard = ({
   </motion.div>
 );
 
-export default function FlightsPage() {
-  const [searchResults, setSearchResults] = useState<typeof mockFlights | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+function validCityId(id: string | null): string {
+  return id && getCity(id) ? id : "";
+}
 
-  const handleSearch = async (data: FlightSearchFormData) => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setSearchResults(mockFlights);
-    setIsLoading(false);
+function FlightsPageContent() {
+  const searchParams = useSearchParams();
+  const initialFrom = validCityId(searchParams.get("from"));
+  const initialTo = validCityId(searchParams.get("to"));
+
+  const [searchResults, setSearchResults] = useState<FlightOption[] | null>(() =>
+    initialFrom && initialTo && initialFrom !== initialTo
+      ? searchFlights(initialFrom, initialTo)
+      : null
+  );
+
+  const handleSearch = ({ fromCityId, toCityId }: FlightSearchFormData) => {
+    setSearchResults(searchFlights(fromCityId, toCityId));
   };
 
   return (
@@ -140,11 +116,15 @@ export default function FlightsPage() {
 
           {/* Search Form */}
           <div className="mb-12 sm:mb-16">
-            <FlightSearch onSearch={handleSearch} isLoading={isLoading} />
+            <FlightSearch
+              initialFromCityId={initialFrom}
+              initialToCityId={initialTo}
+              onSearch={handleSearch}
+            />
           </div>
 
           {/* Results */}
-          {searchResults && (
+          {searchResults && searchResults.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <h2 className="text-2xl font-serif font-bold text-[var(--fg)] mb-6">
                 Available Flights
@@ -157,8 +137,21 @@ export default function FlightsPage() {
             </motion.div>
           )}
 
+          {/* No results */}
+          {searchResults && searchResults.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <p className="text-[var(--muted)] text-lg">
+                No flights found for this route. Try different cities.
+              </p>
+            </motion.div>
+          )}
+
           {/* Empty State */}
-          {!searchResults && !isLoading && (
+          {!searchResults && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -172,5 +165,13 @@ export default function FlightsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FlightsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)]" />}>
+      <FlightsPageContent />
+    </Suspense>
   );
 }
