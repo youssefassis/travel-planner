@@ -8,12 +8,12 @@ import CTA from "@/features/marketing/CTASection";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[var(--bg)] scroll-smooth">
+    <div className="min-h-screen bg-[var(--bg)] scroll-smooth">
       <HeroSection />
       <PartnersStrip />
       <FeaturedDestinations />
       <HowItWorksSection />
       <CTA />
-    </main>
+    </div>
   );
 }

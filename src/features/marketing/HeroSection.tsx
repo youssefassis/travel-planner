@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, Calendar, Users, Wallet, ArrowRight, Sparkles, X, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import Container from "@/components/ui/Container";
+import { fadeInUp, staggerChildren } from "@/components/motion";
 
 const QUICK_DESTINATIONS = [
   { emoji: "🇫🇷", city: "Paris" },
@@ -15,19 +17,8 @@ const QUICK_DESTINATIONS = [
 const TRAVELER_OPTIONS = ["Solo", "Friends", "Family"];
 const BUDGET_OPTIONS = ["Backpacker", "Standard", "Luxury"];
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.15 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: "easeOut" as const },
-  },
-};
+const containerVariants = staggerChildren(0.15);
+const itemVariants = fadeInUp;
 
 function formatDate(iso: string) {
   if (!iso) return null;
@@ -57,6 +48,7 @@ interface Suggestion {
 
 export default function HeroSection() {
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
   const [travelers, setTravelers] = useState("Solo");
@@ -135,7 +127,7 @@ export default function HeroSection() {
   };
 
   return (
-    <div className="relative w-full min-h-[620px] md:min-h-[720px] bg-gradient-to-br from-[var(--primary)] via-[#c94d17] to-[var(--accent)] overflow-hidden">
+    <div className="relative w-full min-h-[620px] md:min-h-[720px] bg-[image:var(--gradient-hero)] overflow-hidden">
       {/* Noise texture */}
       <div
         className="absolute inset-0 opacity-[0.18] mix-blend-overlay pointer-events-none"
@@ -146,14 +138,18 @@ export default function HeroSection() {
         }}
       />
 
-      {/* Ambient blobs */}
+      {/* Ambient blobs — looped only when motion is not reduced */}
       <motion.div
         className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl"
         style={{
           background:
             "radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)",
         }}
-        animate={{ scale: [1, 1.12, 1], opacity: [0.7, 1, 0.7] }}
+        animate={
+          prefersReducedMotion
+            ? undefined
+            : { scale: [1, 1.12, 1], opacity: [0.7, 1, 0.7] }
+        }
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
@@ -162,26 +158,31 @@ export default function HeroSection() {
           background:
             "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
         }}
-        animate={{ scale: [1, 1.08, 1], opacity: [0.5, 0.85, 0.5] }}
+        animate={
+          prefersReducedMotion
+            ? undefined
+            : { scale: [1, 1.08, 1], opacity: [0.5, 0.85, 0.5] }
+        }
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
       />
 
-      <motion.div
-        className="relative z-10 max-w-[1100px] mx-auto px-4 sm:px-6 py-24 sm:py-28 md:py-36 flex flex-col items-center text-center"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <Container className="relative z-10">
+        <motion.div
+          className="py-24 sm:py-28 md:py-36 flex flex-col items-center text-center"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
         {/* Badge + Heading */}
         <motion.div className="mb-10 sm:mb-14" variants={itemVariants}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 backdrop-blur-md">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI-Powered Planning</span>
           </div>
-          <h1 className="font-serif font-bold text-4xl sm:text-5xl md:text-[4.5rem] text-white mb-5 tracking-tight leading-[1.08]">
+          <h1 className="text-display text-white mb-5">
             Your next adventure <br className="hidden md:block" /> starts here
           </h1>
-          <p className="text-lg md:text-xl text-white/75 max-w-xl mx-auto font-light leading-relaxed">
+          <p className="text-body-lg text-white/75 max-w-xl mx-auto">
             Discover customized itineraries tailored to your unique travel style.
           </p>
         </motion.div>
@@ -189,7 +190,7 @@ export default function HeroSection() {
         {/* ── Search card ── */}
         <motion.div className="w-full max-w-3xl mb-10" variants={itemVariants}>
           <div
-            className="rounded-3xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.25)] border border-white/20"
+            className="rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.25)] border border-white/20"
             style={{
               background: "rgba(255,255,255,0.13)",
               backdropFilter: "blur(24px)",
@@ -199,14 +200,9 @@ export default function HeroSection() {
             {/* Destination row + suggestions */}
             <div ref={suggestionRef} className="relative">
               <div className="flex items-center gap-4 px-6 py-5">
-                {/* Floating pin */}
-                <motion.div
-                  className="shrink-0"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                >
+                <div className="shrink-0">
                   <MapPin className="w-[22px] h-[22px] text-white drop-shadow-sm" />
-                </motion.div>
+                </div>
 
                 <input
                   type="text"
@@ -251,7 +247,7 @@ export default function HeroSection() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.98 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute left-3 right-3 top-full z-50 mt-1 rounded-2xl overflow-hidden border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.3)]"
+                    className="absolute left-3 right-3 top-full z-50 mt-1 rounded-xl overflow-hidden border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.3)]"
                     style={{
                       background: "rgba(30, 20, 10, 0.75)",
                       backdropFilter: "blur(20px)",
@@ -316,13 +312,9 @@ export default function HeroSection() {
                 onClick={cycleTravelers}
                 className="flex-1 flex items-center gap-4 px-6 py-4 hover:bg-white/8 transition-colors text-left group sm:border-r border-white/10"
               >
-                <motion.div
-                  className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center"
-                  animate={{ scale: [1, 1.07, 1] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-                >
+                <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
                   <Users className="w-5 h-5 text-white" />
-                </motion.div>
+                </div>
                 <div className="flex-1">
                   <div className="text-[10px] text-white/50 uppercase tracking-widest font-semibold mb-0.5">
                     Who
@@ -361,13 +353,9 @@ export default function HeroSection() {
                 onClick={cycleBudget}
                 className="flex-1 flex items-center gap-4 px-6 py-4 hover:bg-white/8 transition-colors text-left group"
               >
-                <motion.div
-                  className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center"
-                  animate={{ y: [0, -3, 0] }}
-                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                >
+                <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
                   <Wallet className="w-5 h-5 text-white" />
-                </motion.div>
+                </div>
                 <div className="flex-1">
                   <div className="text-[10px] text-white/50 uppercase tracking-widest font-semibold mb-0.5">
                     Budget
@@ -407,15 +395,10 @@ export default function HeroSection() {
                 onClick={handleSearch}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full flex items-center justify-center gap-2.5 bg-white text-[var(--primary)] rounded-2xl py-3.5 font-semibold text-base shadow-md hover:bg-white/95 transition-colors"
+                className="group w-full flex items-center justify-center gap-2.5 bg-white text-[var(--primary)] rounded-2xl py-3.5 font-semibold text-base shadow-md hover:bg-white/95 transition-colors"
               >
                 <span>Explore</span>
-                <motion.div
-                  animate={{ x: [0, 3, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </motion.div>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </motion.button>
             </div>
           </div>
@@ -456,7 +439,8 @@ export default function HeroSection() {
           <span className="hidden sm:block w-1 h-1 rounded-full bg-white/25" />
           <span>4.9★ average rating</span>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </Container>
     </div>
   );
 }

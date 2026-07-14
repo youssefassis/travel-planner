@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { SiX, SiInstagram, SiTiktok } from "react-icons/si";
 import Button from "@/components/ui/Button";
+import Container from "@/components/ui/Container";
 
 const BRAND_NAME = "Wanderly";
 const YEAR = new Date().getFullYear();
@@ -45,8 +47,8 @@ export default function Footer() {
         </span>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-16 mb-20">
+      <Container className="relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
           <div className="md:col-span-5 flex flex-col gap-5">
             <Link
               href="/"
@@ -76,9 +78,7 @@ export default function Footer() {
           </div>
 
           <nav className="md:col-span-2 flex flex-col">
-            <h4 className="text-xs uppercase tracking-widest text-[var(--fg)] font-semibold mb-6 pb-2">
-              Navigate
-            </h4>
+            <h4 className="text-caption text-[var(--fg)] mb-6 pb-2">Navigate</h4>
 
             <div className="flex flex-col gap-2">
               {NAVIGATION.map((item) => (
@@ -94,9 +94,7 @@ export default function Footer() {
           </nav>
 
           <nav className="md:col-span-2 flex flex-col">
-            <h4 className="text-xs uppercase tracking-widest text-[var(--fg)] font-semibold mb-6 pb-2">
-              Company
-            </h4>
+            <h4 className="text-caption text-[var(--fg)] mb-6 pb-2">Company</h4>
 
             <div className="flex flex-col gap-2">
               {COMPANY_LINKS.map((item) => (
@@ -121,7 +119,7 @@ export default function Footer() {
               href="/planner"
               variant="primary"
               size="sm"
-              icon="→"
+              icon={<ArrowRight className="w-4 h-4" />}
               iconPosition="right"
             >
               Plan a trip
@@ -146,7 +144,7 @@ export default function Footer() {
             ))}
           </div>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }

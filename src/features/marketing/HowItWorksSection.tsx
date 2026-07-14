@@ -1,9 +1,12 @@
 "use client";
 
-import { PenLine, Bot, Plane, Zap } from "lucide-react";
+import { PenLine, Bot, Plane, Zap, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import SectionHeader from "@/components/ui/SectionHeader";
+import Section from "@/components/ui/Section";
+import Container from "@/components/ui/Container";
+import { VIEWPORT_ONCE, DUR, EASE_OUT } from "@/components/motion";
 import type { LucideIcon } from "lucide-react";
 
 const StepCard = ({
@@ -22,9 +25,9 @@ const StepCard = ({
   <motion.div
     initial={{ opacity: 0, y: 32 }}
     whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-40px" }}
-    transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
-    className="relative group rounded-2xl p-8 bg-[var(--card)] border border-[var(--border)] shadow-sm hover:shadow-md hover:border-[var(--primary)]/30 transition-all duration-300"
+    viewport={VIEWPORT_ONCE}
+    transition={{ duration: DUR.slow, ease: EASE_OUT, delay: Math.min(index * 0.1, 0.3) }}
+    className="relative group rounded-xl p-8 bg-[var(--card)] border border-[var(--border)] shadow-sm hover:shadow-md hover:border-[var(--primary)]/30 transition-all duration-300"
   >
     {/* Step number + icon row */}
     <div className="flex items-center gap-4 mb-6">
@@ -36,14 +39,12 @@ const StepCard = ({
       </span>
     </div>
 
-    <h3 className="text-xl md:text-2xl font-serif font-bold text-[var(--fg)] mb-3">
-      {title}
-    </h3>
+    <h3 className="text-h2 text-[var(--fg)] mb-3">{title}</h3>
 
     <p className="text-[var(--muted)] text-base leading-relaxed">{description}</p>
 
     {/* Subtle gradient accent on hover */}
-    <div className="absolute inset-x-0 bottom-0 h-0.5 rounded-b-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="absolute inset-x-0 bottom-0 h-0.5 rounded-b-xl bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
   </motion.div>
 );
 
@@ -73,13 +74,13 @@ export default function HowItWorksSection() {
   ];
 
   return (
-    <section className="py-16 sm:py-20 md:py-28 bg-[var(--card-subtle)]">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
+    <Section size="md" className="bg-[var(--card-subtle)]">
+      <Container>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          viewport={VIEWPORT_ONCE}
+          transition={{ duration: DUR.base, ease: EASE_OUT }}
         >
           <SectionHeader
             badge="Process"
@@ -112,21 +113,21 @@ export default function HowItWorksSection() {
           className="mt-14 sm:mt-20 text-center"
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" }}
+          viewport={VIEWPORT_ONCE}
+          transition={{ duration: DUR.base, delay: 0.3, ease: EASE_OUT }}
         >
           <Button
             asLink
             href="/planner"
             variant="primary"
             size="lg"
-            icon="→"
+            icon={<ArrowRight className="w-4 h-4" />}
             iconPosition="right"
           >
             Start Planning
           </Button>
         </motion.div>
-      </div>
-    </section>
+      </Container>
+    </Section>
   );
 }
