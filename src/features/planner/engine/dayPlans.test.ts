@@ -85,8 +85,11 @@ describe("buildCityDayPlans", () => {
       expect(filler.price).toBe(0);
       expect(filler.category).toBe("activity");
       expect(filler.name).toBe("Explore Lisbon at your own pace");
-      expect(filler.id).toMatch(/^lisbon-explore-\d+$/);
+      expect(filler.id).toMatch(/^lisbon-explore-\d+-\d+$/);
     }
+
+    const fillerIds = fillerActivities.map((f) => f.id);
+    expect(new Set(fillerIds).size).toBe(fillerIds.length);
   });
 
   it("produces correctly-indexed day ids/labels starting at startDayIndex", () => {
