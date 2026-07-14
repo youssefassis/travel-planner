@@ -37,7 +37,7 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="relative pt-24 pb-12 overflow-hidden border-t border-[var(--border)] bg-[var(--bg)]">
+    <footer className="relative pt-24 pb-12 overflow-hidden border-t border-[var(--border)] bg-[var(--bg)] print:hidden">
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/3 pointer-events-none select-none">
         <span
           className="text-[14vw] font-serif whitespace-nowrap"

@@ -37,7 +37,7 @@ export default function Header() {
   return (
     <header
       className={`
-        fixed left-1/2 -translate-x-1/2 top-4 z-50
+        fixed left-1/2 -translate-x-1/2 top-4 z-50 print:hidden
         w-[92%] max-w-[1200px] rounded-full border
         transition-all duration-base
         ${isScrolled ? "border-[var(--border)]" : "border-transparent"}
