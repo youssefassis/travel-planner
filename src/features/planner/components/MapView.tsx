@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import { ItineraryDay } from "../types";
+import { toLngLat } from "@/domain/geo";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -93,7 +94,7 @@ export default function MapView({ itinerary, activeDayId, onSelectDay }: Props) 
       day.activities.forEach((a) => {
         if (!a.location) return;
 
-        const lngLat: [number, number] = [a.location[1], a.location[0]];
+        const lngLat = toLngLat(a.location);
 
         coords.push(lngLat);
         bounds.extend(lngLat);
