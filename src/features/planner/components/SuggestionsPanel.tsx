@@ -38,17 +38,17 @@ export default function SuggestionsPanel({
   return (
     <aside className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-2 text-sm">
+      <div className="flex gap-2">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`
-              px-3 py-1.5 rounded-xl capitalize
+              px-3 py-1.5 rounded-full capitalize text-small font-medium transition
               ${
                 activeTab === tab
-                  ? "bg-[var(--foreground)] text-[var(--bg)]"
-                  : "bg-[var(--card)]"
+                  ? "bg-[var(--fg)] text-[var(--bg)]"
+                  : "bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--card-subtle)]"
               }
             `}
           >
@@ -60,7 +60,7 @@ export default function SuggestionsPanel({
       {/* Content */}
       <div className="space-y-3">
         {activeTab === "budget" && (
-          <div className="p-3 rounded-xl bg-[var(--card)] space-y-2">
+          <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-2">
             <div className="flex justify-between text-sm">
               <span>Transport</span>
               <span>€{trip.budget.transport}</span>
@@ -90,7 +90,7 @@ export default function SuggestionsPanel({
         {activeTab === "cities" && (
           <>
             {trip.legs.length > 0 && (
-              <div className="p-3 rounded-xl bg-[var(--card)] space-y-2">
+              <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--card)] space-y-2">
                 {trip.legs.map((leg) => (
                   <div
                     key={leg.id}
@@ -126,7 +126,10 @@ export default function SuggestionsPanel({
             )}
 
             {trip.stops.map((stop) => (
-              <div key={stop.cityId} className="p-3 rounded-xl bg-[var(--card)]">
+              <div
+                key={stop.cityId}
+                className="p-3 rounded-xl border border-[var(--border)] bg-[var(--card)]"
+              >
                 <div className="text-sm font-medium">{stop.city}</div>
                 <div className="text-xs text-[var(--muted)]">
                   {stop.days} {stop.days === 1 ? "day" : "days"} · €
@@ -152,7 +155,10 @@ export default function SuggestionsPanel({
               {activeDay.label} · {activeDay.city}
             </div>
             {activeDay.activities.map((a) => (
-              <div key={a.id} className="p-3 rounded-xl bg-[var(--card)]">
+              <div
+                key={a.id}
+                className="p-3 rounded-xl border border-[var(--border)] bg-[var(--card)]"
+              >
                 <div className="text-sm">{a.name}</div>
                 <div className="flex justify-between text-xs text-[var(--muted)]">
                   <span>{a.category}</span>

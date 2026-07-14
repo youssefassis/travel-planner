@@ -1,22 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { useTripIntentStore } from "../store/tripIntentStore";
 import { CITIES, citiesByCountry } from "@/domain/cities";
 import { BudgetTier, Climate, Interest, Pace, Region } from "@/domain/types";
 import { TripIntent, TripMode } from "../types";
+import Button from "@/components/ui/Button";
+import { fadeIn } from "@/components/motion";
 
-const FilterCard = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5"
-  >
-    <label className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-4">
-      {label}
-    </label>
+const FilterCard = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5">
+    <label className="text-caption text-[var(--fg)] block mb-4">{label}</label>
     {children}
-  </motion.div>
+  </div>
 );
 
 const SegmentButton = ({
@@ -45,11 +49,12 @@ const MODE_OPTIONS: { label: string; value: TripMode }[] = [
   { label: "Pick my cities", value: "custom" },
 ];
 
-const COMPANION_OPTIONS: { label: string; value: TripIntent["companions"] }[] = [
-  { label: "Solo", value: "solo" },
-  { label: "Couple", value: "couple" },
-  { label: "Group", value: "group" },
-];
+const COMPANION_OPTIONS: { label: string; value: TripIntent["companions"] }[] =
+  [
+    { label: "Solo", value: "solo" },
+    { label: "Couple", value: "couple" },
+    { label: "Group", value: "group" },
+  ];
 
 const PACE_OPTIONS: { label: string; value: Pace }[] = [
   { label: "Chill", value: "chill" },
@@ -102,13 +107,16 @@ export default function PlannerSidebar({
   loading: boolean;
 }) {
   const { intent, patchIntent } = useTripIntentStore();
+  const [expanded, setExpanded] = useState(false);
 
   const companions = intent.companions || "solo";
   const pace = intent.vibe?.pace || "balanced";
   const budget = intent.vibe?.budget || "comfort";
   const interests = intent.interests ?? [];
   const citiesByCountryMap = citiesByCountry();
-  const countries = Object.keys(citiesByCountryMap).sort((a, b) => a.localeCompare(b));
+  const countries = Object.keys(citiesByCountryMap).sort((a, b) =>
+    a.localeCompare(b),
+  );
 
   const toggleInterest = (interest: Interest) => {
     const next = interests.includes(interest)
@@ -126,223 +134,251 @@ export default function PlannerSidebar({
   };
 
   const generateDisabled =
-    loading || (intent.mode === "custom" && intent.selectedCityIds.length === 0);
+    loading ||
+    (intent.mode === "custom" && intent.selectedCityIds.length === 0);
 
   return (
-    <aside className="h-fit sticky top-24 space-y-4">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center gap-3 mb-6"
+    <aside className="h-fit sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto space-y-4">
+      {/* Mobile disclosure toggle */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="md:hidden w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--card)] border border-[var(--border)] text-left"
       >
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] flex items-center justify-center text-white font-serif font-bold">
-          ✈
+        <span className="text-h3 text-[var(--fg)]">Trip preferences</span>
+        <ChevronDown
+          size={18}
+          className={`text-[var(--muted)] transition-transform ${
+            expanded ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      <motion.div
+        variants={fadeIn}
+        initial="hidden"
+        animate="visible"
+        className={`${expanded ? "block" : "hidden"} md:block space-y-4`}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] flex items-center justify-center text-white font-serif font-bold">
+            ✈
+          </div>
+          <div>
+            <h3 className="font-serif font-bold text-[var(--fg)]">
+              Build Your Trip
+            </h3>
+            <p className="text-xs text-[var(--muted)]">Customize preferences</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-serif font-bold text-[var(--fg)]">Build Your Trip</h3>
-          <p className="text-xs text-[var(--muted)]">Customize preferences</p>
-        </div>
-      </motion.div>
 
-      {/* Mode */}
-      <FilterCard label="Trip Mode">
-        <div className="flex gap-2">
-          {MODE_OPTIONS.map((option) => (
-            <SegmentButton
-              key={option.value}
-              label={option.label}
-              selected={intent.mode === option.value}
-              onClick={() => patchIntent({ mode: option.value })}
-            />
-          ))}
-        </div>
-      </FilterCard>
-
-      {/* Origin city */}
-      <FilterCard label="Origin City">
-        <select
-          value={intent.originCityId}
-          onChange={(e) => patchIntent({ originCityId: e.target.value })}
-          className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
-        >
-          {SORTED_CITIES.map((city) => (
-            <option key={city.id} value={city.id}>
-              {city.name}, {city.country}
-            </option>
-          ))}
-        </select>
-      </FilterCard>
-
-      {/* Duration */}
-      <FilterCard label="Trip Duration">
-        <div className="space-y-3">
-          <input
-            type="number"
-            min="1"
-            max="30"
-            value={intent.duration ?? 5}
-            onChange={(e) => patchIntent({ duration: Number(e.target.value) })}
-            className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
-          />
-          <p className="text-sm text-[var(--muted)]">{intent.duration ?? 5} days</p>
-        </div>
-      </FilterCard>
-
-      {/* Companions */}
-      <FilterCard label="Travel Style">
-        <div className="flex gap-2">
-          {COMPANION_OPTIONS.map((option) => (
-            <SegmentButton
-              key={option.value}
-              label={option.label}
-              selected={companions === option.value}
-              onClick={() => patchIntent({ companions: option.value })}
-            />
-          ))}
-        </div>
-      </FilterCard>
-
-      {/* Pace */}
-      <FilterCard label="Travel Pace">
-        <div className="flex gap-2">
-          {PACE_OPTIONS.map((option) => (
-            <SegmentButton
-              key={option.value}
-              label={option.label}
-              selected={pace === option.value}
-              onClick={() =>
-                patchIntent({
-                  vibe: { ...intent.vibe, pace: option.value },
-                })
-              }
-            />
-          ))}
-        </div>
-      </FilterCard>
-
-      {/* Budget */}
-      <FilterCard label="Budget Tier">
-        <div className="flex gap-2">
-          {BUDGET_OPTIONS.map((option) => (
-            <SegmentButton
-              key={option.value}
-              label={option.label}
-              selected={budget === option.value}
-              onClick={() =>
-                patchIntent({
-                  vibe: { ...intent.vibe, budget: option.value },
-                })
-              }
-            />
-          ))}
-        </div>
-      </FilterCard>
-
-      {/* Interests */}
-      <FilterCard label="Interests">
-        <div className="flex flex-wrap gap-2">
-          {INTEREST_OPTIONS.map((interest) => {
-            const selected = interests.includes(interest);
-            return (
-              <button
-                key={interest}
-                onClick={() => toggleInterest(interest)}
-                className={`py-1.5 px-3 rounded-full font-medium transition-all text-xs ${
-                  selected
-                    ? "bg-[var(--primary)] text-white shadow-md"
-                    : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-                }`}
-              >
-                {capitalize(interest)}
-              </button>
-            );
-          })}
-        </div>
-      </FilterCard>
-
-      {/* Climate + Region (surprise mode only) */}
-      {intent.mode === "surprise" && (
-        <>
-          <FilterCard label="Climate">
-            <select
-              value={intent.vibe?.climate ?? "any"}
-              onChange={(e) =>
-                patchIntent({
-                  vibe: { ...intent.vibe, climate: e.target.value as Climate | "any" },
-                })
-              }
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
-            >
-              <option value="any">Any</option>
-              {CLIMATE_OPTIONS.map((climate) => (
-                <option key={climate} value={climate}>
-                  {capitalize(climate)}
-                </option>
-              ))}
-            </select>
-          </FilterCard>
-
-          <FilterCard label="Region">
-            <select
-              value={intent.region ?? "any"}
-              onChange={(e) => patchIntent({ region: e.target.value as Region | "any" })}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
-            >
-              <option value="any">Any</option>
-              {REGION_OPTIONS.map((region) => (
-                <option key={region} value={region}>
-                  {capitalize(region)}
-                </option>
-              ))}
-            </select>
-          </FilterCard>
-        </>
-      )}
-
-      {/* City picker (custom mode only) */}
-      {intent.mode === "custom" && (
-        <FilterCard label="Cities">
-          <div className="max-h-64 overflow-y-auto space-y-4 pr-1">
-            {countries.map((country) => (
-              <div key={country}>
-                <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">
-                  {country}
-                </p>
-                <div className="space-y-1.5">
-                  {citiesByCountryMap[country].map((city) => (
-                    <label
-                      key={city.id}
-                      className="flex items-center gap-2 text-sm text-[var(--fg)] cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={intent.selectedCityIds.includes(city.id)}
-                        onChange={() => toggleCity(city.id)}
-                        className="accent-[var(--primary)]"
-                      />
-                      {city.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
+        {/* Mode */}
+        <FilterCard label="Trip Mode">
+          <div className="flex gap-2">
+            {MODE_OPTIONS.map((option) => (
+              <SegmentButton
+                key={option.value}
+                label={option.label}
+                selected={intent.mode === option.value}
+                onClick={() => patchIntent({ mode: option.value })}
+              />
             ))}
           </div>
         </FilterCard>
-      )}
 
-      {/* CTA Button */}
-      <motion.button
-        whileHover={generateDisabled ? undefined : { y: -2 }}
-        whileTap={generateDisabled ? undefined : { scale: 0.98 }}
+        {/* Origin city */}
+        <FilterCard label="Origin City">
+          <select
+            value={intent.originCityId}
+            onChange={(e) => patchIntent({ originCityId: e.target.value })}
+            className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+          >
+            {SORTED_CITIES.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name}, {city.country}
+              </option>
+            ))}
+          </select>
+        </FilterCard>
+
+        {/* Duration */}
+        <FilterCard label="Trip Duration">
+          <div className="space-y-3">
+            <input
+              type="number"
+              min="1"
+              max="30"
+              value={intent.duration ?? 5}
+              onChange={(e) =>
+                patchIntent({ duration: Number(e.target.value) })
+              }
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+            />
+            <p className="text-sm text-[var(--muted)]">
+              {intent.duration ?? 5} days
+            </p>
+          </div>
+        </FilterCard>
+
+        {/* Companions */}
+        <FilterCard label="Travel Style">
+          <div className="flex gap-2">
+            {COMPANION_OPTIONS.map((option) => (
+              <SegmentButton
+                key={option.value}
+                label={option.label}
+                selected={companions === option.value}
+                onClick={() => patchIntent({ companions: option.value })}
+              />
+            ))}
+          </div>
+        </FilterCard>
+
+        {/* Pace */}
+        <FilterCard label="Travel Pace">
+          <div className="flex gap-2">
+            {PACE_OPTIONS.map((option) => (
+              <SegmentButton
+                key={option.value}
+                label={option.label}
+                selected={pace === option.value}
+                onClick={() =>
+                  patchIntent({
+                    vibe: { ...intent.vibe, pace: option.value },
+                  })
+                }
+              />
+            ))}
+          </div>
+        </FilterCard>
+
+        {/* Budget */}
+        <FilterCard label="Budget Tier">
+          <div className="flex gap-2">
+            {BUDGET_OPTIONS.map((option) => (
+              <SegmentButton
+                key={option.value}
+                label={option.label}
+                selected={budget === option.value}
+                onClick={() =>
+                  patchIntent({
+                    vibe: { ...intent.vibe, budget: option.value },
+                  })
+                }
+              />
+            ))}
+          </div>
+        </FilterCard>
+
+        {/* Interests */}
+        <FilterCard label="Interests">
+          <div className="flex flex-wrap gap-2">
+            {INTEREST_OPTIONS.map((interest) => {
+              const selected = interests.includes(interest);
+              return (
+                <button
+                  key={interest}
+                  onClick={() => toggleInterest(interest)}
+                  className={`py-1.5 px-3 rounded-full font-medium transition-all text-xs ${
+                    selected
+                      ? "bg-[var(--primary)] text-white shadow-md"
+                      : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
+                  }`}
+                >
+                  {capitalize(interest)}
+                </button>
+              );
+            })}
+          </div>
+        </FilterCard>
+
+        {/* Climate + Region (surprise mode only) */}
+        {intent.mode === "surprise" && (
+          <>
+            <FilterCard label="Climate">
+              <select
+                value={intent.vibe?.climate ?? "any"}
+                onChange={(e) =>
+                  patchIntent({
+                    vibe: {
+                      ...intent.vibe,
+                      climate: e.target.value as Climate | "any",
+                    },
+                  })
+                }
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+              >
+                <option value="any">Any</option>
+                {CLIMATE_OPTIONS.map((climate) => (
+                  <option key={climate} value={climate}>
+                    {capitalize(climate)}
+                  </option>
+                ))}
+              </select>
+            </FilterCard>
+
+            <FilterCard label="Region">
+              <select
+                value={intent.region ?? "any"}
+                onChange={(e) =>
+                  patchIntent({ region: e.target.value as Region | "any" })
+                }
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+              >
+                <option value="any">Any</option>
+                {REGION_OPTIONS.map((region) => (
+                  <option key={region} value={region}>
+                    {capitalize(region)}
+                  </option>
+                ))}
+              </select>
+            </FilterCard>
+          </>
+        )}
+
+        {/* City picker (custom mode only) */}
+        {intent.mode === "custom" && (
+          <FilterCard label="Cities">
+            <div className="max-h-64 overflow-y-auto space-y-4 pr-1">
+              {countries.map((country) => (
+                <div key={country}>
+                  <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">
+                    {country}
+                  </p>
+                  <div className="space-y-1.5">
+                    {citiesByCountryMap[country].map((city) => (
+                      <label
+                        key={city.id}
+                        className="flex items-center gap-2 text-sm text-[var(--fg)] cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={intent.selectedCityIds.includes(city.id)}
+                          onChange={() => toggleCity(city.id)}
+                          className="accent-[var(--primary)]"
+                        />
+                        {city.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </FilterCard>
+        )}
+      </motion.div>
+
+      {/* CTA Button — always visible regardless of mobile collapse state */}
+      <Button
+        variant="primary"
+        size="lg"
+        className="w-full mt-8"
         onClick={onGenerate}
         disabled={generateDisabled}
-        className={`w-full mt-8 btn btn-primary text-white font-semibold py-3 shadow-lg ${
-          generateDisabled ? "opacity-50 cursor-not-allowed" : ""
-        }`}
       >
         {loading ? "Generating..." : "Generate Itinerary"}
-      </motion.button>
+      </Button>
     </aside>
   );
 }
