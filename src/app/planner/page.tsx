@@ -53,6 +53,8 @@ export default function PlannerPage() {
             activeDayId={activeDayId}
             setActiveDayId={setActiveDayId}
             loading={loading}
+            stops={trip?.stops ?? []}
+            legs={trip?.legs ?? []}
           />
 
           {/* RIGHT: SUGGESTIONS */}
@@ -60,6 +62,7 @@ export default function PlannerPage() {
             trip={trip}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
+            activeDayId={activeDayId}
           />
         </div>
       </div>

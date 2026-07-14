@@ -1,13 +1,23 @@
 "use client";
 
+import { Car, Bus, TrainFront, Plane } from "lucide-react";
 import MapView from "./MapView";
-import { ItineraryDay } from "../types";
+import { CityStay, ItineraryDay, TransportLeg, TransportMode } from "../types";
 
 type Props = {
   itinerary: ItineraryDay[];
   activeDayId: string | null;
   setActiveDayId: (id: string) => void;
   loading: boolean;
+  stops?: CityStay[];
+  legs?: TransportLeg[];
+};
+
+const MODE_ICONS: Record<TransportMode, typeof Car> = {
+  car: Car,
+  bus: Bus,
+  train: TrainFront,
+  flight: Plane,
 };
 
 export default function PlannerCanvas({
@@ -15,7 +25,15 @@ export default function PlannerCanvas({
   activeDayId,
   setActiveDayId,
   loading,
+  stops = [],
+  legs = [],
 }: Props) {
+  const legBetween = (fromCityId: string, toCityId: string) =>
+    legs.find((leg) => leg.fromCityId === fromCityId && leg.toCityId === toCityId);
+
+  const firstDayIdForCity = (cityId: string) =>
+    itinerary.find((day) => day.cityId === cityId)?.id;
+
   return (
     <div className="space-y-6">
       {/* MAP */}
@@ -24,8 +42,44 @@ export default function PlannerCanvas({
           itinerary={itinerary}
           activeDayId={activeDayId}
           onSelectDay={(id) => setActiveDayId(id)}
+          stops={stops}
+          legs={legs}
         />
       </div>
+
+      {/* ROUTE SUMMARY */}
+      {stops.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 p-4 rounded-2xl bg-[var(--card)]">
+          {stops.map((stop, index) => {
+            const nextStop = stops[index + 1];
+            const leg = nextStop ? legBetween(stop.cityId, nextStop.cityId) : undefined;
+            const Icon = leg ? MODE_ICONS[leg.mode] : null;
+
+            return (
+              <div key={stop.cityId} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dayId = firstDayIdForCity(stop.cityId);
+                    if (dayId) setActiveDayId(dayId);
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-full bg-[var(--card-subtle)] hover:bg-[var(--primary)] hover:text-white transition font-medium"
+                >
+                  {stop.city} · {stop.days}d
+                </button>
+
+                {leg && Icon && (
+                  <div className="flex items-center gap-1 text-xs text-[var(--muted)]">
+                    <Icon size={14} />
+                    <span>{leg.durationHrs}h</span>
+                    <span>€{leg.cost}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ITINERARY */}
       <div className="space-y-3">
