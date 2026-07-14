@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { MouseEventHandler, ReactNode } from "react";
 import Link from "next/link";
 
 type Variant = "primary" | "secondary" | "ghost" | "outline" | "accent" | "white";
@@ -15,7 +15,7 @@ interface SharedProps {
 
 interface ButtonAsButtonProps extends SharedProps {
   asLink?: false;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -26,7 +26,7 @@ export default function FlightSearch({
   const [fromCityId, setFromCityId] = useState(initialFromCityId);
   const [toCityId, setToCityId] = useState(initialToCityId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (fromCityId && toCityId && fromCityId !== toCityId) {
       onSearch({ fromCityId, toCityId });

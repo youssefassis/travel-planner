@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import { BudgetTier } from "@/domain/types";
 import Card from "@/components/ui/Card";
@@ -36,7 +36,7 @@ export default function StaySearch({
     initialNights !== undefined ? String(initialNights) : ""
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!cityId) return;
     const parsedNights = parseInt(nights, 10);
