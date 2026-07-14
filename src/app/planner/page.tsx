@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { useTripIntentStore } from "@/features/planner/store/tripIntentStore";
 import {
@@ -8,6 +9,7 @@ import {
   makeRainFriendly,
   swapActivity,
 } from "@/features/planner/engine";
+import { intentFromShareParams } from "@/features/planner/lib/share";
 
 import TripCommandBar from "@/features/planner/components/TripCommandBar";
 import MapView from "@/features/planner/components/MapView";
@@ -16,37 +18,55 @@ import RouteStrip from "@/features/planner/components/RouteStrip";
 import DayTimeline from "@/features/planner/components/DayTimeline";
 import DayDetails from "@/features/planner/components/DayDetails";
 import BeforeYouGo from "@/features/planner/components/BeforeYouGo";
+import ShareTripBar from "@/features/planner/components/ShareTripBar";
+import PrintItinerary from "@/features/planner/components/PrintItinerary";
+import BookActivityPanel, {
+  BookingTarget,
+} from "@/features/planner/components/BookActivityPanel";
 
-import { TripIntent, TripPlan } from "@/features/planner/types";
+import { Activity, TripIntent, TripPlan } from "@/features/planner/types";
 
 import Container from "@/components/ui/Container";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 
-export default function PlannerPage() {
-  const { intent } = useTripIntentStore();
+function PlannerPageContent() {
+  const searchParams = useSearchParams();
+  const { intent, patchIntent } = useTripIntentStore();
 
   const [trip, setTrip] = useState<TripPlan | null>(null);
-  // The intent the current plan was generated with — replanning must use
-  // this snapshot, not live form state the user may have edited since.
+  // The intent the current plan was generated with — replanning and sharing
+  // must use this snapshot, not live form state the user may have edited.
   const [planIntent, setPlanIntent] = useState<TripIntent | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
+  const [booking, setBooking] = useState<BookingTarget | null>(null);
 
-  const generate = () => {
+  const generateFrom = (source: TripIntent) => {
     setLoading(true);
 
-    const result = generateTripPlan(intent);
+    const result = generateTripPlan(source);
 
     setTrip(result);
-    setPlanIntent(intent);
+    setPlanIntent(source);
     setActiveDayId(result.itinerary?.[0]?.id ?? null);
 
     setLoading(false);
   };
 
+  const generate = () => generateFrom(intent);
+
+  // First draft on load — from a shared link's intent when present, so the
+  // recipient sees the exact plan that was shared (the engine is
+  // deterministic), otherwise from the traveler's own preferences.
   useEffect(() => {
-    generate();
+    const shared = intentFromShareParams(searchParams);
+    if (shared) {
+      patchIntent(shared);
+      generateFrom(shared);
+    } else {
+      generate();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,71 +89,111 @@ export default function PlannerPage() {
     return true;
   };
 
+  // Table for 1/2/4 depending on who's traveling.
+  const partySize =
+    planIntent?.companions === "couple" ? 2 : planIntent?.companions === "group" ? 4 : 1;
+
+  const bookFromDay = (activity: Activity, startMin: number | null) => {
+    setBooking({ activity, dayLabel: activeDay?.label ?? "", startMin });
+  };
+
+  const bookFromChecklist = (activity: Activity, dayLabel: string) => {
+    setBooking({ activity, dayLabel, startMin: null });
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
-      <div className="pt-28 md:pt-32 pb-20">
-        <Container size="wide" className="space-y-6">
-          <PageHeader
-            title="Trip planner"
-            description="A first draft in seconds — then review, swap, and adapt it like a travel companion."
-          />
+      <div className="pt-28 md:pt-32 pb-20 print:p-0">
+        <Container size="wide" className="space-y-6 print:space-y-0">
+          <div className="print:hidden space-y-6">
+            <PageHeader
+              title="Trip planner"
+              description="A first draft in seconds — then review, swap, and adapt it like a travel companion."
+            />
 
-          {/* Trip brief + generate */}
-          <TripCommandBar onGenerate={generate} loading={loading} />
+            {/* Trip brief + generate */}
+            <TripCommandBar onGenerate={generate} loading={loading} />
 
-          {/* Engine notes */}
-          {trip && trip.notes.length > 0 && (
-            <Card padding="md" className="space-y-1">
-              {trip.notes.map((note, i) => (
-                <p key={i} className="text-sm text-[var(--muted)]">
-                  {note}
-                </p>
-              ))}
-            </Card>
-          )}
+            {/* Engine notes */}
+            {trip && trip.notes.length > 0 && (
+              <Card padding="md" className="space-y-1">
+                {trip.notes.map((note, i) => (
+                  <p key={i} className="text-sm text-[var(--muted)]">
+                    {note}
+                  </p>
+                ))}
+              </Card>
+            )}
 
-          {/* Full-width map with docked budget */}
-          <div className="relative">
-            <MapView
-              itinerary={itinerary}
-              activeDayId={activeDayId}
-              onSelectDay={setActiveDayId}
+            {/* Full-width map with docked budget */}
+            <div className="relative">
+              <MapView
+                itinerary={itinerary}
+                activeDayId={activeDayId}
+                onSelectDay={setActiveDayId}
+                stops={trip?.stops ?? []}
+                legs={trip?.legs ?? []}
+              />
+              {trip && <BudgetOverlay budget={trip.budget} />}
+            </div>
+
+            {/* Route overview + share */}
+            <RouteStrip
               stops={trip?.stops ?? []}
               legs={trip?.legs ?? []}
+              itinerary={itinerary}
+              setActiveDayId={setActiveDayId}
             />
-            {trip && <BudgetOverlay budget={trip.budget} />}
+            {trip && planIntent && (
+              <ShareTripBar plan={trip} intent={planIntent} pace={planIntent.vibe.pace} />
+            )}
+
+            {/* Day-by-day timeline */}
+            <DayTimeline
+              itinerary={itinerary}
+              activeDayId={activeDayId}
+              setActiveDayId={setActiveDayId}
+            />
+
+            {/* Selected day — timed companion schedule */}
+            <DayDetails
+              key={activeDayId ?? "no-day"}
+              day={activeDay}
+              stops={trip?.stops ?? []}
+              pace={planIntent?.vibe.pace ?? "balanced"}
+              budgetTier={planIntent?.vibe.budget ?? "comfort"}
+              onSwap={handleSwap}
+              onRainDay={handleRainDay}
+              onBook={bookFromDay}
+            />
+
+            {/* Trip-wide booking checklist */}
+            <BeforeYouGo itinerary={itinerary} onBook={bookFromChecklist} />
           </div>
 
-          {/* Route overview */}
-          <RouteStrip
-            stops={trip?.stops ?? []}
-            legs={trip?.legs ?? []}
-            itinerary={itinerary}
-            setActiveDayId={setActiveDayId}
-          />
-
-          {/* Day-by-day timeline */}
-          <DayTimeline
-            itinerary={itinerary}
-            activeDayId={activeDayId}
-            setActiveDayId={setActiveDayId}
-          />
-
-          {/* Selected day — timed companion schedule */}
-          <DayDetails
-            key={activeDayId ?? "no-day"}
-            day={activeDay}
-            stops={trip?.stops ?? []}
-            pace={planIntent?.vibe.pace ?? "balanced"}
-            budgetTier={planIntent?.vibe.budget ?? "comfort"}
-            onSwap={handleSwap}
-            onRainDay={handleRainDay}
-          />
-
-          {/* Trip-wide booking checklist */}
-          <BeforeYouGo itinerary={itinerary} />
+          {/* Print / PDF layout */}
+          {trip && planIntent && (
+            <PrintItinerary plan={trip} pace={planIntent.vibe.pace} />
+          )}
         </Container>
       </div>
+
+      {/* Attraction / restaurant booking */}
+      {booking && (
+        <BookActivityPanel
+          target={booking}
+          partySize={partySize}
+          onClose={() => setBooking(null)}
+        />
+      )}
     </div>
+  );
+}
+
+export default function PlannerPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)]" />}>
+      <PlannerPageContent />
+    </Suspense>
   );
 }

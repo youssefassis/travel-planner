@@ -1,11 +1,18 @@
 "use client";
 
 import { Ticket } from "lucide-react";
+import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { ItineraryDay } from "../types";
+import { Activity, ItineraryDay } from "../types";
 
-/** The trip-wide "book these in advance" checklist. */
-export default function BeforeYouGo({ itinerary }: { itinerary: ItineraryDay[] }) {
+type Props = {
+  itinerary: ItineraryDay[];
+  /** Open the booking flow for an item on the checklist. */
+  onBook: (activity: Activity, dayLabel: string) => void;
+};
+
+/** The trip-wide "book these in advance" checklist — actionable, not a list. */
+export default function BeforeYouGo({ itinerary, onBook }: Props) {
   const bookings = itinerary.flatMap((day) =>
     day.activities
       .filter((a) => a.bookAhead)
@@ -35,8 +42,17 @@ export default function BeforeYouGo({ itinerary }: { itinerary: ItineraryDay[] }
                 {day.label} · {day.city}
               </span>
             </span>
-            <span className="shrink-0 text-xs text-[var(--muted)]">
-              {activity.price > 0 ? `€${activity.price}` : "Free entry"}
+            <span className="shrink-0 flex items-center gap-2">
+              <span className="text-xs text-[var(--muted)]">
+                {activity.price > 0 ? `€${activity.price}` : "Free entry"}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onBook(activity, day.label)}
+              >
+                {activity.category === "food" ? "Reserve" : "Book"}
+              </Button>
             </span>
           </li>
         ))}

@@ -13,7 +13,7 @@ import {
 import { BudgetTier, Pace } from "@/domain/types";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
+import { Activity, CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
 import { buildDaySchedule, formatClock } from "../engine";
 
 const LOAD_STYLES: Record<DayLoad, string> = {
@@ -31,7 +31,13 @@ type Props = {
   onSwap: (activityId: string) => boolean;
   /** Returns false when the day is already rain-proof. */
   onRainDay: () => boolean;
+  /** Open the booking flow for an activity at its scheduled time. */
+  onBook: (activity: Activity, startMin: number | null) => void;
 };
+
+function isBookable(activity: Activity): boolean {
+  return activity.bookAhead || activity.category === "food";
+}
 
 const TimeCell = ({ item }: { item: ScheduleItem }) => (
   <div className="shrink-0 w-24 sm:w-32 text-xs text-[var(--muted)] pt-0.5">
@@ -42,6 +48,21 @@ const TimeCell = ({ item }: { item: ScheduleItem }) => (
   </div>
 );
 
+const ActivityChips = ({ activity }: { activity: Activity }) => (
+  <>
+    {activity.mustSee && (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
+        <Star className="w-2.5 h-2.5" /> Must-see
+      </span>
+    )}
+    {activity.bookAhead && (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
+        <Ticket className="w-2.5 h-2.5" /> Book ahead
+      </span>
+    )}
+  </>
+);
+
 export default function DayDetails({
   day,
   stops,
@@ -49,6 +70,7 @@ export default function DayDetails({
   budgetTier,
   onSwap,
   onRainDay,
+  onBook,
 }: Props) {
   const [message, setMessage] = useState<string | null>(null);
 
@@ -70,6 +92,24 @@ export default function DayDetails({
         : "This day is already indoors-friendly — nothing to swap."
     );
   };
+
+  const BookButton = ({
+    activity,
+    startMin,
+  }: {
+    activity: Activity;
+    startMin: number;
+  }) =>
+    isBookable(activity) ? (
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => onBook(activity, startMin)}
+        className="shrink-0"
+      >
+        {activity.category === "food" ? "Reserve" : "Book"}
+      </Button>
+    ) : null;
 
   return (
     <Card padding="lg">
@@ -117,9 +157,31 @@ export default function DayDetails({
               <span className="shrink-0 w-7 h-7 rounded-full bg-[var(--card-subtle)] text-[var(--muted)] flex items-center justify-center">
                 <UtensilsCrossed className="w-3.5 h-3.5" />
               </span>
-              <p className="text-sm text-[var(--muted)] pt-1">
-                {item.label} — somewhere local nearby
-              </p>
+              {item.activity ? (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                      <span className="text-sm font-medium text-[var(--fg)]">
+                        {item.label} · {item.activity.name}
+                      </span>
+                      <ActivityChips activity={item.activity} />
+                    </div>
+                    <p className="text-xs text-[var(--muted)]">
+                      {item.activity.price > 0
+                        ? `≈ €${item.activity.price} per person`
+                        : "Free"}
+                    </p>
+                    <p className="text-xs text-[var(--muted)] italic mt-0.5">
+                      {item.activity.why}
+                    </p>
+                  </div>
+                  <BookButton activity={item.activity} startMin={item.startMin} />
+                </>
+              ) : (
+                <p className="text-sm text-[var(--muted)] pt-1">
+                  {item.label} — somewhere local nearby
+                </p>
+              )}
             </div>
           ) : (
             <div key={item.activity.id} className="flex items-start gap-3 py-3">
@@ -129,16 +191,7 @@ export default function DayDetails({
                   <span className="text-sm font-medium text-[var(--fg)]">
                     {item.activity.name}
                   </span>
-                  {item.activity.mustSee && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
-                      <Star className="w-2.5 h-2.5" /> Must-see
-                    </span>
-                  )}
-                  {item.activity.bookAhead && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                      <Ticket className="w-2.5 h-2.5" /> Book ahead
-                    </span>
-                  )}
+                  <ActivityChips activity={item.activity} />
                 </div>
                 <p className="text-xs text-[var(--muted)]">
                   <span className="capitalize">{item.activity.category}</span> ·{" "}
@@ -154,15 +207,18 @@ export default function DayDetails({
                   {item.activity.why}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => handleSwap(item.activity.id)}
-                aria-label={`Swap ${item.activity.name} for something else`}
-                title="Swap for something else"
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--card-subtle)] hover:text-[var(--primary)] transition-colors"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-              </button>
+              <div className="shrink-0 flex items-center gap-1.5">
+                <BookButton activity={item.activity} startMin={item.startMin} />
+                <button
+                  type="button"
+                  onClick={() => handleSwap(item.activity.id)}
+                  aria-label={`Swap ${item.activity.name} for something else`}
+                  title="Swap for something else"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--card-subtle)] hover:text-[var(--primary)] transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           )
         )}
