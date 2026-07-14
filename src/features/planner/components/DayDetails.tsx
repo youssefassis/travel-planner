@@ -5,12 +5,15 @@ import {
   ArrowRight,
   CloudRain,
   Footprints,
+  Plus,
   RefreshCw,
   Star,
   Ticket,
+  Trash2,
   UtensilsCrossed,
+  X,
 } from "lucide-react";
-import { BudgetTier, Pace } from "@/domain/types";
+import { BudgetTier, Pace, Poi } from "@/domain/types";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { Activity, CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
@@ -27,12 +30,18 @@ type Props = {
   stops: CityStay[];
   pace: Pace;
   budgetTier: BudgetTier;
+  /** What "Add a stop" can offer — the city's POIs not yet in the plan. */
+  availablePois: Poi[];
   /** Returns false when no alternative was available. */
   onSwap: (activityId: string) => boolean;
   /** Returns false when the day is already rain-proof. */
   onRainDay: () => boolean;
   /** Open the booking flow for an activity at its scheduled time. */
   onBook: (activity: Activity, startMin: number | null) => void;
+  /** Remove one stop (or a planned meal) from this day. */
+  onRemove: (activityId: string) => void;
+  /** Add one of `availablePois` to this day. */
+  onAdd: (poiId: string) => void;
 };
 
 function isBookable(activity: Activity): boolean {
@@ -68,11 +77,15 @@ export default function DayDetails({
   stops,
   pace,
   budgetTier,
+  availablePois,
   onSwap,
   onRainDay,
   onBook,
+  onRemove,
+  onAdd,
 }: Props) {
   const [message, setMessage] = useState<string | null>(null);
+  const [addingStop, setAddingStop] = useState(false);
 
   if (!day) return null;
 
@@ -110,6 +123,18 @@ export default function DayDetails({
         {activity.category === "food" ? "Reserve" : "Book"}
       </Button>
     ) : null;
+
+  const RemoveButton = ({ activity }: { activity: Activity }) => (
+    <button
+      type="button"
+      onClick={() => onRemove(activity.id)}
+      aria-label={`Remove ${activity.name} from this day`}
+      title="Remove from this day"
+      className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--card-subtle)] hover:text-red-500 transition-colors"
+    >
+      <Trash2 className="w-3.5 h-3.5" />
+    </button>
+  );
 
   return (
     <Card padding="lg">
@@ -175,7 +200,10 @@ export default function DayDetails({
                       {item.activity.why}
                     </p>
                   </div>
-                  <BookButton activity={item.activity} startMin={item.startMin} />
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    <BookButton activity={item.activity} startMin={item.startMin} />
+                    <RemoveButton activity={item.activity} />
+                  </div>
                 </>
               ) : (
                 <p className="text-sm text-[var(--muted)] pt-1">
@@ -218,9 +246,73 @@ export default function DayDetails({
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
+                <RemoveButton activity={item.activity} />
               </div>
             </div>
           )
+        )}
+      </div>
+
+      {/* Add a stop */}
+      <div className="mt-3">
+        {addingStop ? (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card-subtle)] p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-caption text-[var(--muted)]">
+                Add to {day.label} · {day.city}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAddingStop(false)}
+                aria-label="Close the add-a-stop picker"
+                className="w-7 h-7 flex items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--card)] transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {availablePois.length > 0 ? (
+              <ul className="divide-y divide-[var(--border)]">
+                {availablePois.map((poi) => (
+                  <li key={poi.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onAdd(poi.id);
+                        setAddingStop(false);
+                      }}
+                      className="w-full flex items-center gap-3 py-2 text-left group"
+                    >
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-[var(--card)] text-[var(--muted)] group-hover:text-[var(--primary)] flex items-center justify-center transition-colors">
+                        <Plus className="w-3.5 h-3.5" />
+                      </span>
+                      <span className="flex-1 min-w-0 text-sm text-[var(--fg)] truncate">
+                        {poi.name}
+                      </span>
+                      <span className="shrink-0 text-xs text-[var(--muted)]">
+                        <span className="capitalize">{poi.category}</span> ·{" "}
+                        {poi.price > 0 ? `€${poi.price}` : "Free"}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-[var(--muted)] py-1">
+                You&apos;ve planned everything we know in {day.city} — swap a stop
+                instead, or add another city.
+              </p>
+            )}
+          </div>
+        ) : (
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Plus className="w-3.5 h-3.5" />}
+            iconPosition="left"
+            onClick={() => setAddingStop(true)}
+          >
+            Add a stop
+          </Button>
         )}
       </div>
 
