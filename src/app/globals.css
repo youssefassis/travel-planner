@@ -218,92 +218,39 @@ p {
    COMPONENTS
 ========================= */
 
-/* DEPRECATED — .card and .btn/.btn-primary are being replaced by the
-   Card and Button components in src/components/ui/. Removed once the
-   last consumers migrate (design wave 2). Do not add new usages. */
+/* Inputs — in @layer base so Tailwind utility classes (padding, background,
+   border overrides on individual fields) always win over these defaults.
+   Unlayered element rules would otherwise beat layered utilities. */
+@layer base {
+  input,
+  textarea,
+  select {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    color: var(--fg);
+    font-family: inherit;
+    transition: all var(--duration-base);
+  }
 
-/* Cards */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-sm);
-  transition:
-    box-shadow var(--duration-base),
-    transform var(--duration-base),
-    border-color var(--duration-base);
-}
+  select {
+    cursor: pointer;
+  }
 
-.card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
+  }
 
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--fg);
-  transition: all var(--duration-base) var(--ease-default);
-}
-
-.btn:hover {
-  background: var(--card-subtle);
-  border-color: var(--primary);
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  box-shadow: var(--shadow-primary);
-}
-
-.btn-primary:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(231, 101, 28, 0.22);
-}
-
-/* Inputs */
-input,
-textarea,
-select {
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4);
-  color: var(--fg);
-  font-family: inherit;
-  transition: all var(--duration-base);
-}
-
-select {
-  cursor: pointer;
-}
-
-input[type="checkbox"],
-input[type="radio"] {
-  cursor: pointer;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  background: var(--card);
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(231, 101, 28, 0.12);
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    background: var(--card);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(231, 101, 28, 0.12);
+  }
 }
 
 /* =========================

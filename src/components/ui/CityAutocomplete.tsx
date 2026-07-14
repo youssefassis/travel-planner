@@ -117,7 +117,9 @@ export default function CityAutocomplete({
     "w-full bg-transparent text-[var(--fg)] text-lg md:text-xl font-medium placeholder-[var(--muted)] border-none outline-none";
 
   return (
-    <div ref={rootRef} className="relative">
+    // className lands on the root so flex parents can size the whole field
+    // (e.g. flex-1 in the hero search bar).
+    <div ref={rootRef} className={`relative w-full min-w-0 ${className}`}>
       <div className="relative flex items-center">
         {variant === "field" && (
           <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" />
@@ -144,7 +146,7 @@ export default function CityAutocomplete({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className={`${variant === "field" ? fieldClasses : bareClasses} ${className}`}
+          className={variant === "field" ? fieldClasses : bareClasses}
         />
         {query && (
           <button
