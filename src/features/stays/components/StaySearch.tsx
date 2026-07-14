@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { BudgetTier } from "@/domain/types";
 import { CITIES } from "@/domain/cities";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { fadeInUp } from "@/components/motion";
 
 export type StaySearchFormData = {
   cityId: string;
@@ -50,91 +53,73 @@ export default function StaySearch({
   };
 
   return (
-    <motion.form
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      onSubmit={handleSubmit}
-      className="card bg-[var(--card)] border border-[var(--border)]"
-    >
-      <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[var(--fg)] mb-6 sm:mb-8">
-        Search Accommodations
-      </h2>
+    <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
+      <Card as="form" padding="lg" onSubmit={handleSubmit}>
+        <h2 className="text-h2 text-[var(--fg)] mb-6 sm:mb-8">Search Accommodations</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {/* City */}
-        <div>
-          <label
-            htmlFor="stay-city"
-            className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2"
-          >
-            City
-          </label>
-          <select
-            id="stay-city"
-            name="city"
-            value={cityId}
-            onChange={(e) => setCityId(e.target.value)}
-            className={fieldClasses}
-          >
-            <option value="">Where to?</option>
-            {sortedCities.map((city) => (
-              <option key={city.id} value={city.id}>
-                {city.name}, {city.country}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          {/* City */}
+          <div>
+            <label htmlFor="stay-city" className="text-caption text-[var(--fg)] block mb-2">
+              City
+            </label>
+            <select
+              id="stay-city"
+              name="city"
+              value={cityId}
+              onChange={(e) => setCityId(e.target.value)}
+              className={fieldClasses}
+            >
+              <option value="">Where to?</option>
+              {sortedCities.map((city) => (
+                <option key={city.id} value={city.id}>
+                  {city.name}, {city.country}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Budget */}
+          <div>
+            <label htmlFor="stay-budget" className="text-caption text-[var(--fg)] block mb-2">
+              Budget
+            </label>
+            <select
+              id="stay-budget"
+              name="budget"
+              value={budget}
+              onChange={(e) => setBudget(e.target.value as BudgetTier)}
+              className={fieldClasses}
+            >
+              <option value="backpacker">Backpacker</option>
+              <option value="comfort">Comfort</option>
+              <option value="luxury">Luxury</option>
+            </select>
+          </div>
+
+          {/* Nights */}
+          <div>
+            <label htmlFor="stay-nights" className="text-caption text-[var(--fg)] block mb-2">
+              Nights (optional)
+            </label>
+            <input
+              id="stay-nights"
+              type="number"
+              name="nights"
+              value={nights}
+              onChange={(e) => setNights(e.target.value)}
+              min="1"
+              max="60"
+              placeholder="How many nights?"
+              className={fieldClasses}
+            />
+          </div>
         </div>
 
-        {/* Budget */}
-        <div>
-          <label
-            htmlFor="stay-budget"
-            className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2"
-          >
-            Budget
-          </label>
-          <select
-            id="stay-budget"
-            name="budget"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value as BudgetTier)}
-            className={fieldClasses}
-          >
-            <option value="backpacker">Backpacker</option>
-            <option value="comfort">Comfort</option>
-            <option value="luxury">Luxury</option>
-          </select>
-        </div>
-
-        {/* Nights */}
-        <div>
-          <label
-            htmlFor="stay-nights"
-            className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide block mb-2"
-          >
-            Nights (optional)
-          </label>
-          <input
-            id="stay-nights"
-            type="number"
-            name="nights"
-            value={nights}
-            onChange={(e) => setNights(e.target.value)}
-            min="1"
-            max="60"
-            placeholder="How many nights?"
-            className={fieldClasses}
-          />
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        disabled={!cityId}
-        className="w-full btn btn-primary btn-lg text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Search Accommodations
-      </button>
-    </motion.form>
+        <Button type="submit" size="lg" className="w-full" disabled={!cityId}>
+          Search Accommodations
+        </Button>
+      </Card>
+    </motion.div>
   );
 }

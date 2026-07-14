@@ -3,25 +3,34 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { Building2, BedDouble, Hotel, Star } from "lucide-react";
 import StaySearch, { StaySearchFormData } from "@/features/stays/components/StaySearch";
 import { searchStays } from "@/features/stays/lib/searchStays";
 import { StayOption, StayType } from "@/features/stays/types";
 import { BudgetTier } from "@/domain/types";
 import { getCity } from "@/domain/cities";
+import Container from "@/components/ui/Container";
+import PageHeader from "@/components/ui/PageHeader";
+import Button from "@/components/ui/Button";
+import { fadeInUp, staggerChildren } from "@/components/motion";
 
 const GRADIENTS = [
-  "bg-gradient-to-br from-[#ff6b35] to-[#004e89]",
-  "bg-gradient-to-br from-[#34495e] to-[#e74c3c]",
-  "bg-gradient-to-br from-[#8b4513] to-[#2f4f4f]",
-  "bg-gradient-to-br from-[#d4af37] to-[#a0826d]",
-  "bg-gradient-to-br from-[#228b22] to-[#8b4513]",
-  "bg-gradient-to-br from-[#ff6b35] to-[#f7931e]",
+  "from-[var(--primary)]/80 to-[var(--accent)]/70",
+  "from-[var(--primary-light)] to-[var(--primary-dark)]",
+  "from-[var(--accent-light)] to-[var(--accent-dark)]",
+  "from-[var(--primary)] to-[var(--primary-light)]",
 ];
 
 const TYPE_LABELS: Record<StayType, string> = {
   hotel: "Hotel",
   apartment: "Apartment",
   hostel: "Hostel",
+};
+
+const TYPE_ICONS: Record<StayType, typeof Hotel> = {
+  hotel: Hotel,
+  apartment: Building2,
+  hostel: BedDouble,
 };
 
 const StayCard = ({
@@ -32,63 +41,70 @@ const StayCard = ({
   stay: StayOption;
   index: number;
   nights?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-    whileHover={{ y: -8 }}
-    className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all"
-  >
-    {/* Image */}
-    <div className={`h-48 ${GRADIENTS[index % GRADIENTS.length]} relative`}>
-      <div className="absolute top-3 right-3 bg-white/90 px-3 py-1 rounded-full">
-        <p className="text-sm font-semibold text-[var(--fg)]">
-          €{stay.pricePerNight}/night
+}) => {
+  const TypeIcon = TYPE_ICONS[stay.type];
+
+  return (
+    <motion.div
+      variants={fadeInUp}
+      whileHover={{ y: -4 }}
+      className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all"
+    >
+      {/* Image */}
+      <div
+        className={`h-48 bg-gradient-to-br ${GRADIENTS[index % GRADIENTS.length]} relative flex items-center justify-center`}
+      >
+        <TypeIcon className="text-white/40 w-10 h-10" />
+        <div className="absolute top-3 right-3 bg-[var(--card)]/90 backdrop-blur-sm px-3 py-1 rounded-full">
+          <p className="text-sm font-semibold text-[var(--fg)]">
+            €{stay.pricePerNight}/night
+          </p>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-5">
+        <h3 className="text-h3 text-[var(--fg)] mb-1">{stay.name}</h3>
+        <p className="text-sm text-[var(--muted)] mb-4">
+          {TYPE_LABELS[stay.type]} · {stay.city}
         </p>
-      </div>
-    </div>
 
-    {/* Content */}
-    <div className="p-5">
-      <h3 className="text-xl font-serif font-bold text-[var(--fg)] mb-1">{stay.name}</h3>
-      <p className="text-sm text-[var(--muted)] mb-4">
-        {TYPE_LABELS[stay.type]} · {stay.city}
-      </p>
-
-      {/* Rating */}
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-sm font-semibold text-[var(--fg)]">
-          {stay.rating.toFixed(1)}
-        </span>
-        <span className="text-yellow-500">★</span>
-      </div>
-
-      {/* Amenities */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        {stay.amenities.slice(0, 3).map((amenity) => (
-          <span
-            key={amenity}
-            className="text-xs bg-[var(--card-subtle)] text-[var(--fg)] px-2 py-1 rounded"
-          >
-            {amenity}
+        {/* Rating */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-sm font-semibold text-[var(--fg)]">
+            {stay.rating.toFixed(1)}
           </span>
-        ))}
+          <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+        </div>
+
+        {/* Amenities */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {stay.amenities.slice(0, 3).map((amenity) => (
+            <span
+              key={amenity}
+              className="text-xs bg-[var(--card-subtle)] text-[var(--fg)] px-2 py-1 rounded"
+            >
+              {amenity}
+            </span>
+          ))}
+        </div>
+
+        {/* Total for stay */}
+        {nights !== undefined && (
+          <p className="text-sm font-medium text-[var(--fg)] mb-4">
+            €{stay.pricePerNight * nights} total for {nights}{" "}
+            {nights === 1 ? "night" : "nights"}
+          </p>
+        )}
+
+        {/* Button */}
+        <Button size="md" className="w-full">
+          View & Book
+        </Button>
       </div>
-
-      {/* Total for stay */}
-      {nights !== undefined && (
-        <p className="text-sm font-medium text-[var(--fg)] mb-4">
-          €{stay.pricePerNight * nights} total for {nights}{" "}
-          {nights === 1 ? "night" : "nights"}
-        </p>
-      )}
-
-      {/* Button */}
-      <button className="w-full btn btn-primary text-white text-sm">View & Book</button>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 function validCityId(id: string | null): string {
   return id && getCity(id) ? id : "";
@@ -123,21 +139,12 @@ function StaysPageContent() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
-      <div className="pt-20 sm:pt-24 pb-16 sm:pb-20">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-10 sm:mb-12"
-          >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--fg)] mb-3 sm:mb-4">
-              Find & Book Stays
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg text-[var(--muted)]">
-              Discover the perfect place to rest during your travels
-            </p>
-          </motion.div>
+      <div className="pt-28 md:pt-32 pb-16 sm:pb-20">
+        <Container size="wide">
+          <PageHeader
+            title="Find & book stays"
+            description="Discover the perfect place to rest during your travels"
+          />
 
           {/* Search Form */}
           <div className="mb-12 sm:mb-16">
@@ -152,14 +159,17 @@ function StaysPageContent() {
           {/* Results */}
           {searchResults && searchResults.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <h2 className="text-2xl font-serif font-bold text-[var(--fg)] mb-6">
-                Available Accommodations
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <h2 className="text-h2 text-[var(--fg)] mb-6">Available Accommodations</h2>
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={staggerChildren(0.06)}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
                 {searchResults.map((stay, idx) => (
                   <StayCard key={stay.id} stay={stay} index={idx} nights={nights} />
                 ))}
-              </div>
+              </motion.div>
             </motion.div>
           )}
 
@@ -188,7 +198,7 @@ function StaysPageContent() {
               </p>
             </motion.div>
           )}
-        </div>
+        </Container>
       </div>
     </div>
   );
