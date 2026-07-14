@@ -33,6 +33,41 @@ export type Activity = {
   location: Coordinates;
   cityId: string;
   city: string;
+  /** Typical visit length in hours. */
+  durationHrs: number;
+  /** Top pick for this traveler's interests — don't skip it. */
+  mustSee: boolean;
+  /** Popular/ticketed — reserve before the trip. */
+  bookAhead: boolean;
+  /** Why the engine chose it, in plain language. */
+  why: string;
+};
+
+/* ─── Scheduled day (the companion view of an ItineraryDay) ─────── */
+
+export type ScheduleItem =
+  | {
+      kind: "activity";
+      startMin: number; // minutes since midnight
+      endMin: number;
+      activity: Activity;
+      /** Walking time from the previous stop, minutes (0 for the first). */
+      walkMin: number;
+    }
+  | {
+      kind: "meal";
+      startMin: number;
+      endMin: number;
+      label: "Lunch" | "Dinner";
+    };
+
+export type DayLoad = "relaxed" | "balanced" | "packed";
+
+export type DaySchedule = {
+  items: ScheduleItem[];
+  busyHrs: number; // activity + meal + walking time
+  load: DayLoad;
+  loadNote: string;
 };
 
 export type ItineraryDay = {
