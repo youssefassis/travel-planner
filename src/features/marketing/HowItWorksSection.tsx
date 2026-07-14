@@ -1,8 +1,7 @@
 "use client";
 
-import { PenLine, Bot, Plane, Zap, ArrowRight } from "lucide-react";
+import { PenLine, Map, Zap, SlidersHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
-import Button from "@/components/ui/Button";
 import SectionHeader from "@/components/ui/SectionHeader";
 import Section from "@/components/ui/Section";
 import Container from "@/components/ui/Container";
@@ -52,24 +51,21 @@ export default function HowItWorksSection() {
   const steps = [
     {
       number: 1,
-      title: "Tell Us Your Dream",
-      description:
-        "Share destination, dates, travel style and preferences. The system adapts to your input.",
+      title: "Tell us your trip",
+      description: "Three quick questions — destination or surprise, who's going, your style.",
       Icon: PenLine,
     },
     {
       number: 2,
-      title: "Trip Construction",
-      description:
-        "Itineraries, transport options and stays are generated according to selected criteria.",
-      Icon: Bot,
+      title: "We build your plan",
+      description: "Route, day-by-day itinerary, transport, and budget — in seconds.",
+      Icon: Map,
     },
     {
       number: 3,
-      title: "Adjust and Finalize",
-      description:
-        "Modify activities, timing and accommodation before final confirmation.",
-      Icon: Plane,
+      title: "Adjust & go",
+      description: "Swap anything, add stops or cities, then share or print it.",
+      Icon: SlidersHorizontal,
     },
   ];
 
@@ -86,7 +82,7 @@ export default function HowItWorksSection() {
             badge="Process"
             badgeIcon={<Zap className="w-4 h-4" />}
             title="How It Works"
-            description="A structured process from idea to travel plan — in three simple steps."
+            description="From idea to itinerary in three steps."
           />
         </motion.div>
 
@@ -109,24 +105,6 @@ export default function HowItWorksSection() {
           </div>
         </div>
 
-        <motion.div
-          className="mt-14 sm:mt-20 text-center"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT_ONCE}
-          transition={{ duration: DUR.base, delay: 0.3, ease: EASE_OUT }}
-        >
-          <Button
-            asLink
-            href="/planner"
-            variant="primary"
-            size="lg"
-            icon={<ArrowRight className="w-4 h-4" />}
-            iconPosition="right"
-          >
-            Start Planning
-          </Button>
-        </motion.div>
       </Container>
     </Section>
   );

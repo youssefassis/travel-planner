@@ -1,5 +1,3 @@
-"use client";
-
 import HeroSection from "@/features/marketing/HeroSection";
 import FeaturedDestinations from "@/features/marketing/FeaturedDestinations";
 import HowItWorksSection from "@/features/marketing/HowItWorksSection";
