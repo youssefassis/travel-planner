@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { useTripIntentStore } from "@/features/planner/store/tripIntentStore";
 import {
@@ -15,8 +16,10 @@ import {
   unusedPoisForCity,
 } from "@/features/planner/engine";
 import { intentFromShareParams } from "@/features/planner/lib/share";
+import { intentFromHeroParams } from "@/features/planner/lib/heroPrefill";
 
-import TripCommandBar from "@/features/planner/components/TripCommandBar";
+import TripWizard from "@/features/planner/components/wizard/TripWizard";
+import TripSummaryHeader from "@/features/planner/components/TripSummaryHeader";
 import MapView from "@/features/planner/components/MapView";
 import BudgetOverlay from "@/features/planner/components/BudgetOverlay";
 import RouteStrip from "@/features/planner/components/RouteStrip";
@@ -32,12 +35,19 @@ import BookActivityPanel, {
 import { Activity, TripIntent, TripPlan } from "@/features/planner/types";
 
 import Container from "@/components/ui/Container";
-import PageHeader from "@/components/ui/PageHeader";
-import Card from "@/components/ui/Card";
+import { fadeIn, fadeInUp, staggerChildren } from "@/components/motion";
+
+function GroupHeading({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-h3 text-[var(--fg)]">{children}</h2>;
+}
 
 function PlannerPageContent() {
   const searchParams = useSearchParams();
   const { intent, patchIntent } = useTripIntentStore();
+
+  // The page moves between answering the wizard and reviewing the plan.
+  const [phase, setPhase] = useState<"wizard" | "revealed">("wizard");
+  const [stepIndex, setStepIndex] = useState(0);
 
   const [trip, setTrip] = useState<TripPlan | null>(null);
   // The intent the current plan was generated with — replanning and sharing
@@ -57,21 +67,21 @@ function PlannerPageContent() {
     setActiveDayId(result.itinerary?.[0]?.id ?? null);
 
     setLoading(false);
+    setPhase("revealed");
   };
 
-  const generate = () => generateFrom(intent);
-
-  // First draft on load — from a shared link's intent when present, so the
-  // recipient sees the exact plan that was shared (the engine is
-  // deterministic), otherwise from the traveler's own preferences.
+  // A share link carries a full intent — regenerate that exact plan and skip
+  // the wizard (the engine is deterministic). Hero/destination links only
+  // prefill the wizard's answers; everyone else starts at step 1.
   useEffect(() => {
     const shared = intentFromShareParams(searchParams);
     if (shared) {
       patchIntent(shared);
       generateFrom(shared);
-    } else {
-      generate();
+      return;
     }
+    const prefilled = intentFromHeroParams(searchParams, intent);
+    if (prefilled) patchIntent(prefilled);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -148,79 +158,119 @@ function PlannerPageContent() {
     setBooking({ activity, dayLabel, startMin: null });
   };
 
+  const startEditing = () => {
+    setStepIndex(0);
+    setPhase("wizard");
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
       <div className="pt-28 md:pt-32 pb-20 print:p-0">
         <Container size="wide" className="space-y-6 print:space-y-0">
-          <div className="print:hidden space-y-6">
-            <PageHeader
-              title="Trip planner"
-              description="A first draft in seconds — then review, swap, and adapt it like a travel companion."
-            />
+          <div className="print:hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              {phase === "wizard" ? (
+                <motion.div
+                  key="wizard"
+                  variants={fadeIn}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
+                  className="space-y-8"
+                >
+                  <div className="text-center max-w-3xl mx-auto">
+                    <h1 className="text-h1 text-[var(--fg)]">Plan a trip</h1>
+                    <p className="text-body-lg text-[var(--muted)] mt-2">
+                      Three quick questions, then your full itinerary.
+                    </p>
+                  </div>
+                  <TripWizard
+                    stepIndex={stepIndex}
+                    onStepChange={setStepIndex}
+                    onGenerate={() => generateFrom(intent)}
+                    loading={loading}
+                    onCancel={trip ? () => setPhase("revealed") : undefined}
+                  />
+                </motion.div>
+              ) : (
+                trip &&
+                planIntent && (
+                  <motion.div
+                    key="revealed"
+                    variants={staggerChildren(0.08)}
+                    initial="hidden"
+                    animate="visible"
+                    exit={{ opacity: 0 }}
+                    className="space-y-10"
+                  >
+                    <motion.div variants={fadeInUp}>
+                      <TripSummaryHeader
+                        plan={trip}
+                        intent={planIntent}
+                        onEdit={startEditing}
+                      />
+                    </motion.div>
 
-            {/* Trip brief + generate */}
-            <TripCommandBar onGenerate={generate} loading={loading} />
+                    <motion.section variants={fadeInUp} className="space-y-4">
+                      <GroupHeading>Map & route</GroupHeading>
+                      <div className="relative">
+                        <MapView
+                          itinerary={itinerary}
+                          activeDayId={activeDayId}
+                          onSelectDay={setActiveDayId}
+                          stops={trip.stops}
+                          legs={trip.legs}
+                        />
+                        <BudgetOverlay budget={trip.budget} />
+                      </div>
+                      <RouteStrip
+                        stops={trip.stops}
+                        legs={trip.legs}
+                        itinerary={itinerary}
+                        setActiveDayId={setActiveDayId}
+                        onRemoveCity={handleRemoveCity}
+                        onAddCity={handleAddCity}
+                      />
+                    </motion.section>
 
-            {/* Engine notes */}
-            {trip && trip.notes.length > 0 && (
-              <Card padding="md" className="space-y-1">
-                {trip.notes.map((note, i) => (
-                  <p key={i} className="text-sm text-[var(--muted)]">
-                    {note}
-                  </p>
-                ))}
-              </Card>
-            )}
+                    <motion.section variants={fadeInUp} className="space-y-4">
+                      <GroupHeading>Day by day</GroupHeading>
+                      <DayTimeline
+                        itinerary={itinerary}
+                        activeDayId={activeDayId}
+                        setActiveDayId={setActiveDayId}
+                      />
+                      <DayDetails
+                        key={activeDayId ?? "no-day"}
+                        day={activeDay}
+                        stops={trip.stops}
+                        pace={planIntent.vibe.pace}
+                        budgetTier={planIntent.vibe.budget}
+                        availablePois={availablePois}
+                        onSwap={handleSwap}
+                        onRainDay={handleRainDay}
+                        onBook={bookFromDay}
+                        onRemove={handleRemoveActivity}
+                        onAdd={handleAddActivity}
+                      />
+                      <BeforeYouGo
+                        itinerary={itinerary}
+                        onBook={bookFromChecklist}
+                      />
+                    </motion.section>
 
-            {/* Full-width map with docked budget */}
-            <div className="relative">
-              <MapView
-                itinerary={itinerary}
-                activeDayId={activeDayId}
-                onSelectDay={setActiveDayId}
-                stops={trip?.stops ?? []}
-                legs={trip?.legs ?? []}
-              />
-              {trip && <BudgetOverlay budget={trip.budget} />}
-            </div>
-
-            {/* Route overview + share */}
-            <RouteStrip
-              stops={trip?.stops ?? []}
-              legs={trip?.legs ?? []}
-              itinerary={itinerary}
-              setActiveDayId={setActiveDayId}
-              onRemoveCity={handleRemoveCity}
-              onAddCity={handleAddCity}
-            />
-            {trip && planIntent && (
-              <ShareTripBar plan={trip} intent={planIntent} pace={planIntent.vibe.pace} />
-            )}
-
-            {/* Day-by-day timeline */}
-            <DayTimeline
-              itinerary={itinerary}
-              activeDayId={activeDayId}
-              setActiveDayId={setActiveDayId}
-            />
-
-            {/* Selected day — timed companion schedule */}
-            <DayDetails
-              key={activeDayId ?? "no-day"}
-              day={activeDay}
-              stops={trip?.stops ?? []}
-              pace={planIntent?.vibe.pace ?? "balanced"}
-              budgetTier={planIntent?.vibe.budget ?? "comfort"}
-              availablePois={availablePois}
-              onSwap={handleSwap}
-              onRainDay={handleRainDay}
-              onBook={bookFromDay}
-              onRemove={handleRemoveActivity}
-              onAdd={handleAddActivity}
-            />
-
-            {/* Trip-wide booking checklist */}
-            <BeforeYouGo itinerary={itinerary} onBook={bookFromChecklist} />
+                    <motion.section variants={fadeInUp} className="space-y-4">
+                      <GroupHeading>Share & export</GroupHeading>
+                      <ShareTripBar
+                        plan={trip}
+                        intent={planIntent}
+                        pace={planIntent.vibe.pace}
+                      />
+                    </motion.section>
+                  </motion.div>
+                )
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Print / PDF layout */}
