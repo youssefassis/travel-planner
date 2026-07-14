@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Compass } from "lucide-react";
+import { ArrowRight, Compass } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "@/components/ui/Button";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAVIGATION = [
   { href: "/", label: "Discover" },
@@ -37,14 +38,12 @@ export default function Header() {
     <header
       className={`
         fixed left-1/2 -translate-x-1/2 top-4 z-50
-        w-[92%] max-w-[1100px] rounded-full border
+        w-[92%] max-w-[1200px] rounded-full border
         transition-all duration-base
         ${isScrolled ? "border-[var(--border)]" : "border-transparent"}
       `}
       style={{
-        background: isScrolled
-          ? "rgba(251, 248, 245, 0.92)"
-          : "rgba(251, 248, 245, 0.65)",
+        background: isScrolled ? "var(--header-bg-scrolled)" : "var(--header-bg)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
       }}
@@ -102,39 +101,43 @@ export default function Header() {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           <Button
             onClick={() => router.push("/planner")}
             variant="primary"
             size="md"
-            icon="→"
+            icon={<ArrowRight className="w-4 h-4" />}
             iconPosition="right"
           >
             Plan a trip
           </Button>
         </div>
 
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden w-8 h-8 flex items-center justify-center"
-          aria-label="Toggle navigation menu"
-          aria-expanded={isMenuOpen}
-        >
-          <span
-            className={`absolute h-[1.5px] w-5 bg-current transition-transform duration-base ${
-              isMenuOpen ? "rotate-45" : "-translate-y-1.5"
-            }`}
-          />
-          <span
-            className={`absolute h-[1.5px] w-5 bg-current transition-opacity duration-base ${
-              isMenuOpen ? "opacity-0" : "opacity-100"
-            }`}
-          />
-          <span
-            className={`absolute h-[1.5px] w-5 bg-current transition-transform duration-base ${
-              isMenuOpen ? "-rotate-45" : "translate-y-1.5"
-            }`}
-          />
-        </button>
+        <div className="md:hidden flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="relative w-8 h-8 flex items-center justify-center"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMenuOpen}
+          >
+            <span
+              className={`absolute h-[1.5px] w-5 bg-current transition-transform duration-base ${
+                isMenuOpen ? "rotate-45" : "-translate-y-1.5"
+              }`}
+            />
+            <span
+              className={`absolute h-[1.5px] w-5 bg-current transition-opacity duration-base ${
+                isMenuOpen ? "opacity-0" : "opacity-100"
+              }`}
+            />
+            <span
+              className={`absolute h-[1.5px] w-5 bg-current transition-transform duration-base ${
+                isMenuOpen ? "-rotate-45" : "translate-y-1.5"
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       <div
@@ -180,7 +183,7 @@ export default function Header() {
               }}
               variant="primary"
               size="md"
-              icon="→"
+              icon={<ArrowRight className="w-4 h-4" />}
               iconPosition="right"
             >
               Plan a trip
