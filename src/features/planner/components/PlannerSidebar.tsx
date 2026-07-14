@@ -2,6 +2,9 @@
 
 import { motion } from "framer-motion";
 import { useTripIntentStore } from "../store/tripIntentStore";
+import { CITIES, citiesByCountry } from "@/domain/cities";
+import { BudgetTier, Climate, Interest, Pace, Region } from "@/domain/types";
+import { TripIntent, TripMode } from "../types";
 
 const FilterCard = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <motion.div
@@ -18,12 +21,10 @@ const FilterCard = ({ label, children }: { label: string; children: React.ReactN
 
 const SegmentButton = ({
   label,
-  value,
   selected,
   onClick,
 }: {
   label: string;
-  value: string;
   selected: boolean;
   onClick: () => void;
 }) => (
@@ -39,11 +40,93 @@ const SegmentButton = ({
   </button>
 );
 
-export default function PlannerSidebar() {
+const MODE_OPTIONS: { label: string; value: TripMode }[] = [
+  { label: "Surprise me", value: "surprise" },
+  { label: "Pick my cities", value: "custom" },
+];
+
+const COMPANION_OPTIONS: { label: string; value: TripIntent["companions"] }[] = [
+  { label: "Solo", value: "solo" },
+  { label: "Couple", value: "couple" },
+  { label: "Group", value: "group" },
+];
+
+const PACE_OPTIONS: { label: string; value: Pace }[] = [
+  { label: "Chill", value: "chill" },
+  { label: "Balanced", value: "balanced" },
+  { label: "Intense", value: "intense" },
+];
+
+const BUDGET_OPTIONS: { label: string; value: BudgetTier }[] = [
+  { label: "Backpacker", value: "backpacker" },
+  { label: "Comfort", value: "comfort" },
+  { label: "Luxury", value: "luxury" },
+];
+
+const INTEREST_OPTIONS: Interest[] = [
+  "culture",
+  "food",
+  "nature",
+  "nightlife",
+  "beach",
+  "history",
+  "art",
+  "adventure",
+];
+
+const CLIMATE_OPTIONS: Climate[] = ["cold", "temperate", "warm"];
+
+const REGION_OPTIONS: Region[] = [
+  "iberia",
+  "france",
+  "british-isles",
+  "benelux",
+  "central",
+  "italy",
+  "nordics",
+  "balkans",
+  "east",
+];
+
+const SORTED_CITIES = [...CITIES].sort((a, b) => a.name.localeCompare(b.name));
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export default function PlannerSidebar({
+  onGenerate,
+  loading,
+}: {
+  onGenerate: () => void;
+  loading: boolean;
+}) {
   const { intent, patchIntent } = useTripIntentStore();
 
   const companions = intent.companions || "solo";
   const pace = intent.vibe?.pace || "balanced";
+  const budget = intent.vibe?.budget || "comfort";
+  const interests = intent.interests ?? [];
+  const citiesByCountryMap = citiesByCountry();
+  const countries = Object.keys(citiesByCountryMap).sort((a, b) => a.localeCompare(b));
+
+  const toggleInterest = (interest: Interest) => {
+    const next = interests.includes(interest)
+      ? interests.filter((i) => i !== interest)
+      : [...interests, interest];
+    patchIntent({ interests: next });
+  };
+
+  const toggleCity = (cityId: string) => {
+    const selected = intent.selectedCityIds ?? [];
+    const next = selected.includes(cityId)
+      ? selected.filter((id) => id !== cityId)
+      : [...selected, cityId];
+    patchIntent({ selectedCityIds: next });
+  };
+
+  const generateDisabled =
+    loading || (intent.mode === "custom" && intent.selectedCityIds.length === 0);
 
   return (
     <aside className="h-fit sticky top-24 space-y-4">
@@ -62,6 +145,35 @@ export default function PlannerSidebar() {
         </div>
       </motion.div>
 
+      {/* Mode */}
+      <FilterCard label="Trip Mode">
+        <div className="flex gap-2">
+          {MODE_OPTIONS.map((option) => (
+            <SegmentButton
+              key={option.value}
+              label={option.label}
+              selected={intent.mode === option.value}
+              onClick={() => patchIntent({ mode: option.value })}
+            />
+          ))}
+        </div>
+      </FilterCard>
+
+      {/* Origin city */}
+      <FilterCard label="Origin City">
+        <select
+          value={intent.originCityId}
+          onChange={(e) => patchIntent({ originCityId: e.target.value })}
+          className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+        >
+          {SORTED_CITIES.map((city) => (
+            <option key={city.id} value={city.id}>
+              {city.name}, {city.country}
+            </option>
+          ))}
+        </select>
+      </FilterCard>
+
       {/* Duration */}
       <FilterCard label="Trip Duration">
         <div className="space-y-3">
@@ -70,7 +182,7 @@ export default function PlannerSidebar() {
             min="1"
             max="30"
             value={intent.duration ?? 5}
-            onChange={(e) => patchIntent({ ...intent, duration: Number(e.target.value) })}
+            onChange={(e) => patchIntent({ duration: Number(e.target.value) })}
             className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
           />
           <p className="text-sm text-[var(--muted)]">{intent.duration ?? 5} days</p>
@@ -80,17 +192,12 @@ export default function PlannerSidebar() {
       {/* Companions */}
       <FilterCard label="Travel Style">
         <div className="flex gap-2">
-          {[
-            { label: "Solo", value: "solo" },
-            { label: "Couple", value: "couple" },
-            { label: "Group", value: "group" },
-          ].map((option) => (
+          {COMPANION_OPTIONS.map((option) => (
             <SegmentButton
               key={option.value}
               label={option.label}
-              value={option.value}
               selected={companions === option.value}
-              onClick={() => patchIntent({ ...intent, companions: option.value as any })}
+              onClick={() => patchIntent({ companions: option.value })}
             />
           ))}
         </div>
@@ -99,20 +206,14 @@ export default function PlannerSidebar() {
       {/* Pace */}
       <FilterCard label="Travel Pace">
         <div className="flex gap-2">
-          {[
-            { label: "Chill", value: "chill" },
-            { label: "Balanced", value: "balanced" },
-            { label: "Intense", value: "intense" },
-          ].map((option) => (
+          {PACE_OPTIONS.map((option) => (
             <SegmentButton
               key={option.value}
               label={option.label}
-              value={option.value}
               selected={pace === option.value}
               onClick={() =>
                 patchIntent({
-                  ...intent,
-                  vibe: { ...intent.vibe, pace: option.value as any },
+                  vibe: { ...intent.vibe, pace: option.value },
                 })
               }
             />
@@ -120,13 +221,127 @@ export default function PlannerSidebar() {
         </div>
       </FilterCard>
 
+      {/* Budget */}
+      <FilterCard label="Budget Tier">
+        <div className="flex gap-2">
+          {BUDGET_OPTIONS.map((option) => (
+            <SegmentButton
+              key={option.value}
+              label={option.label}
+              selected={budget === option.value}
+              onClick={() =>
+                patchIntent({
+                  vibe: { ...intent.vibe, budget: option.value },
+                })
+              }
+            />
+          ))}
+        </div>
+      </FilterCard>
+
+      {/* Interests */}
+      <FilterCard label="Interests">
+        <div className="flex flex-wrap gap-2">
+          {INTEREST_OPTIONS.map((interest) => {
+            const selected = interests.includes(interest);
+            return (
+              <button
+                key={interest}
+                onClick={() => toggleInterest(interest)}
+                className={`py-1.5 px-3 rounded-full font-medium transition-all text-xs ${
+                  selected
+                    ? "bg-[var(--primary)] text-white shadow-md"
+                    : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
+                }`}
+              >
+                {capitalize(interest)}
+              </button>
+            );
+          })}
+        </div>
+      </FilterCard>
+
+      {/* Climate + Region (surprise mode only) */}
+      {intent.mode === "surprise" && (
+        <>
+          <FilterCard label="Climate">
+            <select
+              value={intent.vibe?.climate ?? "any"}
+              onChange={(e) =>
+                patchIntent({
+                  vibe: { ...intent.vibe, climate: e.target.value as Climate | "any" },
+                })
+              }
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+            >
+              <option value="any">Any</option>
+              {CLIMATE_OPTIONS.map((climate) => (
+                <option key={climate} value={climate}>
+                  {capitalize(climate)}
+                </option>
+              ))}
+            </select>
+          </FilterCard>
+
+          <FilterCard label="Region">
+            <select
+              value={intent.region ?? "any"}
+              onChange={(e) => patchIntent({ region: e.target.value as Region | "any" })}
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+            >
+              <option value="any">Any</option>
+              {REGION_OPTIONS.map((region) => (
+                <option key={region} value={region}>
+                  {capitalize(region)}
+                </option>
+              ))}
+            </select>
+          </FilterCard>
+        </>
+      )}
+
+      {/* City picker (custom mode only) */}
+      {intent.mode === "custom" && (
+        <FilterCard label="Cities">
+          <div className="max-h-64 overflow-y-auto space-y-4 pr-1">
+            {countries.map((country) => (
+              <div key={country}>
+                <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">
+                  {country}
+                </p>
+                <div className="space-y-1.5">
+                  {citiesByCountryMap[country].map((city) => (
+                    <label
+                      key={city.id}
+                      className="flex items-center gap-2 text-sm text-[var(--fg)] cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={intent.selectedCityIds.includes(city.id)}
+                        onChange={() => toggleCity(city.id)}
+                        className="accent-[var(--primary)]"
+                      />
+                      {city.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </FilterCard>
+      )}
+
       {/* CTA Button */}
       <motion.button
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full mt-8 btn btn-primary text-white font-semibold py-3 shadow-lg"
+        whileHover={generateDisabled ? undefined : { y: -2 }}
+        whileTap={generateDisabled ? undefined : { scale: 0.98 }}
+        onClick={onGenerate}
+        disabled={generateDisabled}
+        className={`w-full mt-8 btn btn-primary text-white font-semibold py-3 shadow-lg ${
+          generateDisabled ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       >
-        Generate Itinerary
+        {loading ? "Generating..." : "Generate Itinerary"}
       </motion.button>
     </aside>
   );
