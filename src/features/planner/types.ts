@@ -59,6 +59,8 @@ export type ScheduleItem =
       startMin: number;
       endMin: number;
       label: "Lunch" | "Dinner";
+      /** The plan's restaurant for this meal; undefined = traveler's choice. */
+      activity?: Activity;
     };
 
 export type DayLoad = "relaxed" | "balanced" | "packed";

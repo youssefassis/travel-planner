@@ -88,6 +88,69 @@ describe("buildDaySchedule", () => {
   });
 });
 
+describe("meal + nightlife integration", () => {
+  it("uses a cheap food stop as the lunch venue instead of a daytime visit", () => {
+    const schedule = buildDaySchedule(
+      day([
+        activity({ id: "sight", category: "sight" }),
+        activity({ id: "cafe", category: "food", price: 15, durationHrs: 1.5 }),
+      ]),
+      "balanced"
+    );
+    const lunch = schedule.items.find((i) => i.kind === "meal" && i.label === "Lunch");
+    expect(lunch?.kind === "meal" && lunch.activity?.id).toBe("cafe");
+    // The café must not also appear as a regular daytime stop.
+    const asActivity = schedule.items.filter(
+      (i) => i.kind === "activity" && i.activity.id === "cafe"
+    );
+    expect(asActivity).toHaveLength(0);
+    expect(lunch!.startMin).toBeGreaterThanOrEqual(LUNCH.earliestMin);
+  });
+
+  it("sends an expensive restaurant to dinner and keeps lunch generic", () => {
+    const schedule = buildDaySchedule(
+      day([
+        activity({ id: "sight", category: "sight" }),
+        activity({ id: "resto", category: "food", price: 40, durationHrs: 1.5 }),
+      ]),
+      "balanced"
+    );
+    const lunch = schedule.items.find((i) => i.kind === "meal" && i.label === "Lunch");
+    const dinner = schedule.items.find((i) => i.kind === "meal" && i.label === "Dinner");
+    expect(lunch?.kind === "meal" && lunch.activity).toBeUndefined();
+    expect(dinner?.kind === "meal" && dinner.activity?.id).toBe("resto");
+  });
+
+  it("splits two restaurants: cheaper to lunch, pricier to dinner", () => {
+    const schedule = buildDaySchedule(
+      day([
+        activity({ id: "cafe", category: "food", price: 12 }),
+        activity({ id: "resto", category: "food", price: 45 }),
+      ]),
+      "balanced"
+    );
+    const lunch = schedule.items.find((i) => i.kind === "meal" && i.label === "Lunch");
+    const dinner = schedule.items.find((i) => i.kind === "meal" && i.label === "Dinner");
+    expect(lunch?.kind === "meal" && lunch.activity?.id).toBe("cafe");
+    expect(dinner?.kind === "meal" && dinner.activity?.id).toBe("resto");
+  });
+
+  it("schedules nightlife after dinner, never in the morning", () => {
+    const schedule = buildDaySchedule(
+      day([
+        activity({ id: "bar", category: "nightlife", durationHrs: 2 }),
+        activity({ id: "sight", category: "sight" }),
+      ]),
+      "balanced"
+    );
+    const bar = schedule.items.find(
+      (i) => i.kind === "activity" && i.activity.id === "bar"
+    );
+    const dinner = schedule.items.find((i) => i.kind === "meal" && i.label === "Dinner");
+    expect(bar!.startMin).toBeGreaterThanOrEqual(dinner!.endMin);
+  });
+});
+
 describe("formatClock", () => {
   it("formats minutes since midnight as 12h clock", () => {
     expect(formatClock(570)).toBe("9:30 AM");
