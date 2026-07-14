@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import FlightSearch, {
   FlightSearchFormData,
+  StopsPreference,
 } from "@/features/flights/components/FlightSearch";
 import { searchFlights } from "@/features/flights/lib/searchFlights";
 import { FlightOption } from "@/features/flights/types";
@@ -12,7 +13,16 @@ import { getCity } from "@/domain/cities";
 import Container from "@/components/ui/Container";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import { fadeInUp, staggerChildren } from "@/components/motion";
+
+type SortBy = "price" | "duration" | "departure";
+
+const SORT_OPTIONS: { label: string; value: SortBy }[] = [
+  { label: "Cheapest", value: "price" },
+  { label: "Fastest", value: "duration" },
+  { label: "Earliest", value: "departure" },
+];
 
 function formatDuration(durationHrs: number): string {
   const hours = Math.floor(durationHrs);
@@ -24,7 +34,22 @@ function stopsLabel(stops: FlightOption["stops"]): string {
   return stops === 0 ? "Direct" : `${stops} stop${stops > 1 ? "s" : ""}`;
 }
 
-const FlightCard = ({ flight }: { flight: FlightOption }) => (
+/** "6:30 AM" → minutes since midnight, for departure sorting. */
+function departureMinutes(time: string): number {
+  const match = time.match(/(\d+):(\d+)\s*(AM|PM)/);
+  if (!match) return 0;
+  const [, h, m, period] = match;
+  const hours = (parseInt(h, 10) % 12) + (period === "PM" ? 12 : 0);
+  return hours * 60 + parseInt(m, 10);
+}
+
+const FlightCard = ({
+  flight,
+  travelers,
+}: {
+  flight: FlightOption;
+  travelers: number;
+}) => (
   <motion.div
     variants={fadeInUp}
     whileHover={{ y: -2 }}
@@ -72,6 +97,11 @@ const FlightCard = ({ flight }: { flight: FlightOption }) => (
           <p className="text-3xl font-serif font-bold text-[var(--primary)]">
             €{flight.price}
           </p>
+          {travelers > 1 && (
+            <p className="text-xs text-[var(--muted)] mt-1">
+              €{flight.price * travelers} total for {travelers} travelers
+            </p>
+          )}
         </div>
         <Button size="md">Book Now</Button>
       </div>
@@ -93,10 +123,29 @@ function FlightsPageContent() {
       ? searchFlights(initialFrom, initialTo)
       : null
   );
+  const [travelers, setTravelers] = useState(1);
+  const [stops, setStops] = useState<StopsPreference>("any");
+  const [sortBy, setSortBy] = useState<SortBy>("price");
 
-  const handleSearch = ({ fromCityId, toCityId }: FlightSearchFormData) => {
-    setSearchResults(searchFlights(fromCityId, toCityId));
+  const handleSearch = (data: FlightSearchFormData) => {
+    setSearchResults(searchFlights(data.fromCityId, data.toCityId));
+    setTravelers(data.travelers);
+    setStops(data.stops);
   };
+
+  const visibleResults = useMemo(() => {
+    if (!searchResults) return null;
+    const filtered =
+      stops === "direct"
+        ? searchResults.filter((f) => f.stops === 0)
+        : searchResults;
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "duration") return a.durationHrs - b.durationHrs;
+      if (sortBy === "departure")
+        return departureMinutes(a.departureTime) - departureMinutes(b.departureTime);
+      return a.price - b.price;
+    });
+  }, [searchResults, stops, sortBy]);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
@@ -118,37 +167,55 @@ function FlightsPageContent() {
           </div>
 
           {/* Results */}
-          {searchResults && searchResults.length > 0 && (
+          {visibleResults && visibleResults.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <h2 className="text-h2 text-[var(--fg)] mb-6">Available Flights</h2>
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <h2 className="text-h2 text-[var(--fg)]">
+                  Available Flights
+                  <span className="ml-3 text-small font-sans text-[var(--muted)]">
+                    {visibleResults.length}{" "}
+                    {visibleResults.length === 1 ? "option" : "options"}
+                  </span>
+                </h2>
+                <div className="w-full sm:w-auto sm:min-w-[300px]">
+                  <SegmentedControl
+                    options={SORT_OPTIONS}
+                    value={sortBy}
+                    onChange={setSortBy}
+                  />
+                </div>
+              </div>
               <motion.div
+                key={`${sortBy}-${stops}`}
                 className="space-y-4"
                 initial="hidden"
                 animate="visible"
                 variants={staggerChildren(0.06)}
               >
-                {searchResults.map((flight) => (
-                  <FlightCard key={flight.id} flight={flight} />
+                {visibleResults.map((flight) => (
+                  <FlightCard key={flight.id} flight={flight} travelers={travelers} />
                 ))}
               </motion.div>
             </motion.div>
           )}
 
           {/* No results */}
-          {searchResults && searchResults.length === 0 && (
+          {visibleResults && visibleResults.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center py-16"
             >
               <p className="text-[var(--muted)] text-lg">
-                No flights found for this route. Try different cities.
+                {stops === "direct" && searchResults && searchResults.length > 0
+                  ? "No direct flights on this route — try allowing stops."
+                  : "No flights found for this route. Try different cities."}
               </p>
             </motion.div>
           )}
 
           {/* Empty State */}
-          {!searchResults && (
+          {!visibleResults && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
