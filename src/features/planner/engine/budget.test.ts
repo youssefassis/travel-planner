@@ -42,11 +42,15 @@ function dayPlan(id: string, cityId: string, city: string, prices: number[]): It
     activities: prices.map((price, i) => ({
       id: `${id}-act-${i}`,
       name: `Activity ${i}`,
-      category: "sight",
+      category: "sight" as const,
       price,
       location: { lat: 0, lng: 0 },
       cityId,
       city,
+      durationHrs: 1.5,
+      mustSee: false,
+      bookAhead: false,
+      why: "test",
     })),
   };
 }

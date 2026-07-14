@@ -1,6 +1,12 @@
 import { City, Poi, PoiCategory } from "@/domain/types";
+import { distanceKm } from "@/domain/geo";
 import { Activity, ItineraryDay, TripIntent } from "../types";
-import { ACTIVITIES_PER_DAY, CATEGORY_TO_INTERESTS } from "./constants";
+import {
+  ACTIVITIES_PER_DAY,
+  BOOK_AHEAD_PRICE,
+  CATEGORY_TO_INTERESTS,
+  DURATION_BY_CATEGORY,
+} from "./constants";
 
 function matchesInterests(category: PoiCategory, intent: TripIntent): boolean {
   return CATEGORY_TO_INTERESTS[category].some((i) => intent.interests.includes(i));
@@ -21,7 +27,22 @@ function rankPois(pois: Poi[], intent: TripIntent): Poi[] {
   });
 }
 
-function toActivity(poi: Poi, city: City): Activity {
+function buildWhy(poi: Poi, intent: TripIntent, mustSee: boolean): string {
+  const matched = CATEGORY_TO_INTERESTS[poi.category].filter((i) =>
+    intent.interests.includes(i)
+  );
+  if (matched.length > 0) {
+    return `Matches your ${matched.join(" and ")} interest${matched.length > 1 ? "s" : ""}`;
+  }
+  return mustSee ? "A city highlight most visitors rate" : "Rounds out the day nearby";
+}
+
+export function toActivity(
+  poi: Poi,
+  city: City,
+  intent: TripIntent,
+  mustSee: boolean
+): Activity {
   return {
     id: poi.id,
     name: poi.name,
@@ -30,6 +51,10 @@ function toActivity(poi: Poi, city: City): Activity {
     location: poi.coords,
     cityId: city.id,
     city: city.name,
+    durationHrs: DURATION_BY_CATEGORY[poi.category],
+    mustSee,
+    bookAhead: poi.price >= BOOK_AHEAD_PRICE || poi.category === "museum",
+    why: buildWhy(poi, intent, mustSee),
   };
 }
 
@@ -42,6 +67,10 @@ function fillerActivity(city: City, dayIndex: number, slot: number): Activity {
     location: city.coords,
     cityId: city.id,
     city: city.name,
+    durationHrs: 1.5,
+    mustSee: false,
+    bookAhead: false,
+    why: "Free time to wander wherever looks inviting",
   };
 }
 
@@ -54,6 +83,34 @@ function pickNextPoi(ranked: Poi[], used: Set<string>, usedCategoriesToday: Set<
   return unused.find((p) => !usedCategoriesToday.has(p.category)) ?? unused[0];
 }
 
+/**
+ * Orders a day's activities geographically (nearest-neighbor from the city
+ * center) so the traveler never backtracks across town.
+ */
+export function orderDayActivities(activities: Activity[], city: City): Activity[] {
+  if (activities.length <= 2) return activities;
+  const remaining = [...activities];
+  const ordered: Activity[] = [];
+  let cursor = city.coords;
+
+  while (remaining.length > 0) {
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < remaining.length; i++) {
+      const d = distanceKm(cursor, remaining[i].location);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    }
+    const next = remaining.splice(bestIdx, 1)[0];
+    ordered.push(next);
+    cursor = next.location;
+  }
+
+  return ordered;
+}
+
 export function buildCityDayPlans(
   city: City,
   days: number,
@@ -62,6 +119,12 @@ export function buildCityDayPlans(
 ): ItineraryDay[] {
   const perDay = ACTIVITIES_PER_DAY[intent.vibe.pace];
   const ranked = rankPois(city.pois, intent);
+  // The top interest-matched POIs across the stay are the must-sees —
+  // roughly one per day. With no stated interests, the city's top-ranked
+  // highlights take that role instead.
+  const interestMatched = ranked.filter((p) => matchesInterests(p.category, intent));
+  const mustSeePool = interestMatched.length > 0 ? interestMatched : ranked;
+  const mustSeeIds = new Set(mustSeePool.slice(0, days).map((p) => p.id));
   const used = new Set<string>();
 
   const dayActivities: Activity[][] = Array.from({ length: days }, () => []);
@@ -73,7 +136,7 @@ export function buildCityDayPlans(
       if (poi) {
         used.add(poi.id);
         dayCategories[d].add(poi.category);
-        dayActivities[d].push(toActivity(poi, city));
+        dayActivities[d].push(toActivity(poi, city, intent, mustSeeIds.has(poi.id)));
       } else {
         dayActivities[d].push(fillerActivity(city, startDayIndex + d, slot));
       }
@@ -87,7 +150,7 @@ export function buildCityDayPlans(
       label: `Day ${dayIndex}`,
       cityId: city.id,
       city: city.name,
-      activities,
+      activities: orderDayActivities(activities, city),
     };
   });
 }
