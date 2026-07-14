@@ -33,7 +33,10 @@ export function computeBudget(
   const transport = Math.round(legs.reduce((sum, l) => sum + l.cost, 0));
 
   const total = stays + food + activities + transport;
-  const perDay = Math.round(total / intent.duration);
+  // Actual trip length, not intent.duration — plan edits (adding or
+  // removing a city) can change how many days the trip really has.
+  const days = stops.reduce((sum, s) => sum + s.days, 0);
+  const perDay = days > 0 ? Math.round(total / days) : 0;
 
   return { transport, stays, activities, food, total, perDay };
 }
