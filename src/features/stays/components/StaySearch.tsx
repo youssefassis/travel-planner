@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { BudgetTier } from "@/domain/types";
-import { CITIES } from "@/domain/cities";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import { fadeInUp } from "@/components/motion";
 
 export type StaySearchFormData = {
@@ -36,11 +36,6 @@ export default function StaySearch({
     initialNights !== undefined ? String(initialNights) : ""
   );
 
-  const sortedCities = useMemo(
-    () => [...CITIES].sort((a, b) => a.name.localeCompare(b.name)),
-    []
-  );
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!cityId) return;
@@ -63,20 +58,12 @@ export default function StaySearch({
             <label htmlFor="stay-city" className="text-caption text-[var(--fg)] block mb-2">
               City
             </label>
-            <select
+            <CityAutocomplete
               id="stay-city"
-              name="city"
               value={cityId}
-              onChange={(e) => setCityId(e.target.value)}
-              className={fieldClasses}
-            >
-              <option value="">Where to?</option>
-              {sortedCities.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.name}, {city.country}
-                </option>
-              ))}
-            </select>
+              onChange={setCityId}
+              placeholder="Where to?"
+            />
           </div>
 
           {/* Budget */}

@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { CITIES } from "@/domain/cities";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import { fadeInUp } from "@/components/motion";
 
 export type FlightSearchFormData = {
@@ -18,9 +18,6 @@ type Props = {
   onSearch: (data: FlightSearchFormData) => void;
 };
 
-const selectClasses =
-  "w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] cursor-pointer focus:outline-none focus:border-[var(--primary)] text-sm";
-
 export default function FlightSearch({
   initialFromCityId = "",
   initialToCityId = "",
@@ -28,11 +25,6 @@ export default function FlightSearch({
 }: Props) {
   const [fromCityId, setFromCityId] = useState(initialFromCityId);
   const [toCityId, setToCityId] = useState(initialToCityId);
-
-  const sortedCities = useMemo(
-    () => [...CITIES].sort((a, b) => a.name.localeCompare(b.name)),
-    []
-  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,20 +44,12 @@ export default function FlightSearch({
             <label htmlFor="flight-from" className="text-caption text-[var(--fg)] block mb-2">
               From
             </label>
-            <select
+            <CityAutocomplete
               id="flight-from"
-              name="from"
               value={fromCityId}
-              onChange={(e) => setFromCityId(e.target.value)}
-              className={selectClasses}
-            >
-              <option value="">Departure city</option>
-              {sortedCities.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.name}, {city.country}
-                </option>
-              ))}
-            </select>
+              onChange={setFromCityId}
+              placeholder="Departure city"
+            />
           </div>
 
           {/* To */}
@@ -73,20 +57,12 @@ export default function FlightSearch({
             <label htmlFor="flight-to" className="text-caption text-[var(--fg)] block mb-2">
               To
             </label>
-            <select
+            <CityAutocomplete
               id="flight-to"
-              name="to"
               value={toCityId}
-              onChange={(e) => setToCityId(e.target.value)}
-              className={selectClasses}
-            >
-              <option value="">Destination city</option>
-              {sortedCities.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.name}, {city.country}
-                </option>
-              ))}
-            </select>
+              onChange={setToCityId}
+              placeholder="Destination city"
+            />
           </div>
         </div>
 
