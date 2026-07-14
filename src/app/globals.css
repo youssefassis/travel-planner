@@ -27,7 +27,12 @@
 
   /* Gradients */
   --gradient-brand: linear-gradient(135deg, #e7651c 0%, #6d5dfc 100%);
+  --gradient-hero: linear-gradient(135deg, #e7651c 0%, #c94d17 45%, #6d5dfc 100%);
   --gradient-warm: linear-gradient(145deg, #fffaf6, #f6f1ff);
+
+  /* Header (frosted pill) */
+  --header-bg: rgba(251, 248, 245, 0.65);
+  --header-bg-scrolled: rgba(251, 248, 245, 0.92);
 
   /* Radius */
   --radius-sm: 8px;
@@ -93,7 +98,11 @@
   --accent-dark: #6d5dfc;
 
   --gradient-brand: linear-gradient(135deg, #f07a3a 0%, #8b7cff 100%);
+  --gradient-hero: linear-gradient(135deg, #f07a3a 0%, #d15a20 45%, #8b7cff 100%);
   --gradient-warm: linear-gradient(145deg, #2a2218, #3b2f52);
+
+  --header-bg: rgba(15, 12, 8, 0.6);
+  --header-bg-scrolled: rgba(15, 12, 8, 0.88);
 
   --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 6px 14px rgba(0, 0, 0, 0.35);
@@ -119,7 +128,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
-  line-height: 1.7;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition:
@@ -128,55 +137,66 @@ body {
 }
 
 /* =========================
-   TYPOGRAPHY
+   TYPE SCALE
+   Semantic tags stay free: any heading element can wear any
+   scale class (e.g. an <h2> styled with .text-h1).
 ========================= */
-h1 {
+.text-display {
   font-family: var(--font-serif);
-  font-size: 2.4rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: clamp(2.75rem, 2rem + 3.5vw, 4.5rem);
+  line-height: 1.05;
   letter-spacing: -0.02em;
-  line-height: 1.15;
-  margin-bottom: var(--space-4);
 }
 
-h2 {
+.text-h1 {
   font-family: var(--font-serif);
-  font-size: 1.9rem;
-  font-weight: 600;
-  line-height: 1.25;
-  margin-bottom: var(--space-3);
+  font-weight: 700;
+  font-size: clamp(2.25rem, 1.8rem + 2.2vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-h3 {
-  font-family: var(--font-sans);
-  font-size: 1.35rem;
+.text-h2 {
+  font-family: var(--font-serif);
   font-weight: 600;
-  margin-bottom: var(--space-2);
+  font-size: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
-h4,
-h5,
-h6 {
+.text-h3 {
   font-family: var(--font-sans);
-  font-weight: 500;
-  margin-bottom: var(--space-2);
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: 1.35;
+}
+
+.text-body-lg {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.text-small {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.text-caption {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 p {
   margin: 0;
-  line-height: 1.7;
-}
-
-@media (max-width: 768px) {
-  h1 {
-    font-size: 1.9rem;
-  }
-  h2 {
-    font-size: 1.5rem;
-  }
-  h3 {
-    font-size: 1.2rem;
-  }
 }
 
 /* Selection */
@@ -188,6 +208,10 @@ p {
 /* =========================
    COMPONENTS
 ========================= */
+
+/* DEPRECATED — .card and .btn/.btn-primary are being replaced by the
+   Card and Button components in src/components/ui/. Removed once the
+   last consumers migrate (design wave 2). Do not add new usages. */
 
 /* Cards */
 .card {
@@ -204,21 +228,6 @@ p {
 
 .card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.card-subtle {
-  background: var(--card-subtle);
-  border-color: var(--border);
-}
-
-.card-brand {
-  background: var(--card);
-  border: 1px solid rgba(231, 101, 28, 0.25);
-  box-shadow: var(--shadow-primary);
-}
-
-.card-brand:hover {
   transform: translateY(-2px);
 }
 
@@ -263,7 +272,7 @@ textarea,
 select {
   background: var(--card-subtle);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   color: var(--fg);
   font-family: inherit;
@@ -277,16 +286,6 @@ select:focus {
   background: var(--card);
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(231, 101, 28, 0.12);
-}
-
-/* Badge */
-.badge {
-  padding: 4px 10px;
-  background: var(--accent-light);
-  color: #fff;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 /* =========================
@@ -303,16 +302,6 @@ select:focus {
 }
 .shadow-xl {
   box-shadow: var(--shadow-xl);
-}
-
-.gradient-text {
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-.space-y-md > * + * {
-  margin-top: var(--space-4);
 }
 
 /* Scroll */
@@ -337,4 +326,14 @@ select:focus {
 
 .animate-marquee {
   animation: marquee 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-marquee {
+    animation: none;
+  }
 }
