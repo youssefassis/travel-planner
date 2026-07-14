@@ -75,7 +75,7 @@ export default function HowItWorksSection() {
 
   return (
     <Section size="md" className="bg-[var(--card-subtle)]">
-      <Container>
+      <Container size="wide">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

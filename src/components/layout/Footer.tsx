@@ -47,7 +47,7 @@ export default function Footer() {
         </span>
       </div>
 
-      <Container className="relative z-10">
+      <Container size="wide" className="relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
           <div className="md:col-span-5 flex flex-col gap-5">
             <Link
