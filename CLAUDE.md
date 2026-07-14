@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Development
-- `npm run dev` — Start the Next.js dev server on http://localhost:3000 (Turbopack). Requires `NEXT_PUBLIC_MAPBOX_TOKEN` in `.env.local` for the planner's map to render.
+- `npm run dev` — Start the Next.js dev server on http://localhost:3000 (Turbopack). The planner map needs no API key (MapLibre + free OpenFreeMap tiles).
 - `npm run build` — Build the production bundle.
 - `npm start` — Start the production server.
 - `npm run lint` — Run ESLint (no auto-fix). Keep this at zero errors/warnings; never grow the baseline.
@@ -21,7 +21,7 @@ Wanderly is an AI-styled (currently rule-based, no LLM) travel planning app buil
 2. **Flights** (`/flights`) — standalone flight search over the same city dataset.
 3. **Stays** (`/stays`) — standalone accommodation search over the same city dataset.
 
-**Key technologies:** Next.js 16 (App Router) · React 19 · TypeScript (strict) · Zustand · Mapbox GL + Mapbox SDK · Framer Motion · Tailwind CSS v4 · Vitest.
+**Key technologies:** Next.js 16 (App Router) · React 19 · TypeScript (strict) · Zustand · MapLibre GL (OpenFreeMap tiles, no API key) · Framer Motion · Tailwind CSS v4 · Vitest.
 
 ### Layering rule — read this before adding a file
 
@@ -39,7 +39,7 @@ components/  (importable by app and any feature)
 
 #### `/src/domain/` — Shared domain layer (no React, no feature imports)
 - `types.ts` — `Coordinates`, `BudgetTier`, `Pace`, `Climate`, `Interest`, `Region`, `PoiCategory`, `Poi`, `City`.
-- `geo.ts` — `distanceKm(a, b)` (Haversine, km) and `toLngLat(c)`. The app's coordinate convention is `{ lat, lng }` **everywhere**; `[lng, lat]` tuples exist only at the Mapbox boundary, produced by `toLngLat`. Don't reintroduce raw tuple indexing.
+- `geo.ts` — `distanceKm(a, b)` (Haversine, km) and `toLngLat(c)`. The app's coordinate convention is `{ lat, lng }` **everywhere**; `[lng, lat]` tuples exist only at the MapLibre boundary, produced by `toLngLat`. Don't reintroduce raw tuple indexing.
 - `cities/` — the city dataset, one file per region (`france.ts`, `iberia.ts`, `italy.ts`, `central.ts`, `benelux.ts`, `british-isles.ts`, `nordics.ts`, `balkans.ts`, `east.ts`), aggregated by `cities/index.ts` into `CITIES: City[]`, `CITY_BY_ID`, `getCity(id)`, and `citiesByCountry()`. ~41 European cities, each with 5-8 POIs, tiered stay/food costs, and min/max recommended days.
   - Adding a city: follow the existing entries for id conventions (`kebab-city-country`, e.g. `lisbon-pt`; POI ids `cityid-poi-slug`), realistic tiered pricing, and 5-8 POIs with real-ish coordinates near the city center.
   - `cities/index.test.ts` and `geo.test.ts` are dataset/geo sanity tests (unique ids, POI counts, Europe bounding box) — keep them passing when editing the dataset.
@@ -51,7 +51,7 @@ components/  (importable by app and any feature)
   Two companion modules operate on the generated plan: `schedule.ts` (`buildDaySchedule` — timed day plan with per-category visit durations, walking gaps, lunch/dinner slots, and a relaxed/balanced/packed realism rating per pace) and `replan.ts` (`swapActivity`, `makeRainFriendly` — pure plan transformations that swap stops for unused alternatives and recompute the day order + budget).
   Every module has a colocated `*.test.ts`. Run `npm t` after any engine change.
 - `store/tripIntentStore.ts` — Zustand store for `TripIntent`. `patchIntent(patch: Partial<TripIntent>)` does a partial merge — pass small partials, not full-object spreads (remember to spread `intent.vibe` yourself for nested fields).
-- `components/` — `TripCommandBar` (horizontal trip brief: origin autocomplete, duration stepper, Who/Budget cycle fields, mode toggle, collapsible "More filters" for pace/interests/climate/region/cities, Generate button), `MapView` (Mapbox: always-visible city markers + leg lines, POI markers scoped to the active city's day), `BudgetOverlay` (compact expandable budget card docked over the map), `RouteStrip` (stop pills + transport leg badges; flight legs deep-link to `/flights`), `DayTimeline` (horizontal scrollable day tabs), `DayDetails` (the selected day's timed schedule: clock times, restaurant meals with Reserve buttons, walking gaps, must-see/book-ahead chips, per-stop swap + Book, rainy-day replanning, `/stays` deep link), `BeforeYouGo` (actionable book-in-advance checklist), `BookActivityPanel` (attraction/restaurant booking modal, party size from companions), `ShareTripBar` + `PrintItinerary` (share/export UI).
+- `components/` — `TripCommandBar` (horizontal trip brief: origin autocomplete, duration stepper, Who/Budget cycle fields, mode toggle, collapsible "More filters" for pace/interests/climate/region/cities, Generate button), `MapView` (MapLibre: always-visible city markers + leg lines, POI markers scoped to the active city's day), `BudgetOverlay` (compact expandable budget card docked over the map), `RouteStrip` (stop pills + transport leg badges; flight legs deep-link to `/flights`), `DayTimeline` (horizontal scrollable day tabs), `DayDetails` (the selected day's timed schedule: clock times, restaurant meals with Reserve buttons, walking gaps, must-see/book-ahead chips, per-stop swap + Book, rainy-day replanning, `/stays` deep link), `BeforeYouGo` (actionable book-in-advance checklist), `BookActivityPanel` (attraction/restaurant booking modal, party size from companions), `ShareTripBar` + `PrintItinerary` (share/export UI).
 - `lib/share.ts` — share & export helpers. A share link encodes only the `TripIntent` as URL params (`/planner?plan=1&...`) because the engine is deterministic — the recipient's browser regenerates the identical plan. Also: `googleMapsRouteUrl` (multi-stop directions link) and `planToText` (chat-pasteable summary). The planner page parses share params on load.
 - The scheduler places the plan's `food` POIs as the lunch/dinner venues (cheaper → lunch, ≥€30 → dinner; generic "somewhere local" only when no restaurant is planned) and nightlife after dinner — never as morning visits.
 - Generation is **explicit**: the planner regenerates once on mount and whenever the command bar's Generate button is clicked — not on every keystroke.
@@ -74,7 +74,7 @@ Server components rendered from `app/(marketing)/page.tsx`. No shared state.
 - `layout/` — `Header`, `Footer` (used by the root layout). Don't add more here unless it's genuinely used by more than one route — this directory has previously accumulated unused wrappers.
 
 #### `/src/app/` — Routes
-- `layout.tsx` — root layout: fonts, `Header`/`Footer`, imports `globals.css` (incl. Mapbox GL CSS is imported inside `MapView.tsx`, not globally).
+- `layout.tsx` — root layout: fonts, `Header`/`Footer`, imports `globals.css` (MapLibre GL CSS is imported inside `MapView.tsx`, not globally).
 - `(marketing)/page.tsx`, `planner/page.tsx`, `flights/page.tsx`, `stays/page.tsx`.
 
 ### Styling

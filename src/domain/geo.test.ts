@@ -14,7 +14,7 @@ describe("distanceKm", () => {
 });
 
 describe("toLngLat", () => {
-  it("swaps lat/lng into Mapbox's [lng, lat] order", () => {
+  it("swaps lat/lng into the map renderer's [lng, lat] order", () => {
     expect(toLngLat({ lat: 48.8566, lng: 2.3522 })).toEqual([2.3522, 48.8566]);
   });
 });
