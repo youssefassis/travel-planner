@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -16,7 +15,6 @@ const FLOATING_PILLS = [
 ];
 
 export default function CTA() {
-  const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -70,13 +68,14 @@ export default function CTA() {
 
           <div className="flex justify-center">
             <Button
-              onClick={() => router.push("/planner")}
+              asLink
+              href="/planner"
               variant="primary"
               size="lg"
               icon={<ArrowRight className="w-4 h-4" />}
               iconPosition="right"
             >
-              Begin planning
+              Plan a trip
             </Button>
           </div>
         </motion.div>

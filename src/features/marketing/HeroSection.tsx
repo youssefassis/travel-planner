@@ -17,8 +17,10 @@ const QUICK_DESTINATIONS = [
   { emoji: "🇵🇹", cityId: "lisbon-pt" },
 ];
 
-const TRAVELER_OPTIONS = ["Solo", "Friends", "Family"];
-const BUDGET_OPTIONS = ["Backpacker", "Standard", "Luxury"];
+// Labels match the planner's vocabulary — lowercased they are valid
+// TripIntent values, so the wizard can prefill from the URL.
+const TRAVELER_OPTIONS = ["Solo", "Couple", "Group"];
+const BUDGET_OPTIONS = ["Backpacker", "Comfort", "Luxury"];
 
 const containerVariants = staggerChildren(0.15);
 const itemVariants = fadeInUp;
@@ -61,12 +63,12 @@ export default function HeroSection() {
     setBudget(BUDGET_OPTIONS[(idx + 1) % BUDGET_OPTIONS.length]);
   };
 
+  const plannerUrl = (cityId: string) =>
+    `/planner?destination=${encodeURIComponent(cityId)}&date=${startDate}&travelers=${travelers.toLowerCase()}&budget=${budget.toLowerCase()}`;
+
   const handleSearch = () => {
-    const city = getCity(destinationCityId);
-    if (city) {
-      router.push(
-        `/planner?destination=${encodeURIComponent(city.name)}&date=${startDate}&travelers=${travelers.toLowerCase()}&budget=${budget.toLowerCase()}`,
-      );
+    if (getCity(destinationCityId)) {
+      router.push(plannerUrl(destinationCityId));
     }
   };
 
@@ -122,7 +124,7 @@ export default function HeroSection() {
             <br className="hidden md:block" /> starts here
           </h1>
           <p className="text-body-lg text-[var(--muted)] max-w-xl mx-auto">
-            Discover customized itineraries tailored to your unique travel style.
+            Tell us where and how you travel — get a day-by-day plan in seconds.
           </p>
         </motion.div>
 
@@ -267,7 +269,7 @@ export default function HeroSection() {
                 className="w-full"
                 icon={<ArrowRight className="w-4 h-4" />}
               >
-                Explore
+                Plan a trip
               </Button>
             </div>
           </div>
@@ -279,7 +281,7 @@ export default function HeroSection() {
           variants={itemVariants}
         >
           <span className="text-[var(--muted)] text-xs font-medium tracking-wide mr-1">
-            Trending:
+            Or jump straight in:
           </span>
           {QUICK_DESTINATIONS.map((dest, i) => {
             const city = getCity(dest.cityId);
@@ -287,7 +289,7 @@ export default function HeroSection() {
             return (
               <motion.button
                 key={dest.cityId}
-                onClick={() => setDestinationCityId(dest.cityId)}
+                onClick={() => router.push(plannerUrl(dest.cityId))}
                 className="px-4 py-1.5 rounded-full bg-[var(--card-subtle)] hover:bg-[var(--border)] text-[var(--fg)] text-sm font-medium border border-[var(--border)] transition-colors"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
