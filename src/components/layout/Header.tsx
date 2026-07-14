@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ArrowRight, Compass } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAVIGATION = [
-  { href: "/", label: "Discover" },
+  { href: "/planner", label: "Plan a trip" },
   { href: "/flights", label: "Flights" },
   { href: "/stays", label: "Stays" },
 ];
@@ -17,7 +17,6 @@ const NAVIGATION = [
 const BRAND_NAME = "Wanderly";
 
 export default function Header() {
-  const router = useRouter();
   const pathname = usePathname();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -103,7 +102,8 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
           <Button
-            onClick={() => router.push("/planner")}
+            asLink
+            href="/planner"
             variant="primary"
             size="md"
             icon={<ArrowRight className="w-4 h-4" />}
@@ -174,21 +174,6 @@ export default function Header() {
               );
             })}
           </nav>
-
-          <div className="mt-6 pt-4 border-t border-[var(--border)] flex justify-end">
-            <Button
-              onClick={() => {
-                setIsMenuOpen(false);
-                router.push("/planner");
-              }}
-              variant="primary"
-              size="md"
-              icon={<ArrowRight className="w-4 h-4" />}
-              iconPosition="right"
-            >
-              Plan a trip
-            </Button>
-          </div>
         </div>
       </div>
     </header>
