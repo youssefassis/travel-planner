@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, X } from "lucide-react";
 import { CITIES, getCity } from "@/domain/cities";
 import { City } from "@/domain/types";
@@ -87,7 +87,7 @@ export default function CityAutocomplete({
     setIsOpen(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
       setIsOpen(true);
       return;
