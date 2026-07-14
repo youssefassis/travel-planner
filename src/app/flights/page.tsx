@@ -9,6 +9,10 @@ import FlightSearch, {
 import { searchFlights } from "@/features/flights/lib/searchFlights";
 import { FlightOption } from "@/features/flights/types";
 import { getCity } from "@/domain/cities";
+import Container from "@/components/ui/Container";
+import PageHeader from "@/components/ui/PageHeader";
+import Button from "@/components/ui/Button";
+import { fadeInUp, staggerChildren } from "@/components/motion";
 
 function formatDuration(durationHrs: number): string {
   const hours = Math.floor(durationHrs);
@@ -20,15 +24,13 @@ function stopsLabel(stops: FlightOption["stops"]): string {
   return stops === 0 ? "Direct" : `${stops} stop${stops > 1 ? "s" : ""}`;
 }
 
-const FlightCard = ({ flight, index }: { flight: FlightOption; index: number }) => (
+const FlightCard = ({ flight }: { flight: FlightOption }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-    whileHover={{ y: -4 }}
-    className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 hover:shadow-lg transition-all"
+    variants={fadeInUp}
+    whileHover={{ y: -2 }}
+    className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 hover:shadow-lg transition-all"
   >
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-[1.2fr_1.6fr_1fr_auto] lg:gap-6 items-center">
       {/* Airline & Duration */}
       <div>
         <p className="text-sm text-[var(--muted)] mb-2">Airline</p>
@@ -64,14 +66,14 @@ const FlightCard = ({ flight, index }: { flight: FlightOption; index: number }) 
       </div>
 
       {/* Price & Button */}
-      <div className="flex flex-col items-end gap-3">
+      <div className="col-span-2 lg:col-span-1 flex items-center justify-between lg:flex-col lg:items-end gap-3 border-t border-[var(--border)] pt-4 lg:border-0 lg:pt-0">
         <div>
           <p className="text-sm text-[var(--muted)] mb-1">Price per person</p>
           <p className="text-3xl font-serif font-bold text-[var(--primary)]">
             €{flight.price}
           </p>
         </div>
-        <button className="btn btn-primary text-sm text-white">Book Now</button>
+        <Button size="md">Book Now</Button>
       </div>
     </div>
   </motion.div>
@@ -98,21 +100,13 @@ function FlightsPageContent() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
-      <div className="pt-20 sm:pt-24 pb-16 sm:pb-20">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+      <div className="pt-28 md:pt-32 pb-16 sm:pb-20">
+        <Container size="wide">
           {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-10 sm:mb-12"
-          >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--fg)] mb-3 sm:mb-4">
-              Find & Book Flights
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg text-[var(--muted)]">
-              Explore the best flight options for your next adventure
-            </p>
-          </motion.div>
+          <PageHeader
+            title="Find & book flights"
+            description="Explore the best flight options for your next adventure"
+          />
 
           {/* Search Form */}
           <div className="mb-12 sm:mb-16">
@@ -126,14 +120,17 @@ function FlightsPageContent() {
           {/* Results */}
           {searchResults && searchResults.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <h2 className="text-2xl font-serif font-bold text-[var(--fg)] mb-6">
-                Available Flights
-              </h2>
-              <div className="space-y-4">
-                {searchResults.map((flight, idx) => (
-                  <FlightCard key={flight.id} flight={flight} index={idx} />
+              <h2 className="text-h2 text-[var(--fg)] mb-6">Available Flights</h2>
+              <motion.div
+                className="space-y-4"
+                initial="hidden"
+                animate="visible"
+                variants={staggerChildren(0.06)}
+              >
+                {searchResults.map((flight) => (
+                  <FlightCard key={flight.id} flight={flight} />
                 ))}
-              </div>
+              </motion.div>
             </motion.div>
           )}
 
@@ -162,7 +159,7 @@ function FlightsPageContent() {
               </p>
             </motion.div>
           )}
-        </div>
+        </Container>
       </div>
     </div>
   );
