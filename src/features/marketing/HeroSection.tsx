@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MapPin, Calendar, Users, Wallet, ArrowRight, Sparkles, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Container from "@/components/ui/Container";
+import Button from "@/components/ui/Button";
 import { fadeInUp, staggerChildren } from "@/components/motion";
 
 const QUICK_DESTINATIONS = [
@@ -127,23 +128,14 @@ export default function HeroSection() {
   };
 
   return (
-    <div className="relative w-full min-h-[620px] md:min-h-[720px] bg-[image:var(--gradient-hero)] overflow-hidden">
-      {/* Noise texture */}
-      <div
-        className="absolute inset-0 opacity-[0.18] mix-blend-overlay pointer-events-none"
-        style={{
-          backgroundImage:
-            'url(\'data:image/svg+xml,%3Csvg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" seed="2"/%3E%3C/filter%3E%3Crect width="400" height="400" filter="url(%23n)"/%3E%3C/svg%3E\')',
-          backgroundSize: "400px 400px",
-        }}
-      />
-
-      {/* Ambient blobs — looped only when motion is not reduced */}
+    <div className="relative w-full min-h-[620px] md:min-h-[720px] bg-[var(--bg)] overflow-hidden">
+      {/* Ambient blobs — a faint brand tint, not a full-bleed wash. Looped
+          only when motion is not reduced. */}
       <motion.div
         className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)",
+            "radial-gradient(circle, color-mix(in srgb, var(--primary) 16%, transparent) 0%, transparent 70%)",
         }}
         animate={
           prefersReducedMotion
@@ -156,7 +148,7 @@ export default function HeroSection() {
         className="absolute -bottom-10 -left-10 w-[420px] h-[420px] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
+            "radial-gradient(circle, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 70%)",
         }}
         animate={
           prefersReducedMotion
@@ -166,7 +158,7 @@ export default function HeroSection() {
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
       />
 
-      <Container className="relative z-10">
+      <Container size="wide" className="relative z-10">
         <motion.div
           className="py-24 sm:py-28 md:py-36 flex flex-col items-center text-center"
           variants={containerVariants}
@@ -175,33 +167,30 @@ export default function HeroSection() {
         >
         {/* Badge + Heading */}
         <motion.div className="mb-10 sm:mb-14" variants={itemVariants}>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-sm font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI-Powered Planning</span>
           </div>
-          <h1 className="text-display text-white mb-5">
-            Your next adventure <br className="hidden md:block" /> starts here
+          <h1 className="text-display text-[var(--fg)] mb-5">
+            Your next{" "}
+            <span className="bg-[image:var(--gradient-brand)] bg-clip-text text-transparent">
+              adventure
+            </span>{" "}
+            <br className="hidden md:block" /> starts here
           </h1>
-          <p className="text-body-lg text-white/75 max-w-xl mx-auto">
+          <p className="text-body-lg text-[var(--muted)] max-w-xl mx-auto">
             Discover customized itineraries tailored to your unique travel style.
           </p>
         </motion.div>
 
         {/* ── Search card ── */}
         <motion.div className="w-full max-w-3xl mb-10" variants={itemVariants}>
-          <div
-            className="rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.25)] border border-white/20"
-            style={{
-              background: "rgba(255,255,255,0.13)",
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-            }}
-          >
+          <div className="rounded-2xl overflow-hidden shadow-xl border border-[var(--border)] bg-[var(--card)]">
             {/* Destination row + suggestions */}
             <div ref={suggestionRef} className="relative">
               <div className="flex items-center gap-4 px-6 py-5">
                 <div className="shrink-0">
-                  <MapPin className="w-[22px] h-[22px] text-white drop-shadow-sm" />
+                  <MapPin className="w-[22px] h-[22px] text-[var(--primary)]" />
                 </div>
 
                 <input
@@ -211,7 +200,7 @@ export default function HeroSection() {
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   placeholder="Where do you want to go?"
-                  className="flex-1 bg-transparent text-white text-lg md:text-xl font-medium placeholder-white/45 border-none outline-none caret-white"
+                  className="flex-1 bg-transparent text-[var(--fg)] text-lg md:text-xl font-medium placeholder-[var(--muted)] border-none outline-none"
                 />
 
                 <AnimatePresence>
@@ -222,7 +211,7 @@ export default function HeroSection() {
                       exit={{ opacity: 0 }}
                       className="shrink-0"
                     >
-                      <Loader2 className="w-4 h-4 text-white/60 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-[var(--muted)] animate-spin" />
                     </motion.div>
                   )}
                   {destination && !isLoadingSuggestions && (
@@ -231,7 +220,7 @@ export default function HeroSection() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.7 }}
                       onClick={() => { setDestination(""); setSuggestions([]); setShowSuggestions(false); }}
-                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-[var(--card-subtle)] hover:bg-[var(--border)] text-[var(--fg)] transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </motion.button>
@@ -247,12 +236,7 @@ export default function HeroSection() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.98 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute left-3 right-3 top-full z-50 mt-1 rounded-xl overflow-hidden border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.3)]"
-                    style={{
-                      background: "rgba(30, 20, 10, 0.75)",
-                      backdropFilter: "blur(20px)",
-                      WebkitBackdropFilter: "blur(20px)",
-                    }}
+                    className="absolute left-3 right-3 top-full z-50 mt-1 rounded-xl overflow-hidden border border-[var(--border)] shadow-xl bg-[var(--card)]"
                   >
                     {suggestions.map((s, i) => (
                       <motion.button
@@ -261,12 +245,12 @@ export default function HeroSection() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.04 }}
                         onClick={() => selectSuggestion(s.name)}
-                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-white/10 transition-colors border-b border-white/8 last:border-0 group"
+                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-[var(--card-subtle)] transition-colors border-b border-[var(--border)] last:border-0 group"
                       >
-                        <MapPin className="w-4 h-4 text-white/40 shrink-0 group-hover:text-[var(--primary-light)] transition-colors" />
+                        <MapPin className="w-4 h-4 text-[var(--muted)] shrink-0 group-hover:text-[var(--primary)] transition-colors" />
                         <div className="min-w-0">
-                          <div className="text-white text-sm font-semibold truncate">{s.name}</div>
-                          <div className="text-white/45 text-xs truncate">{s.fullName}</div>
+                          <div className="text-[var(--fg)] text-sm font-semibold truncate">{s.name}</div>
+                          <div className="text-[var(--muted)] text-xs truncate">{s.fullName}</div>
                         </div>
                       </motion.button>
                     ))}
@@ -276,24 +260,24 @@ export default function HeroSection() {
             </div>
 
             {/* Divider */}
-            <div className="h-px mx-5 bg-white/15" />
+            <div className="h-px mx-5 bg-[var(--border)]" />
 
             {/* Options row */}
             <div className="flex flex-col sm:flex-row">
               {/* Date */}
-              <div className="flex-1 relative flex items-center gap-4 px-6 py-4 hover:bg-white/[0.08] transition-colors sm:border-r border-white/10 group cursor-pointer">
+              <div className="flex-1 relative flex items-center gap-4 px-6 py-4 hover:bg-[var(--card-subtle)] transition-colors sm:border-r border-[var(--border)] group cursor-pointer">
                 <motion.div
-                  className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center pointer-events-none"
+                  className="shrink-0 w-10 h-10 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center pointer-events-none"
                   whileHover={{ rotate: 20, scale: 1.1 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <Calendar className="w-5 h-5 text-white" />
+                  <Calendar className="w-5 h-5 text-[var(--primary)]" />
                 </motion.div>
                 <div className="flex-1 min-w-0 pointer-events-none">
-                  <div className="text-[10px] text-white/50 uppercase tracking-widest font-semibold mb-0.5">
+                  <div className="text-[10px] text-[var(--muted)] uppercase tracking-widest font-semibold mb-0.5">
                     When
                   </div>
-                  <div className="text-white text-sm font-medium truncate">
+                  <div className="text-[var(--fg)] text-sm font-medium truncate">
                     {formatDate(startDate) ?? "Pick a date"}
                   </div>
                 </div>
@@ -310,13 +294,13 @@ export default function HeroSection() {
               <button
                 type="button"
                 onClick={cycleTravelers}
-                className="flex-1 flex items-center gap-4 px-6 py-4 hover:bg-white/8 transition-colors text-left group sm:border-r border-white/10"
+                className="flex-1 flex items-center gap-4 px-6 py-4 hover:bg-[var(--card-subtle)] transition-colors text-left group sm:border-r border-[var(--border)]"
               >
-                <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
+                <div className="shrink-0 w-10 h-10 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-[var(--primary)]" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-[10px] text-white/50 uppercase tracking-widest font-semibold mb-0.5">
+                  <div className="text-[10px] text-[var(--muted)] uppercase tracking-widest font-semibold mb-0.5">
                     Who
                   </div>
                   <AnimatePresence mode="wait">
@@ -326,7 +310,7 @@ export default function HeroSection() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -5 }}
                       transition={{ duration: 0.18 }}
-                      className="text-white text-sm font-medium"
+                      className="text-[var(--fg)] text-sm font-medium"
                     >
                       {travelers}
                     </motion.div>
@@ -339,8 +323,8 @@ export default function HeroSection() {
                       key={opt}
                       className={`rounded-full transition-all duration-300 ${
                         opt === travelers
-                          ? "w-3 h-1.5 bg-white"
-                          : "w-1.5 h-1.5 bg-white/30"
+                          ? "w-3 h-1.5 bg-[var(--primary)]"
+                          : "w-1.5 h-1.5 bg-[var(--border)]"
                       }`}
                     />
                   ))}
@@ -351,13 +335,13 @@ export default function HeroSection() {
               <button
                 type="button"
                 onClick={cycleBudget}
-                className="flex-1 flex items-center gap-4 px-6 py-4 hover:bg-white/8 transition-colors text-left group"
+                className="flex-1 flex items-center gap-4 px-6 py-4 hover:bg-[var(--card-subtle)] transition-colors text-left group"
               >
-                <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-white" />
+                <div className="shrink-0 w-10 h-10 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-[var(--primary)]" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-[10px] text-white/50 uppercase tracking-widest font-semibold mb-0.5">
+                  <div className="text-[10px] text-[var(--muted)] uppercase tracking-widest font-semibold mb-0.5">
                     Budget
                   </div>
                   <AnimatePresence mode="wait">
@@ -367,7 +351,7 @@ export default function HeroSection() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -5 }}
                       transition={{ duration: 0.18 }}
-                      className="text-white text-sm font-medium"
+                      className="text-[var(--fg)] text-sm font-medium"
                     >
                       {budget}
                     </motion.div>
@@ -380,8 +364,8 @@ export default function HeroSection() {
                       key={opt}
                       className={`rounded-full transition-all duration-300 ${
                         opt === budget
-                          ? "w-3 h-1.5 bg-white"
-                          : "w-1.5 h-1.5 bg-white/30"
+                          ? "w-3 h-1.5 bg-[var(--primary)]"
+                          : "w-1.5 h-1.5 bg-[var(--border)]"
                       }`}
                     />
                   ))}
@@ -390,16 +374,16 @@ export default function HeroSection() {
             </div>
 
             {/* Explore button — full-width bottom strip */}
-            <div className="px-4 pb-4 pt-3 border-t border-white/10">
-              <motion.button
+            <div className="px-4 pb-4 pt-3 border-t border-[var(--border)]">
+              <Button
                 onClick={handleSearch}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                className="group w-full flex items-center justify-center gap-2.5 bg-white text-[var(--primary)] rounded-2xl py-3.5 font-semibold text-base shadow-md hover:bg-white/95 transition-colors"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                icon={<ArrowRight className="w-4 h-4" />}
               >
-                <span>Explore</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </motion.button>
+                Explore
+              </Button>
             </div>
           </div>
         </motion.div>
@@ -409,14 +393,14 @@ export default function HeroSection() {
           className="flex flex-wrap justify-center items-center gap-2.5 mb-8"
           variants={itemVariants}
         >
-          <span className="text-white/60 text-xs font-medium tracking-wide mr-1">
+          <span className="text-[var(--muted)] text-xs font-medium tracking-wide mr-1">
             Trending:
           </span>
           {QUICK_DESTINATIONS.map((dest, i) => (
             <motion.button
               key={dest.city}
               onClick={() => setDestination(dest.city)}
-              className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-medium backdrop-blur-md border border-white/15 transition-colors"
+              className="px-4 py-1.5 rounded-full bg-[var(--card-subtle)] hover:bg-[var(--border)] text-[var(--fg)] text-sm font-medium border border-[var(--border)] transition-colors"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ y: -2 }}
@@ -430,13 +414,13 @@ export default function HeroSection() {
 
         {/* Trust strip */}
         <motion.div
-          className="flex flex-wrap justify-center items-center gap-5 text-white/50 text-xs tracking-wide"
+          className="flex flex-wrap justify-center items-center gap-5 text-[var(--muted)] text-xs tracking-wide"
           variants={itemVariants}
         >
           <span>10,000+ trips planned</span>
-          <span className="hidden sm:block w-1 h-1 rounded-full bg-white/25" />
+          <span className="hidden sm:block w-1 h-1 rounded-full bg-[var(--border)]" />
           <span>100+ destinations</span>
-          <span className="hidden sm:block w-1 h-1 rounded-full bg-white/25" />
+          <span className="hidden sm:block w-1 h-1 rounded-full bg-[var(--border)]" />
           <span>4.9★ average rating</span>
         </motion.div>
         </motion.div>

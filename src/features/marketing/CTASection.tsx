@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Section from "@/components/ui/Section";
@@ -17,20 +17,27 @@ const FLOATING_PILLS = [
 
 export default function CTA() {
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
 
   return (
-    <Section size="lg" className="relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-[image:var(--gradient-hero)] opacity-95" />
-
-      {/* Soft glow */}
-      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-white/10 blur-3xl rounded-full" />
+    <Section size="lg" className="relative overflow-hidden bg-[var(--bg)]">
+      {/* Faint ambient glow — same brand-tint language as the hero, not a
+          full-bleed color wash. */}
+      <motion.div
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent) 0%, transparent 70%)",
+        }}
+        animate={prefersReducedMotion ? undefined : { scale: [1, 1.1, 1] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
 
       {/* Floating trip pills */}
       {FLOATING_PILLS.map((pill, i) => (
         <motion.div
           key={i}
-          className="hidden md:flex absolute items-center px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-sm font-medium shadow-lg select-none pointer-events-none"
+          className="hidden md:flex absolute items-center px-4 py-2 rounded-full bg-[var(--card)] border border-[var(--border)] text-[var(--fg)] text-sm font-medium shadow-md select-none pointer-events-none"
           style={{ left: "50%", top: "50%", x: pill.x, y: pill.y, rotate: pill.rotate }}
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -48,9 +55,15 @@ export default function CTA() {
           viewport={VIEWPORT_ONCE}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <h2 className="text-h1 text-white mb-6">Ready for your next adventure?</h2>
+          <h2 className="text-h1 text-[var(--fg)] mb-6">
+            Ready for your next{" "}
+            <span className="bg-[image:var(--gradient-brand)] bg-clip-text text-transparent">
+              adventure
+            </span>
+            ?
+          </h2>
 
-          <p className="text-white/80 text-base md:text-lg text-center mx-auto mb-10 leading-relaxed max-w-xl">
+          <p className="text-body-lg text-[var(--muted)] text-center mx-auto mb-10 max-w-xl">
             Plan routes, compare stays, and receive recommendations adapted to your
             journey.
           </p>
@@ -58,7 +71,7 @@ export default function CTA() {
           <div className="flex justify-center">
             <Button
               onClick={() => router.push("/planner")}
-              variant="white"
+              variant="primary"
               size="lg"
               icon={<ArrowRight className="w-4 h-4" />}
               iconPosition="right"
