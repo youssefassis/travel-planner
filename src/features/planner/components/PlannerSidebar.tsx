@@ -160,19 +160,6 @@ export default function PlannerSidebar({
         animate="visible"
         className={`${expanded ? "block" : "hidden"} md:block space-y-4`}
       >
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] flex items-center justify-center text-white font-serif font-bold">
-            ✈
-          </div>
-          <div>
-            <h3 className="font-serif font-bold text-[var(--fg)]">
-              Build Your Trip
-            </h3>
-            <p className="text-xs text-[var(--muted)]">Customize preferences</p>
-          </div>
-        </div>
-
         {/* Mode */}
         <FilterCard label="Trip Mode">
           <div className="flex gap-2">
@@ -192,7 +179,7 @@ export default function PlannerSidebar({
           <select
             value={intent.originCityId}
             onChange={(e) => patchIntent({ originCityId: e.target.value })}
-            className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+            className="w-full px-4 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
           >
             {SORTED_CITIES.map((city) => (
               <option key={city.id} value={city.id}>
@@ -213,7 +200,7 @@ export default function PlannerSidebar({
               onChange={(e) =>
                 patchIntent({ duration: Number(e.target.value) })
               }
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+              className="w-full px-4 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
             />
             <p className="text-sm text-[var(--muted)]">
               {intent.duration ?? 5} days
@@ -307,7 +294,7 @@ export default function PlannerSidebar({
                     },
                   })
                 }
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
               >
                 <option value="any">Any</option>
                 {CLIMATE_OPTIONS.map((climate) => (
@@ -324,7 +311,7 @@ export default function PlannerSidebar({
                 onChange={(e) =>
                   patchIntent({ region: e.target.value as Region | "any" })
                 }
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-subtle)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
               >
                 <option value="any">Any</option>
                 {REGION_OPTIONS.map((region) => (
