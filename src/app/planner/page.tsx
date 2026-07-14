@@ -43,27 +43,39 @@ export default function PlannerPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
       <div className="pt-24 pb-20">
-        <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-[280px_1fr_340px] gap-6">
-          {/* LEFT: FILTERS */}
-          <PlannerSidebar onGenerate={generate} loading={loading} />
+        <div className="max-w-[1400px] mx-auto px-6">
+          {trip && trip.notes.length > 0 && (
+            <div className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-1">
+              {trip.notes.map((note, i) => (
+                <p key={i} className="text-sm text-[var(--muted)]">
+                  {note}
+                </p>
+              ))}
+            </div>
+          )}
 
-          {/* CENTER: MAP + ITINERARY */}
-          <PlannerCanvas
-            itinerary={itinerary}
-            activeDayId={activeDayId}
-            setActiveDayId={setActiveDayId}
-            loading={loading}
-            stops={trip?.stops ?? []}
-            legs={trip?.legs ?? []}
-          />
+          <div className="grid grid-cols-[280px_1fr_340px] gap-6">
+            {/* LEFT: FILTERS */}
+            <PlannerSidebar onGenerate={generate} loading={loading} />
 
-          {/* RIGHT: SUGGESTIONS */}
-          <SuggestionsPanel
-            trip={trip}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            activeDayId={activeDayId}
-          />
+            {/* CENTER: MAP + ITINERARY */}
+            <PlannerCanvas
+              itinerary={itinerary}
+              activeDayId={activeDayId}
+              setActiveDayId={setActiveDayId}
+              loading={loading}
+              stops={trip?.stops ?? []}
+              legs={trip?.legs ?? []}
+            />
+
+            {/* RIGHT: SUGGESTIONS */}
+            <SuggestionsPanel
+              trip={trip}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              activeDayId={activeDayId}
+            />
+          </div>
         </div>
       </div>
     </div>
