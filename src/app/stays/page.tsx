@@ -1,10 +1,13 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Building2, BedDouble, Hotel, Star } from "lucide-react";
-import StaySearch, { StaySearchFormData } from "@/features/stays/components/StaySearch";
+import StaySearch, {
+  StaySearchFormData,
+  StayTypeFilter,
+} from "@/features/stays/components/StaySearch";
 import { searchStays } from "@/features/stays/lib/searchStays";
 import { StayOption, StayType } from "@/features/stays/types";
 import { BudgetTier } from "@/domain/types";
@@ -12,7 +15,16 @@ import { getCity } from "@/domain/cities";
 import Container from "@/components/ui/Container";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import { fadeInUp, staggerChildren } from "@/components/motion";
+
+type SortBy = "price-asc" | "price-desc" | "rating";
+
+const SORT_OPTIONS: { label: string; value: SortBy }[] = [
+  { label: "Cheapest", value: "price-asc" },
+  { label: "Priciest", value: "price-desc" },
+  { label: "Top rated", value: "rating" },
+];
 
 const GRADIENTS = [
   "from-[var(--primary)]/80 to-[var(--accent)]/70",
@@ -131,11 +143,27 @@ function StaysPageContent() {
     initialCityId ? searchStays(initialCityId, initialBudget) : null
   );
   const [nights, setNights] = useState<number | undefined>(initialNights);
+  const [typeFilter, setTypeFilter] = useState<StayTypeFilter>("any");
+  const [sortBy, setSortBy] = useState<SortBy>("price-asc");
 
   const handleSearch = (data: StaySearchFormData) => {
     setSearchResults(searchStays(data.cityId, data.budget));
     setNights(data.nights);
+    setTypeFilter(data.type);
   };
+
+  const visibleResults = useMemo(() => {
+    if (!searchResults) return null;
+    const filtered =
+      typeFilter === "any"
+        ? searchResults
+        : searchResults.filter((s) => s.type === typeFilter);
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "price-desc") return b.pricePerNight - a.pricePerNight;
+      if (sortBy === "rating") return b.rating - a.rating;
+      return a.pricePerNight - b.pricePerNight;
+    });
+  }, [searchResults, typeFilter, sortBy]);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
@@ -157,16 +185,32 @@ function StaysPageContent() {
           </div>
 
           {/* Results */}
-          {searchResults && searchResults.length > 0 && (
+          {visibleResults && visibleResults.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <h2 className="text-h2 text-[var(--fg)] mb-6">Available Accommodations</h2>
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <h2 className="text-h2 text-[var(--fg)]">
+                  Available Accommodations
+                  <span className="ml-3 text-small font-sans text-[var(--muted)]">
+                    {visibleResults.length}{" "}
+                    {visibleResults.length === 1 ? "option" : "options"}
+                  </span>
+                </h2>
+                <div className="w-full sm:w-auto sm:min-w-[300px]">
+                  <SegmentedControl
+                    options={SORT_OPTIONS}
+                    value={sortBy}
+                    onChange={setSortBy}
+                  />
+                </div>
+              </div>
               <motion.div
+                key={`${sortBy}-${typeFilter}`}
                 initial="hidden"
                 animate="visible"
                 variants={staggerChildren(0.06)}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                {searchResults.map((stay, idx) => (
+                {visibleResults.map((stay, idx) => (
                   <StayCard key={stay.id} stay={stay} index={idx} nights={nights} />
                 ))}
               </motion.div>
@@ -174,20 +218,22 @@ function StaysPageContent() {
           )}
 
           {/* No results */}
-          {searchResults && searchResults.length === 0 && (
+          {visibleResults && visibleResults.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center py-16"
             >
               <p className="text-[var(--muted)] text-lg">
-                No accommodations found for this city. Try another destination.
+                {typeFilter !== "any" && searchResults && searchResults.length > 0
+                  ? "No stays of this type here — try another type."
+                  : "No accommodations found for this city. Try another destination."}
               </p>
             </motion.div>
           )}
 
           {/* Empty State */}
-          {!searchResults && (
+          {!visibleResults && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
