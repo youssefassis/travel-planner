@@ -5,9 +5,14 @@ import { useSearchParams } from "next/navigation";
 
 import { useTripIntentStore } from "@/features/planner/store/tripIntentStore";
 import {
+  addActivity,
+  addCity,
   generateTripPlan,
   makeRainFriendly,
+  removeActivity,
+  removeCity,
   swapActivity,
+  unusedPoisForCity,
 } from "@/features/planner/engine";
 import { intentFromShareParams } from "@/features/planner/lib/share";
 
@@ -89,6 +94,48 @@ function PlannerPageContent() {
     return true;
   };
 
+  const handleRemoveActivity = (activityId: string) => {
+    if (!trip || !planIntent || !activeDayId) return;
+    const next = removeActivity(trip, planIntent, activeDayId, activityId);
+    if (next) setTrip(next);
+  };
+
+  const handleAddActivity = (poiId: string) => {
+    if (!trip || !planIntent || !activeDayId) return;
+    const next = addActivity(trip, planIntent, activeDayId, poiId);
+    if (next) setTrip(next);
+  };
+
+  // City edits renumber every day id — keep the selection on the same city
+  // when it survives, otherwise fall back to the first day.
+  const applyCityEdit = (next: TripPlan | null): boolean => {
+    if (!next) return false;
+    const stillThere = next.itinerary.some((d) => d.id === activeDayId);
+    const sameCity = activeDay
+      ? next.itinerary.find((d) => d.cityId === activeDay.cityId)
+      : undefined;
+    setTrip(next);
+    if (!stillThere) {
+      setActiveDayId(sameCity?.id ?? next.itinerary[0]?.id ?? null);
+    }
+    return true;
+  };
+
+  const handleAddCity = (cityId: string): boolean => {
+    if (!trip || !planIntent) return false;
+    return applyCityEdit(addCity(trip, planIntent, cityId));
+  };
+
+  const handleRemoveCity = (cityId: string): boolean => {
+    if (!trip || !planIntent) return false;
+    return applyCityEdit(removeCity(trip, planIntent, cityId));
+  };
+
+  const availablePois = useMemo(
+    () => (trip && activeDay ? unusedPoisForCity(trip, activeDay.cityId) : []),
+    [trip, activeDay]
+  );
+
   // Table for 1/2/4 depending on who's traveling.
   const partySize =
     planIntent?.companions === "couple" ? 2 : planIntent?.companions === "group" ? 4 : 1;
@@ -143,6 +190,8 @@ function PlannerPageContent() {
               legs={trip?.legs ?? []}
               itinerary={itinerary}
               setActiveDayId={setActiveDayId}
+              onRemoveCity={handleRemoveCity}
+              onAddCity={handleAddCity}
             />
             {trip && planIntent && (
               <ShareTripBar plan={trip} intent={planIntent} pace={planIntent.vibe.pace} />
@@ -162,9 +211,12 @@ function PlannerPageContent() {
               stops={trip?.stops ?? []}
               pace={planIntent?.vibe.pace ?? "balanced"}
               budgetTier={planIntent?.vibe.budget ?? "comfort"}
+              availablePois={availablePois}
               onSwap={handleSwap}
               onRainDay={handleRainDay}
               onBook={bookFromDay}
+              onRemove={handleRemoveActivity}
+              onAdd={handleAddActivity}
             />
 
             {/* Trip-wide booking checklist */}
