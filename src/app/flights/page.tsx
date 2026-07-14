@@ -20,7 +20,10 @@ import {
 import { FlightOption } from "@/features/flights/types";
 import { getCity } from "@/domain/cities";
 import Container from "@/components/ui/Container";
+import FilterPills from "@/components/ui/FilterPills";
 import PageHeader from "@/components/ui/PageHeader";
+import PlannerCallout from "@/components/ui/PlannerCallout";
+import ResultsSection from "@/components/ui/ResultsSection";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import { staggerChildren } from "@/components/motion";
 
@@ -162,8 +165,12 @@ function FlightsPageContent() {
       <div className="pt-28 md:pt-32 pb-16 sm:pb-20">
         <Container size="wide">
           <PageHeader
-            title="Find & book flights"
-            description="Tailored picks with the trade-offs explained — decide, don't dig."
+            title="Find flights"
+            description="Our picks with the trade-offs explained — decide, don't dig."
+          />
+
+          <PlannerCallout
+            variant={initialFrom && initialTo ? "linked" : "standalone"}
           />
 
           {/* Search Form */}
@@ -230,89 +237,71 @@ function FlightsPageContent() {
                 </motion.div>
               </div>
 
-              {/* All flights + filters */}
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h3 className="text-h3 text-[var(--fg)]">
-                  All flights
-                  <span className="ml-2 text-small font-normal text-[var(--muted)]">
-                    {listResults?.length ?? 0} of {phaseOptions.length}
-                  </span>
-                </h3>
-                <div className="w-full lg:w-auto lg:min-w-[300px]">
-                  <SegmentedControl options={SORT_OPTIONS} value={sortBy} onChange={setSortBy} />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 mb-6">
-                <SegmentedControl
-                  size="sm"
-                  options={TIME_OPTIONS}
-                  value={timeOfDay}
-                  onChange={setTimeOfDay}
-                  className="w-full sm:w-auto"
-                />
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAirline("all")}
-                    className={`py-1.5 px-3 rounded-full text-xs font-medium transition-all ${
-                      airline === "all"
-                        ? "bg-[var(--primary)] text-white shadow-sm"
-                        : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-                    }`}
+              {/* Full inventory — collapsed so the picks stay the star */}
+              <ResultsSection
+                title="All flights"
+                count={listResults?.length ?? 0}
+                total={phaseOptions.length}
+                toolbar={
+                  <>
+                    <SegmentedControl
+                      options={SORT_OPTIONS}
+                      value={sortBy}
+                      onChange={setSortBy}
+                    />
+                    <SegmentedControl
+                      size="sm"
+                      options={TIME_OPTIONS}
+                      value={timeOfDay}
+                      onChange={setTimeOfDay}
+                      className="w-full sm:w-auto"
+                    />
+                    <FilterPills
+                      ariaLabel="Filter by airline"
+                      options={[
+                        { label: "All airlines", value: "all" },
+                        ...airlines.map((name) => ({ label: name, value: name })),
+                      ]}
+                      value={airline}
+                      onChange={setAirline}
+                    />
+                  </>
+                }
+              >
+                {listResults && listResults.length > 0 ? (
+                  <motion.div
+                    key={`list-${phase}-${sortBy}-${timeOfDay}-${airline}`}
+                    className="space-y-4"
+                    initial="hidden"
+                    animate="visible"
+                    variants={staggerChildren(0.05)}
                   >
-                    All airlines
-                  </button>
-                  {airlines.map((name) => (
-                    <button
-                      key={name}
-                      type="button"
-                      onClick={() => setAirline(name)}
-                      className={`py-1.5 px-3 rounded-full text-xs font-medium transition-all ${
-                        airline === name
-                          ? "bg-[var(--primary)] text-white shadow-sm"
-                          : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-                      }`}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {listResults && listResults.length > 0 ? (
-                <motion.div
-                  key={`list-${phase}-${sortBy}-${timeOfDay}-${airline}`}
-                  className="space-y-4"
-                  initial="hidden"
-                  animate="visible"
-                  variants={staggerChildren(0.05)}
-                >
-                  {listResults.map((flight) => {
-                    const badges = [
-                      flight.id === cheapestId ? "Cheapest" : null,
-                      flight.id === fastestId ? "Fastest" : null,
-                    ].filter((b): b is string => b !== null);
-                    return (
-                      <FlightCard
-                        key={flight.id}
-                        flight={flight}
-                        travelers={search?.travelers ?? 1}
-                        badges={badges}
-                        selected={
-                          flight.id === selectedOutbound?.id ||
-                          flight.id === selectedReturn?.id
-                        }
-                        onSelect={selectFlight}
-                      />
-                    );
-                  })}
-                </motion.div>
-              ) : (
-                <p className="text-center py-10 text-[var(--muted)]">
-                  No flights match these filters — loosen the time or airline filter.
-                </p>
-              )}
+                    {listResults.map((flight) => {
+                      const badges = [
+                        flight.id === cheapestId ? "Cheapest" : null,
+                        flight.id === fastestId ? "Fastest" : null,
+                      ].filter((b): b is string => b !== null);
+                      return (
+                        <FlightCard
+                          key={flight.id}
+                          flight={flight}
+                          travelers={search?.travelers ?? 1}
+                          badges={badges}
+                          selected={
+                            flight.id === selectedOutbound?.id ||
+                            flight.id === selectedReturn?.id
+                          }
+                          onSelect={selectFlight}
+                        />
+                      );
+                    })}
+                  </motion.div>
+                ) : (
+                  <p className="text-center py-10 text-[var(--muted)]">
+                    No flights match these filters — loosen the time or airline filter.
+                  </p>
+                )}
+              </ResultsSection>
             </motion.div>
           )}
 

@@ -16,7 +16,10 @@ import { BudgetTier } from "@/domain/types";
 import { getCity } from "@/domain/cities";
 import Button from "@/components/ui/Button";
 import Container from "@/components/ui/Container";
+import FilterPills from "@/components/ui/FilterPills";
 import PageHeader from "@/components/ui/PageHeader";
+import PlannerCallout from "@/components/ui/PlannerCallout";
+import ResultsSection from "@/components/ui/ResultsSection";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import { fadeInUp, staggerChildren } from "@/components/motion";
 
@@ -166,9 +169,11 @@ function StaysPageContent() {
       <div className="pt-28 md:pt-32 pb-16 sm:pb-20">
         <Container size="wide">
           <PageHeader
-            title="Find & book stays"
-            description="Answer a few questions — get the neighborhoods and stays that fit the way you travel."
+            title="Find stays"
+            description="Answer a few questions — get neighborhoods and stays that fit how you travel."
           />
+
+          <PlannerCallout variant={initialCityId ? "linked" : "standalone"} />
 
           {/* Advisor form */}
           <div className="mb-12 sm:mb-16">
@@ -200,7 +205,7 @@ function StaysPageContent() {
 
               {/* Picks */}
               <div className="mb-12">
-                <h2 className="text-h2 text-[var(--fg)] mb-1">Where we&apos;d stay</h2>
+                <h2 className="text-h2 text-[var(--fg)] mb-1">Our picks</h2>
                 <p className="text-small text-[var(--muted)] mb-6">
                   {prefs?.nights} {prefs?.nights === 1 ? "night" : "nights"} · up to €
                   {prefs?.budgetPerNight}/night · totals include taxes &amp; fees
@@ -223,58 +228,50 @@ function StaysPageContent() {
                 </motion.div>
               </div>
 
-              {/* Full inventory */}
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h3 className="text-h3 text-[var(--fg)]">
-                  Every stay in {cityName}
-                  <span className="ml-2 text-small font-normal text-[var(--muted)]">
-                    {listResults?.length ?? 0} of {allStays?.length ?? 0}
-                  </span>
-                </h3>
-                <div className="w-full lg:w-auto lg:min-w-[300px]">
-                  <SegmentedControl options={SORT_OPTIONS} value={sortBy} onChange={setSortBy} />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                {TYPE_FILTERS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setTypeFilter(option.value)}
-                    className={`py-1.5 px-3 rounded-full text-xs font-medium transition-all ${
-                      typeFilter === option.value
-                        ? "bg-[var(--primary)] text-white shadow-sm"
-                        : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-
-              {listResults && listResults.length > 0 ? (
-                <motion.div
-                  key={`list-${sortBy}-${typeFilter}`}
-                  className="space-y-4"
-                  initial="hidden"
-                  animate="visible"
-                  variants={staggerChildren(0.05)}
-                >
-                  {listResults.map((stay) => (
-                    <StayListRow
-                      key={stay.id}
-                      stay={stay}
-                      nights={prefs?.nights ?? 1}
-                      onReserve={setReserving}
+              {/* Full inventory — collapsed so the picks stay the star */}
+              <ResultsSection
+                title={`All stays in ${cityName}`}
+                count={listResults?.length ?? 0}
+                total={allStays?.length ?? 0}
+                toolbar={
+                  <>
+                    <SegmentedControl
+                      options={SORT_OPTIONS}
+                      value={sortBy}
+                      onChange={setSortBy}
                     />
-                  ))}
-                </motion.div>
-              ) : (
-                <p className="text-center py-10 text-[var(--muted)]">
-                  No stays of this type here — try another type.
-                </p>
-              )}
+                    <FilterPills
+                      ariaLabel="Filter by stay type"
+                      options={TYPE_FILTERS}
+                      value={typeFilter}
+                      onChange={setTypeFilter}
+                    />
+                  </>
+                }
+              >
+                {listResults && listResults.length > 0 ? (
+                  <motion.div
+                    key={`list-${sortBy}-${typeFilter}`}
+                    className="space-y-4"
+                    initial="hidden"
+                    animate="visible"
+                    variants={staggerChildren(0.05)}
+                  >
+                    {listResults.map((stay) => (
+                      <StayListRow
+                        key={stay.id}
+                        stay={stay}
+                        nights={prefs?.nights ?? 1}
+                        onReserve={setReserving}
+                      />
+                    ))}
+                  </motion.div>
+                ) : (
+                  <p className="text-center py-10 text-[var(--muted)]">
+                    No stays of this type here — try another type.
+                  </p>
+                )}
+              </ResultsSection>
             </motion.div>
           )}
 
