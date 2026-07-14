@@ -5,141 +5,87 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Development
-- `npm run dev` — Start the Next.js dev server on http://localhost:3000. The app will auto-reload on file changes.
+- `npm run dev` — Start the Next.js dev server on http://localhost:3000 (Turbopack). Requires `NEXT_PUBLIC_MAPBOX_TOKEN` in `.env.local` for the planner's map to render.
 - `npm run build` — Build the production bundle.
 - `npm start` — Start the production server.
-- `npm run lint` — Run ESLint on the codebase (no auto-fix).
+- `npm run lint` — Run ESLint (no auto-fix). Keep this at zero errors/warnings; never grow the baseline.
+- `npm t` — Run the Vitest suite (`vitest run`). Covers the trip engine and the shared dataset.
 
 ## Architecture
 
-### Project Overview
+### Project overview
 
-This is an AI-powered travel planning application built with **Next.js 16** (App Router). Users input trip preferences, and the app generates customized itineraries with destinations, activities, and logistics.
+Wanderly is an AI-styled (currently rule-based, no LLM) travel planning app built with **Next.js 16** (App Router). It has three independently usable features that share one dataset:
 
-**Key technologies:**
-- **Next.js 16** with App Router (`app/` directory)
-- **React 19** with Server and Client components (`"use client"`)
-- **TypeScript** with strict mode enabled
-- **Zustand** for client-side state management
-- **Mapbox GL** for interactive maps and **Mapbox SDK** for geolocation
-- **Framer Motion** for animations
-- **Tailwind CSS v4** for styling
-- **Geist Font** (via `next/font`)
+1. **Planner** (`/planner`) — set trip preferences (or pick cities directly) and get a multi-city road-trip itinerary: ordered route, per-city day plans, intercity transport, and a budget breakdown.
+2. **Flights** (`/flights`) — standalone flight search over the same city dataset.
+3. **Stays** (`/stays`) — standalone accommodation search over the same city dataset.
 
-### Code Organization
+**Key technologies:** Next.js 16 (App Router) · React 19 · TypeScript (strict) · Zustand · Mapbox GL + Mapbox SDK · Framer Motion · Tailwind CSS v4 · Vitest.
 
-#### `/app/` — Next.js App Router Pages
-- `layout.tsx` — Root layout with Header, Footer, and global styles (including Mapbox CSS)
-- `page.tsx` — Landing page with hero, product preview, partners strip, and CTA sections
-- `planner/page.tsx` — Main planner interface (3-column grid: sidebar filters, map canvas, suggestions panel)
-- `planner/types.ts` — Planner-specific types (ItineraryDay, TripOption, etc.)
+### Layering rule — read this before adding a file
 
-The planner page is **client-side only** (`"use client"`), uses Zustand to fetch user intent, and calls `generateTripPlan()` to generate itineraries whenever intent changes.
-
-#### `/components/` — React Components
-
-**Feature-based organization:**
-- `planner/` — Planner-specific components (PlannerSidebar for filters, PlannerCanvas for map/itinerary, SuggestionsPanel for flights/stays/activities)
-- `layout/` — Layout wrappers (AppShell, PageHeader, PageSection)
-- `ui/` — Reusable UI primitives (Button, Card, Container, Section)
-- **Root level** — Standalone sections (Header, Footer, TripCard, MapView, SearchPanel, etc.) and landing page sections
-
-#### `/store/` — Zustand State Management
-
-- `tripIntentStore.ts` — Single store for trip user intent (query, duration, companions, vibe preferences). Exports `useTripIntentStore` hook.
-
-**TripIntent shape:**
-```tsx
-{ query, duration, companions, vibe: { pace, budget, activities } }
+```
+app/  →  features/*  →  domain/  →  (nothing)
+components/  (importable by app and any feature)
 ```
 
-#### `/lib/` — Business Logic
+- **`domain/`** is the shared, framework-free layer: types and the city dataset. It imports nothing from `features/` or `app/`.
+- **`features/*`** never import from each other. `features/planner` must not import from `features/flights` or `features/stays`, and vice versa. Each feature must work if the others were deleted.
+- **Cross-feature integration happens only through links with URL query params** — e.g. the planner's "Find stays →" / "Find flights →" buttons are plain `<a href="/stays?city=...">` / `<a href="/flights?from=...&to=...">` links, not imports. See "Cross-feature deep links" below.
+- **`app/`** route files should stay thin: state + composition, delegating logic to `features/*`.
 
-- `tripEngine.ts` — Main export `generateTripPlan(intent)` that generates trip options. Internally:
-  - Scores destinations based on intent (query match, budget alignment, pace)
-  - Builds itineraries with ranked destinations
-  - Generates 3 variations (best match, alternative route, exploration)
-  - Calls `enrichWithActivities()` to attach activities to destinations
-- `tripEngine/` — Modular trip engine submodules (internal exports used by `tripEngine.ts`)
-- `mapActivities.ts` — Maps destination data to activity suggestions
-- `geo.ts` — Geolocation utilities
+### Code organization
 
-#### `/types/` — TypeScript Type Definitions
+#### `/src/domain/` — Shared domain layer (no React, no feature imports)
+- `types.ts` — `Coordinates`, `BudgetTier`, `Pace`, `Climate`, `Interest`, `Region`, `PoiCategory`, `Poi`, `City`.
+- `geo.ts` — `distanceKm(a, b)` (Haversine, km) and `toLngLat(c)`. The app's coordinate convention is `{ lat, lng }` **everywhere**; `[lng, lat]` tuples exist only at the Mapbox boundary, produced by `toLngLat`. Don't reintroduce raw tuple indexing.
+- `cities/` — the city dataset, one file per region (`france.ts`, `iberia.ts`, `italy.ts`, `central.ts`, `benelux.ts`, `british-isles.ts`, `nordics.ts`, `balkans.ts`, `east.ts`), aggregated by `cities/index.ts` into `CITIES: City[]`, `CITY_BY_ID`, `getCity(id)`, and `citiesByCountry()`. ~41 European cities, each with 5-8 POIs, tiered stay/food costs, and min/max recommended days.
+  - Adding a city: follow the existing entries for id conventions (`kebab-city-country`, e.g. `lisbon-pt`; POI ids `cityid-poi-slug`), realistic tiered pricing, and 5-8 POIs with real-ish coordinates near the city center.
+  - `cities/index.test.ts` and `geo.test.ts` are dataset/geo sanity tests (unique ids, POI counts, Europe bounding box) — keep them passing when editing the dataset.
 
-- `tripIntent.tsx` — User intent shape
-- `tripPlan.tsx` — Trip plan/itinerary shape
-- `trip.tsx` — Destination/trip data shape
+#### `/src/features/planner/` — Trip planning feature
+- `types.ts` — `TripIntent`, `TripPlan`, `CityStay`, `TransportLeg`, `BudgetBreakdown`, `ItineraryDay`, `Activity`.
+- `engine/` — the rule-based trip engine. **Pure, synchronous, deterministic**: same `TripIntent` in → identical `TripPlan` out (no `Math.random`, no `Date.now`, no `crypto.randomUUID`; ids are derived from content). Entry point is `generateTripPlan(intent, cities = CITIES)` in `generatePlan.ts`, which orchestrates:
+  `selectCities` (surprise mode: score + filter + greedy pick) → `orderRoute` (nearest-neighbor from the origin) → `allocateDays` (distributes trip length across cities by min/max stay) → `buildCityDayPlans` (ranks POIs by interest/budget fit, deals them into days, pads short-POI cities with a free filler activity) → `pickTransportLeg` (distance-banded car/bus/train/flight cost+duration formula) → `computeBudget`.
+  Every module has a colocated `*.test.ts`. Run `npm t` after any engine change.
+- `store/tripIntentStore.ts` — Zustand store for `TripIntent`. `patchIntent(patch: Partial<TripIntent>)` does a partial merge — pass small partials, not full-object spreads (remember to spread `intent.vibe` yourself for nested fields).
+- `components/` — `PlannerSidebar` (mode toggle, origin, duration, companions, pace, budget tier, interests, climate/region or city picker, Generate button), `PlannerCanvas` (map + route summary strip + day cards), `MapView` (Mapbox: always-visible city markers + leg lines, POI markers scoped to the active city's day), `SuggestionsPanel` (Budget / Cities / Activities tabs, plus the cross-feature deep links).
+- Generation is **explicit**: the planner regenerates once on mount and whenever the sidebar's Generate button is clicked — not on every keystroke.
 
-#### `/data/` — Destination Data
-Static destination data used as seed for itinerary generation.
+#### `/src/features/flights/` and `/src/features/stays/` — Standalone search features
+- Each owns its own `types.ts` and a deterministic mock search lib (`lib/searchFlights.ts`, `lib/searchStays.ts`) over `@/domain/cities` — same-input-same-output (string-hash based variation, not `Math.random`).
+- Each page (`app/flights/page.tsx`, `app/stays/page.tsx`) reads prefill state from `useSearchParams` (wrapped in `<Suspense>`) and auto-searches when enough params are present.
 
-#### `/context/` — React Context
-- `TripIntentContext.tsx` — Context provider for trip intent (minimal usage; Zustand is preferred)
+#### Cross-feature deep links (query-param contract)
+- `/stays?city={cityId}&budget={backpacker|comfort|luxury}&nights={n}`
+- `/flights?from={cityId}&to={cityId}`
 
-#### `/services/providers/` — External Service Integration
-Integrations with external providers (API clients, handlers).
+Both params are domain city ids (e.g. `paris-fr`). Prefer extending this contract over adding a cross-feature import.
 
-#### `/state_old/` — Deprecated
-Old state management code (ignored; use Zustand store instead).
+#### `/src/features/marketing/` — Landing page sections
+Server components rendered from `app/(marketing)/page.tsx`. No shared state.
+
+#### `/src/components/`
+- `ui/` — generic primitives: `Button` (variants incl. `asLink` for `next/link`-backed buttons), `Card`, `Container`, `SectionHeader`.
+- `layout/` — `Header`, `Footer` (used by the root layout). Don't add more here unless it's genuinely used by more than one route — this directory has previously accumulated unused wrappers.
+
+#### `/src/app/` — Routes
+- `layout.tsx` — root layout: fonts, `Header`/`Footer`, imports `globals.css` (incl. Mapbox GL CSS is imported inside `MapView.tsx`, not globally).
+- `(marketing)/page.tsx`, `planner/page.tsx`, `flights/page.tsx`, `stays/page.tsx`.
 
 ### Styling
+- Tailwind v4, config in `tailwind.config.js` (`darkMode: "class"`).
+- CSS variables defined in `src/app/globals.css`: `--bg`, `--fg`, `--muted`, `--border`, `--card`, `--card-subtle`, `--primary` (+ `-dark`/`-light`), `--accent` (+ `-light`/`-dark`), plus gradient tokens. Use these vars, not hardcoded colors.
 
-- **Tailwind v4** config in `tailwind.config.js`
-- **CSS variables** for theming: `--bg`, `--fg`, `--primary` (set in `globals.css`)
-- **Dark mode** support via `darkMode: "class"` in Tailwind config
+### Testing
+- Vitest (`npm t`), node environment, `@` alias → `./src`. Currently covers the trip engine (`features/planner/engine/*.test.ts`) and the dataset/geo layer (`domain/**/*.test.ts`). No component/UI tests yet (no jsdom setup) — if you add one, add the jsdom dependency and config deliberately rather than assuming it's there.
+- No E2E test runner is configured. Verify UI changes by running `npm run dev` and driving the app in a real (or headless) browser.
 
-### Configuration Files
+## Common tasks
 
-- `tsconfig.json` — TypeScript strict mode, path alias `@/*` points to root
-- `next.config.ts` — Minimal Next.js config (can be extended with image optimization, redirects, etc.)
-- `eslint.config.mjs` — Next.js ESLint config (core web vitals + TypeScript rules)
-- `postcss.config.mjs` — PostCSS config for Tailwind CSS v4
-- `.env.local` — Runtime environment variables (e.g., Mapbox tokens)
-
-## Development Notes
-
-### Next.js 16 Breaking Changes
-Before writing code, consult the Next.js 16 documentation in `node_modules/next/dist/docs/`. Key differences from older versions:
-- App Router is the default structure.
-- Layout files can be Server Components by default; use `"use client"` for Client Components.
-- `useRouter` is imported from `next/navigation`, not `next/router`.
-- No automatic static generation for dynamic routes; use `generateStaticParams()` if needed.
-
-### Component Best Practices
-
-- **Server vs Client Components:**
-  - Landing page sections are server components (default in App Router)
-  - Pages that need interactivity or hooks (e.g., `/planner`) are client components (`"use client"`)
-  - Mapbox map renders in client components (requires DOM)
-
-- **Naming Conventions:**
-  - UI components in `components/ui/` are generic, reusable, and prefix-agnostic
-  - Feature components in `components/planner/` or `components/layout/` are feature-specific
-  - Page components (in `app/*/page.tsx`) are capitalized and match the route
-
-### State Management Pattern
-
-- Use `useTripIntentStore()` hook to read/write user preferences
-- Call `patchIntent()` to update the store (full replace, not merge)
-- Components automatically re-render when intent changes (Zustand reactivity)
-
-### Mapbox Integration
-
-- Mapbox GL CSS is imported in `layout.tsx` globally
-- Mapbox token is stored in `.env.local`
-- `MapView` component wraps Mapbox GL initialization
-- `lib/geo.ts` contains geolocation utilities
-- `lib/mapActivities.ts` enriches destinations with Mapbox-relevant activity data
-
-### Testing & Linting
-
-- `npm run lint` runs ESLint (no auto-fix; use IDE to fix or run with `--fix` manually)
-- No test runner configured yet (consider adding Jest or Vitest when needed)
-
-## Common Tasks
-
-- **Modify planner layout:** Edit grid columns in `app/planner/page.tsx` (currently `grid-cols-[280px_1fr_340px]`)
-- **Add new trip preferences:** Extend `TripIntent` type in `types/tripIntent.tsx`, then add UI controls in `PlannerSidebar`
-- **Change color scheme:** Update CSS variables in `app/globals.css` (--bg, --fg, --primary, etc.)
-- **Add new destinations:** Update seed data in `data/destinations.ts` and ensure fields match `Destination` type
-- **Update trip scoring logic:** Edit `score()` function in `lib/tripEngine.ts`
+- **Add a trip preference**: extend `TripIntent` in `features/planner/types.ts`, wire a control into `PlannerSidebar.tsx`, and use it in the relevant `engine/` module (most preferences flow through `selectCities.ts`, `buildCityDayPlans` (interest/budget ranking), or `pickTransportLeg` (budget tier)).
+- **Add cities**: add entries to the appropriate `domain/cities/<region>.ts` file (or a new region file + `Region` union member), matching the existing schema and id conventions. Re-run `npm t`.
+- **Change trip-scoring or transport-cost logic**: edit the relevant `features/planner/engine/*.ts` module and its colocated test — the engine's modules are small and single-purpose (`score.ts`, `selectCities.ts`, `orderRoute.ts`, `allocateDays.ts`, `transport.ts`, `dayPlans.ts`, `budget.ts`).
+- **Change color scheme**: update CSS variables in `src/app/globals.css`.
+- **Link a new cross-feature action**: add a plain `<a href="...">` with query params (see the deep-link contract above) rather than importing across features.
