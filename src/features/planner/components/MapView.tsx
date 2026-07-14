@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
+import maplibregl from "maplibre-gl";
 import { CityStay, ItineraryDay, TransportLeg } from "../types";
 import { toLngLat } from "@/domain/geo";
 
-import "mapbox-gl/dist/mapbox-gl.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
 type Props = {
   itinerary: ItineraryDay[];
@@ -27,11 +26,11 @@ export default function MapView({
   stops = [],
   legs = [],
 }: Props) {
-  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [styleLoaded, setStyleLoaded] = useState(false);
 
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
   const sourcesRef = useRef<string[]>([]);
   const clickHandlersRef = useRef<Record<string, () => void>>({});
 
@@ -39,9 +38,9 @@ export default function MapView({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: "https://tiles.openfreemap.org/styles/liberty",
       center: [2.3522, 48.8566],
       zoom: 3,
     });
@@ -59,7 +58,7 @@ export default function MapView({
   }, []);
 
   // CLEAN MAP
-  const clearMap = (map: mapboxgl.Map) => {
+  const clearMap = (map: maplibregl.Map) => {
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -95,7 +94,7 @@ export default function MapView({
 
     clearMap(map);
 
-    const bounds = new mapboxgl.LngLatBounds();
+    const bounds = new maplibregl.LngLatBounds();
 
     // --- CITY MARKERS (always visible waypoints) ---
     const cityCoordsById = new Map<string, [number, number]>();
@@ -110,7 +109,7 @@ export default function MapView({
         "px-2.5 py-1 rounded-full bg-[var(--primary)] text-white text-xs font-semibold shadow-md whitespace-nowrap border-2 border-white";
       el.textContent = stop.city;
 
-      const marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat(lngLat)
         .addTo(map);
 
@@ -180,7 +179,7 @@ export default function MapView({
         coords.push(lngLat);
         bounds.extend(lngLat);
 
-        const marker = new mapboxgl.Marker({ color }).setLngLat(lngLat).addTo(map);
+        const marker = new maplibregl.Marker({ color }).setLngLat(lngLat).addTo(map);
 
         markersRef.current.push(marker);
       });

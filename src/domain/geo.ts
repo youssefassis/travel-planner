@@ -15,7 +15,7 @@ export function distanceKm(a: Coordinates, b: Coordinates) {
   return 2 * R * Math.asin(Math.sqrt(x));
 }
 
-// Mapbox expects [lng, lat]; keep the swap in one place.
+// MapLibre expects [lng, lat]; keep the swap in one place.
 export function toLngLat(c: Coordinates): [number, number] {
   return [c.lng, c.lat];
 }
