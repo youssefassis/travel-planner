@@ -236,7 +236,7 @@ export default function MapView({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[280px] sm:h-[360px] lg:h-[420px] min-h-[280px] rounded-xl overflow-hidden border border-[var(--border)]"
+      className="w-full h-[300px] sm:h-[400px] lg:h-[480px] min-h-[300px] rounded-xl overflow-hidden border border-[var(--border)]"
     />
   );
 }
