@@ -2,16 +2,16 @@
 
 import { useEffect, useState, useMemo } from "react";
 
-import { useTripIntentStore } from "@/features/itinerary/store/tripIntentStore";
-import { generateTripPlan } from "@/features/itinerary/lib";
+import { useTripIntentStore } from "@/features/planner/store/tripIntentStore";
+import { generateTripPlan } from "@/features/planner/lib";
 
-import PlannerSidebar from "@/features/itinerary/components/PlannerSidebar";
-import PlannerCanvas from "@/features/itinerary/components/PlannerCanvas";
-import SuggestionsPanel from "@/features/itinerary/components/SuggestionsPanel";
+import PlannerSidebar from "@/features/planner/components/PlannerSidebar";
+import PlannerCanvas from "@/features/planner/components/PlannerCanvas";
+import SuggestionsPanel, {
+  SuggestionsTab,
+} from "@/features/planner/components/SuggestionsPanel";
 
-import { TripPlan } from "@/features/itinerary/types";
-
-type ActiveTab = "flights" | "stays" | "activities";
+import { TripPlan } from "@/features/planner/types";
 
 export default function PlannerPage() {
   const { intent } = useTripIntentStore();
@@ -20,12 +20,12 @@ export default function PlannerPage() {
   const [loading, setLoading] = useState(false);
 
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("flights");
+  const [activeTab, setActiveTab] = useState<SuggestionsTab>("budget");
 
-  const generate = async () => {
+  const generate = () => {
     setLoading(true);
 
-    const result = await generateTripPlan(intent);
+    const result = generateTripPlan(intent);
 
     setTrip(result);
     setActiveDayId(result.itinerary?.[0]?.id ?? null);
@@ -33,9 +33,12 @@ export default function PlannerPage() {
     setLoading(false);
   };
 
+  // TODO(wave 2, task #8): drop auto-regen, drive generation solely from
+  // the sidebar's Generate button.
   useEffect(() => {
     generate();
-  }, [intent.duration, intent.query, intent.companions, intent.vibe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intent.duration, intent.companions, intent.vibe]);
 
   const itinerary = useMemo(() => trip?.itinerary ?? [], [trip]);
 
