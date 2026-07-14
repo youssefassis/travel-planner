@@ -37,7 +37,7 @@ export default function PlannerCanvas({
   return (
     <div className="space-y-6">
       {/* MAP */}
-      <div className="rounded-2xl overflow-hidden bg-[var(--card)]">
+      <div className="rounded-xl overflow-hidden bg-[var(--card)] border border-[var(--border)]">
         <MapView
           itinerary={itinerary}
           activeDayId={activeDayId}
@@ -49,7 +49,7 @@ export default function PlannerCanvas({
 
       {/* ROUTE SUMMARY */}
       {stops.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 p-4 rounded-2xl bg-[var(--card)]">
+        <div className="flex flex-wrap items-center gap-2 p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
           {stops.map((stop, index) => {
             const nextStop = stops[index + 1];
             const leg = nextStop ? legBetween(stop.cityId, nextStop.cityId) : undefined;
@@ -95,10 +95,10 @@ export default function PlannerCanvas({
               key={day.id}
               onClick={() => setActiveDayId(day.id)}
               className={`
-                p-4 rounded-2xl cursor-pointer transition
+                p-4 rounded-xl border border-[var(--border)] cursor-pointer transition
                 bg-[var(--card)]
                 hover:bg-[var(--card)]/80
-                ${isActive ? "ring-1 ring-[var(--foreground)]" : ""}
+                ${isActive ? "ring-2 ring-[var(--primary)]" : ""}
               `}
             >
               <div className="flex items-center justify-between">
@@ -109,7 +109,7 @@ export default function PlannerCanvas({
                     text-xs px-2 py-1 rounded-lg
                     ${
                       isActive
-                        ? "bg-[var(--foreground)] text-[var(--bg)]"
+                        ? "bg-[var(--fg)] text-[var(--bg)]"
                         : "text-[var(--muted)]"
                     }
                   `}
