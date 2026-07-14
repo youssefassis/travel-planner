@@ -4,10 +4,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useTripIntentStore } from "../store/tripIntentStore";
-import { CITIES, citiesByCountry } from "@/domain/cities";
+import { citiesByCountry } from "@/domain/cities";
 import { BudgetTier, Climate, Interest, Pace, Region } from "@/domain/types";
 import { TripIntent, TripMode } from "../types";
 import Button from "@/components/ui/Button";
+import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import { fadeIn } from "@/components/motion";
 
 const FilterCard = ({
@@ -93,8 +94,6 @@ const REGION_OPTIONS: Region[] = [
   "east",
 ];
 
-const SORTED_CITIES = [...CITIES].sort((a, b) => a.name.localeCompare(b.name));
-
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -176,17 +175,12 @@ export default function PlannerSidebar({
 
         {/* Origin city */}
         <FilterCard label="Origin City">
-          <select
+          <CityAutocomplete
+            id="origin-city"
             value={intent.originCityId}
-            onChange={(e) => patchIntent({ originCityId: e.target.value })}
-            className="w-full px-4 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
-          >
-            {SORTED_CITIES.map((city) => (
-              <option key={city.id} value={city.id}>
-                {city.name}, {city.country}
-              </option>
-            ))}
-          </select>
+            onChange={(cityId) => patchIntent({ originCityId: cityId })}
+            placeholder="Search a city..."
+          />
         </FilterCard>
 
         {/* Duration */}
