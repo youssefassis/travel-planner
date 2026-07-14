@@ -42,18 +42,28 @@ function formatTime(hoursFromMidnight: number): string {
   return `${hour12}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
-export function searchFlights(fromCityId: string, toCityId: string): FlightOption[] {
+/**
+ * Deterministic mock flight search. `dateISO` (YYYY-MM-DD, optional) seeds the
+ * variation so different travel dates produce different schedules and fares;
+ * omitted = "flexible dates", which keeps old deep links stable.
+ */
+export function searchFlights(
+  fromCityId: string,
+  toCityId: string,
+  dateISO = ""
+): FlightOption[] {
   const from = getCity(fromCityId);
   const to = getCity(toCityId);
   if (!from || !to || from.id === to.id) return [];
 
   const distance = distanceKm(from.coords, to.coords);
-  const routeHash = hashString(`${from.id}->${to.id}`);
-  const count = 4 + (routeHash % 3); // 4-6 options per route
+  const routeKey = `${from.id}->${to.id}@${dateISO}`;
+  const routeHash = hashString(routeKey);
+  const count = 6 + (routeHash % 3); // 6-8 options per route
 
   const options: FlightOption[] = [];
   for (let i = 0; i < count; i++) {
-    const optionHash = hashString(`${from.id}->${to.id}#${i}`);
+    const optionHash = hashString(`${routeKey}#${i}`);
     const stops: 0 | 1 = optionHash % 3 === 0 ? 1 : 0;
 
     const rawDuration =
@@ -72,7 +82,7 @@ export function searchFlights(fromCityId: string, toCityId: string): FlightOptio
     const arrivalHour = departureHour + durationHrs;
 
     options.push({
-      id: `${from.id}--${to.id}--${i}`,
+      id: `${from.id}--${to.id}--${dateISO || "flex"}--${i}`,
       airline: AIRLINES[optionHash % AIRLINES.length],
       fromCityId: from.id,
       toCityId: to.id,
@@ -84,6 +94,7 @@ export function searchFlights(fromCityId: string, toCityId: string): FlightOptio
       durationHrs,
       stops,
       price,
+      bagFee: 20 + (optionHash % 26), // €20-45 per checked bag
     });
   }
 
