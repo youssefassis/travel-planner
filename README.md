@@ -6,7 +6,7 @@ Everything runs client-side on a curated city dataset. No backend, no API keys.
 
 ## Features
 
-- **Trip planner** (`/planner`) — an AI-style first draft in seconds: optimized route, realistic timed daily schedules (meals at restaurants, nightlife after dinner), pace-aware load, booking checklist, and an interactive map (MapLibre + OpenFreeMap).
+- **Trip planner** (`/planner`) — three quick questions, then a full plan: optimized route, realistic timed daily schedules (meals at restaurants, nightlife after dinner), pace-aware load, booking checklist, and an interactive map (MapLibre + OpenFreeMap).
 - **Editable plans** — swap a stop, remove a museum, add an unused sight, make a day rain-friendly, add or remove whole cities; the route, day numbering, and budget recompute instantly.
 - **Share & export** — copy a link that regenerates the identical plan (the engine is deterministic), open the route in Google Maps, share as text, or print to PDF.
 - **Flights** (`/flights`) — decision support: a handful of recommendations tailored to your priorities with trade-offs and full expected cost, not an endless results list.
