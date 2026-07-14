@@ -30,12 +30,12 @@ interface ButtonAsLinkProps extends SharedProps {
 type Props = ButtonAsButtonProps | ButtonAsLinkProps;
 
 const baseStyles =
-  "inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-base cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-base cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed";
 
 const sizeStyles = {
-  sm: "px-3 py-1.5 text-xs uppercase tracking-wide",
-  md: "px-4 py-2 text-sm font-medium",
-  lg: "px-6 py-3 text-base font-semibold",
+  sm: "px-3.5 py-1.5 text-xs",
+  md: "px-5 py-2.5 text-sm font-medium",
+  lg: "px-7 py-3.5 text-base font-semibold",
 };
 
 const variantStyles = {
@@ -48,8 +48,9 @@ const variantStyles = {
   ghost: "text-[var(--fg)] hover:bg-black/5 dark:hover:bg-white/10",
   accent:
     "text-[var(--primary)] hover:text-[var(--primary-dark)] underline-offset-2 hover:underline",
-  white:
-    "bg-white text-[var(--fg)] hover:bg-white/90 shadow-md hover:shadow-lg",
+  // Deliberately hardcoded dark text: this variant sits on colored/gradient
+  // surfaces, and var(--fg) flips to near-white in dark mode.
+  white: "bg-white text-[#1c140d] hover:bg-white/90 shadow-md hover:shadow-lg",
 };
 
 export default function Button({
