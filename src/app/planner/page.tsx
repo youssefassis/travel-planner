@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useTripIntentStore } from "@/features/planner/store/tripIntentStore";
 import { generateTripPlan } from "@/features/planner/engine";
 
-import PlannerSidebar from "@/features/planner/components/PlannerSidebar";
-import PlannerCanvas from "@/features/planner/components/PlannerCanvas";
-import SuggestionsPanel, {
-  SuggestionsTab,
-} from "@/features/planner/components/SuggestionsPanel";
+import TripCommandBar from "@/features/planner/components/TripCommandBar";
+import MapView from "@/features/planner/components/MapView";
+import BudgetOverlay from "@/features/planner/components/BudgetOverlay";
+import RouteStrip from "@/features/planner/components/RouteStrip";
+import DayTimeline from "@/features/planner/components/DayTimeline";
+import DayDetails from "@/features/planner/components/DayDetails";
 
 import { TripPlan } from "@/features/planner/types";
 
@@ -22,9 +23,7 @@ export default function PlannerPage() {
 
   const [trip, setTrip] = useState<TripPlan | null>(null);
   const [loading, setLoading] = useState(false);
-
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<SuggestionsTab>("budget");
 
   const generate = () => {
     setLoading(true);
@@ -43,18 +42,23 @@ export default function PlannerPage() {
   }, []);
 
   const itinerary = useMemo(() => trip?.itinerary ?? [], [trip]);
+  const activeDay = itinerary.find((day) => day.id === activeDayId) ?? null;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
       <div className="pt-28 md:pt-32 pb-20">
-        <Container size="wide">
+        <Container size="wide" className="space-y-6">
           <PageHeader
             title="Trip planner"
             description="Tune your preferences and generate a multi-city itinerary."
           />
 
+          {/* Trip brief + generate */}
+          <TripCommandBar onGenerate={generate} loading={loading} />
+
+          {/* Engine notes */}
           {trip && trip.notes.length > 0 && (
-            <Card padding="md" className="mb-6 space-y-1">
+            <Card padding="md" className="space-y-1">
               {trip.notes.map((note, i) => (
                 <p key={i} className="text-sm text-[var(--muted)]">
                   {note}
@@ -63,30 +67,39 @@ export default function PlannerPage() {
             </Card>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_340px] gap-6">
-            {/* LEFT: FILTERS */}
-            <PlannerSidebar onGenerate={generate} loading={loading} />
-
-            {/* CENTER: MAP + ITINERARY */}
-            <PlannerCanvas
+          {/* Full-width map with docked budget */}
+          <div className="relative">
+            <MapView
               itinerary={itinerary}
               activeDayId={activeDayId}
-              setActiveDayId={setActiveDayId}
-              loading={loading}
+              onSelectDay={setActiveDayId}
               stops={trip?.stops ?? []}
               legs={trip?.legs ?? []}
             />
-
-            {/* RIGHT: SUGGESTIONS */}
-            <div className="md:col-span-2 xl:col-span-1">
-              <SuggestionsPanel
-                trip={trip}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                activeDayId={activeDayId}
-              />
-            </div>
+            {trip && <BudgetOverlay budget={trip.budget} />}
           </div>
+
+          {/* Route overview */}
+          <RouteStrip
+            stops={trip?.stops ?? []}
+            legs={trip?.legs ?? []}
+            itinerary={itinerary}
+            setActiveDayId={setActiveDayId}
+          />
+
+          {/* Day-by-day timeline */}
+          <DayTimeline
+            itinerary={itinerary}
+            activeDayId={activeDayId}
+            setActiveDayId={setActiveDayId}
+          />
+
+          {/* Selected day */}
+          <DayDetails
+            day={activeDay}
+            stops={trip?.stops ?? []}
+            budgetTier={intent.vibe?.budget ?? "comfort"}
+          />
         </Container>
       </div>
     </div>

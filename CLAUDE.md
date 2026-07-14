@@ -50,8 +50,8 @@ components/  (importable by app and any feature)
   `selectCities` (surprise mode: score + filter + greedy pick) → `orderRoute` (nearest-neighbor from the origin) → `allocateDays` (distributes trip length across cities by min/max stay) → `buildCityDayPlans` (ranks POIs by interest/budget fit, deals them into days, pads short-POI cities with a free filler activity) → `pickTransportLeg` (distance-banded car/bus/train/flight cost+duration formula) → `computeBudget`.
   Every module has a colocated `*.test.ts`. Run `npm t` after any engine change.
 - `store/tripIntentStore.ts` — Zustand store for `TripIntent`. `patchIntent(patch: Partial<TripIntent>)` does a partial merge — pass small partials, not full-object spreads (remember to spread `intent.vibe` yourself for nested fields).
-- `components/` — `PlannerSidebar` (mode toggle, origin, duration, companions, pace, budget tier, interests, climate/region or city picker, Generate button), `PlannerCanvas` (map + route summary strip + day cards), `MapView` (Mapbox: always-visible city markers + leg lines, POI markers scoped to the active city's day), `SuggestionsPanel` (Budget / Cities / Activities tabs, plus the cross-feature deep links).
-- Generation is **explicit**: the planner regenerates once on mount and whenever the sidebar's Generate button is clicked — not on every keystroke.
+- `components/` — `TripCommandBar` (horizontal trip brief: origin autocomplete, duration stepper, Who/Budget cycle fields, mode toggle, collapsible "More filters" for pace/interests/climate/region/cities, Generate button), `MapView` (Mapbox: always-visible city markers + leg lines, POI markers scoped to the active city's day), `BudgetOverlay` (compact expandable budget card docked over the map), `RouteStrip` (stop pills + transport leg badges; flight legs deep-link to `/flights`), `DayTimeline` (horizontal scrollable day tabs), `DayDetails` (selected day's activities + `/stays` deep link).
+- Generation is **explicit**: the planner regenerates once on mount and whenever the command bar's Generate button is clicked — not on every keystroke.
 
 #### `/src/features/flights/` and `/src/features/stays/` — Standalone search features
 - Each owns its own `types.ts` and a deterministic mock search lib (`lib/searchFlights.ts`, `lib/searchStays.ts`) over `@/domain/cities` — same-input-same-output (string-hash based variation, not `Math.random`).
@@ -84,7 +84,7 @@ Server components rendered from `app/(marketing)/page.tsx`. No shared state.
 
 ## Common tasks
 
-- **Add a trip preference**: extend `TripIntent` in `features/planner/types.ts`, wire a control into `PlannerSidebar.tsx`, and use it in the relevant `engine/` module (most preferences flow through `selectCities.ts`, `buildCityDayPlans` (interest/budget ranking), or `pickTransportLeg` (budget tier)).
+- **Add a trip preference**: extend `TripIntent` in `features/planner/types.ts`, wire a control into `TripCommandBar.tsx`, and use it in the relevant `engine/` module (most preferences flow through `selectCities.ts`, `buildCityDayPlans` (interest/budget ranking), or `pickTransportLeg` (budget tier)).
 - **Add cities**: add entries to the appropriate `domain/cities/<region>.ts` file (or a new region file + `Region` union member), matching the existing schema and id conventions. Re-run `npm t`.
 - **Change trip-scoring or transport-cost logic**: edit the relevant `features/planner/engine/*.ts` module and its colocated test — the engine's modules are small and single-purpose (`score.ts`, `selectCities.ts`, `orderRoute.ts`, `allocateDays.ts`, `transport.ts`, `dayPlans.ts`, `budget.ts`).
 - **Change color scheme**: update CSS variables in `src/app/globals.css`.
