@@ -5,6 +5,9 @@ import { MapPin, Compass, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import SectionHeader from "@/components/ui/SectionHeader";
+import Section from "@/components/ui/Section";
+import Container from "@/components/ui/Container";
+import { fadeInUp, VIEWPORT_ONCE, DUR, EASE_OUT } from "@/components/motion";
 
 const DestinationCard = ({
   name,
@@ -20,11 +23,12 @@ const DestinationCard = ({
   index: number;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 32 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-60px" }}
-    transition={{ duration: 0.5, delay: index * 0.08, ease: "easeOut" }}
-    className="group relative overflow-hidden rounded-[2rem] h-72 sm:h-80 cursor-pointer transition-transform duration-500 ease-out will-change-transform hover:-translate-y-2 hover:shadow-2xl"
+    variants={fadeInUp}
+    initial="hidden"
+    whileInView="visible"
+    viewport={VIEWPORT_ONCE}
+    transition={{ duration: DUR.slow, ease: EASE_OUT, delay: Math.min(index * 0.08, 0.3) }}
+    className="group relative overflow-hidden rounded-2xl h-72 sm:h-80 cursor-pointer transition-transform duration-500 ease-out will-change-transform hover:-translate-y-1 hover:shadow-2xl"
   >
     <Image
       src={image}
@@ -67,10 +71,10 @@ export default function FeaturedDestinations() {
       image: "/images/paris.jpg",
     },
     {
-      name: "Tokyo",
-      country: "Japan",
-      climate: "Cherry Season 🏯",
-      image: "/images/tokyo.jpg",
+      name: "Lisbon",
+      country: "Portugal",
+      climate: "Sunny Coast ☀️",
+      image: "/images/portugal.jpg",
     },
     {
       name: "Barcelona",
@@ -79,10 +83,10 @@ export default function FeaturedDestinations() {
       image: "/images/barcelona.jpg",
     },
     {
-      name: "Bali",
-      country: "Indonesia",
-      climate: "Dry Season 🏝️",
-      image: "/images/bali.jpg",
+      name: "Marrakech",
+      country: "Morocco",
+      climate: "Desert Warmth 🏜️",
+      image: "/images/morocco.jpg",
     },
     {
       name: "New York",
@@ -99,13 +103,13 @@ export default function FeaturedDestinations() {
   ];
 
   return (
-    <section className="py-20 md:py-32 bg-[var(--bg)]">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
+    <Section size="md">
+      <Container>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          viewport={VIEWPORT_ONCE}
+          transition={{ duration: DUR.base, ease: EASE_OUT }}
         >
           <SectionHeader
             badge="Top Picks"
@@ -129,17 +133,11 @@ export default function FeaturedDestinations() {
         </div>
 
         <div className="text-center flex justify-center">
-          <Button
-            asLink
-            href="/planner"
-            variant="primary"
-            className="rounded-full px-8 py-4 flex items-center gap-2 hover:scale-[1.02] transition-transform shadow-md"
-          >
-            <span>View all destinations</span>
-            <ArrowRight className="w-4 h-4" />
+          <Button asLink href="/planner" variant="primary" size="lg" icon={<ArrowRight className="w-4 h-4" />}>
+            View all destinations
           </Button>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
   );
 }

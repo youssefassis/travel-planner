@@ -8,6 +8,7 @@ import {
   SiBookingdotcom,
   SiOpenstreetmap,
 } from "react-icons/si";
+import Section from "@/components/ui/Section";
 
 const PARTNERS = [
   { name: "Airbnb", Icon: SiAirbnb, color: "#FF5A5F" },
@@ -37,7 +38,7 @@ export default function PartnersStrip() {
   const loop = useMemo(() => [...PARTNERS, ...PARTNERS, ...PARTNERS], []);
 
   return (
-    <section className="relative border-y border-[var(--border)] bg-[var(--bg)] py-8 overflow-hidden">
+    <Section size="sm" className="relative border-y border-[var(--border)] bg-[var(--bg)] overflow-hidden">
       <p className="text-center text-xs uppercase tracking-widest text-[var(--muted)] mb-6 font-medium">
         Trusted by leading platforms
       </p>
@@ -57,6 +58,6 @@ export default function PartnersStrip() {
           ))}
         </div>
       </div>
-    </section>
+    </Section>
   );
 }
