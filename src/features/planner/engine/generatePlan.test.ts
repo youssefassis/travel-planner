@@ -123,6 +123,9 @@ describe("generateTripPlan", () => {
     const totalDays = plan.stops.reduce((sum, s) => sum + s.days, 0);
     expect(totalDays).toBe(30);
     expect(plan.itinerary).toHaveLength(30);
+
+    const activityIds = plan.itinerary.flatMap((d) => d.activities.map((a) => a.id));
+    expect(new Set(activityIds).size).toBe(activityIds.length);
   });
 
   it("handles custom mode with a valid selection, preserving those cities", () => {

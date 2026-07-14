@@ -33,9 +33,9 @@ function toActivity(poi: Poi, city: City): Activity {
   };
 }
 
-function fillerActivity(city: City, dayIndex: number): Activity {
+function fillerActivity(city: City, dayIndex: number, slot: number): Activity {
   return {
-    id: `${city.id}-explore-${dayIndex}`,
+    id: `${city.id}-explore-${dayIndex}-${slot}`,
     name: `Explore ${city.name} at your own pace`,
     category: "activity",
     price: 0,
@@ -75,7 +75,7 @@ export function buildCityDayPlans(
         dayCategories[d].add(poi.category);
         dayActivities[d].push(toActivity(poi, city));
       } else {
-        dayActivities[d].push(fillerActivity(city, startDayIndex + d));
+        dayActivities[d].push(fillerActivity(city, startDayIndex + d, slot));
       }
     }
   }
