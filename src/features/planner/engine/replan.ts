@@ -216,6 +216,154 @@ export function addActivity(
   return next ? rebuildPlan(next, intent, cities) : null;
 }
 
+/**
+ * The schedule slots food into lunch/dinner and nightlife after dinner, so
+ * manual reordering only makes sense within a scheduling class: daytime
+ * stops among daytime stops, nightlife among nightlife.
+ */
+function reorderClass(activity: Activity): "daytime" | "nightlife" | null {
+  if (activity.category === "food") return null;
+  return activity.category === "nightlife" ? "nightlife" : "daytime";
+}
+
+/** Whether up/down reordering can visibly change this activity's slot. */
+export function isReorderable(activity: Activity): boolean {
+  return reorderClass(activity) !== null;
+}
+
+/**
+ * Moves an activity one position up or down among its scheduling peers.
+ * The user's explicit order wins — no geo re-sort. Returns null when the
+ * activity is at the edge already, is meal-slotted food, or isn't there.
+ */
+export function moveActivity(
+  plan: TripPlan,
+  intent: TripIntent,
+  dayId: string,
+  activityId: string,
+  direction: "up" | "down",
+  cities: City[] = CITIES
+): TripPlan | null {
+  const next = replaceDay(
+    plan,
+    dayId,
+    (day) => {
+      const target = day.activities.find((a) => a.id === activityId);
+      if (!target) return null;
+      const klass = reorderClass(target);
+      if (!klass) return null;
+
+      const peerIndexes = day.activities
+        .map((a, i) => (reorderClass(a) === klass ? i : -1))
+        .filter((i) => i !== -1);
+      const position = peerIndexes.findIndex(
+        (i) => day.activities[i].id === activityId
+      );
+      const swapWith = peerIndexes[position + (direction === "up" ? -1 : 1)];
+      if (swapWith === undefined) return null;
+
+      const activities = [...day.activities];
+      const own = peerIndexes[position];
+      [activities[own], activities[swapWith]] = [
+        activities[swapWith],
+        activities[own],
+      ];
+      return { ...day, activities };
+    },
+    cities
+  );
+
+  return next ? rebuildPlan(next, intent, cities) : null;
+}
+
+/**
+ * Moves an activity to another day of the same city (a POI can't change
+ * cities). The target day is geo-reordered like any addition; the source
+ * day keeps its order. Returns null for cross-city or same-day moves.
+ */
+export function moveActivityToDay(
+  plan: TripPlan,
+  intent: TripIntent,
+  fromDayId: string,
+  activityId: string,
+  toDayId: string,
+  cities: City[] = CITIES
+): TripPlan | null {
+  if (fromDayId === toDayId) return null;
+
+  const fromDay = plan.itinerary.find((d) => d.id === fromDayId);
+  const toDay = plan.itinerary.find((d) => d.id === toDayId);
+  const target = fromDay?.activities.find((a) => a.id === activityId);
+  if (!fromDay || !toDay || !target) return null;
+  if (toDay.cityId !== target.cityId) return null;
+
+  const removed = replaceDay(
+    plan,
+    fromDayId,
+    (day) => ({
+      ...day,
+      activities: day.activities.filter((a) => a.id !== activityId),
+    }),
+    cities
+  );
+  if (!removed) return null;
+
+  const next = replaceDay(
+    removed,
+    toDayId,
+    (day, city) => ({
+      ...day,
+      activities: orderDayActivities([...day.activities, target], city),
+    }),
+    cities
+  );
+
+  return next ? rebuildPlan(next, intent, cities) : null;
+}
+
+/**
+ * Removes one day from the trip. The city keeps its other days (the stay
+ * and budget shrink accordingly); removing a city's only day removes the
+ * whole stop. Returns null when it would leave the trip empty.
+ */
+export function removeDay(
+  plan: TripPlan,
+  intent: TripIntent,
+  dayId: string,
+  cities: City[] = CITIES
+): TripPlan | null {
+  const stop = plan.stops.find((s) => s.dayPlans.some((d) => d.id === dayId));
+  if (!stop) return null;
+
+  if (stop.days <= 1) {
+    return removeCity(plan, intent, stop.cityId, cities);
+  }
+
+  const label = dayLabel(plan, dayId);
+  const stops = renumberDays(
+    plan.stops.map((s) => {
+      if (s.cityId !== stop.cityId) return s;
+      const days = s.days - 1;
+      return {
+        ...s,
+        days,
+        dayPlans: s.dayPlans.filter((d) => d.id !== dayId),
+        stayTotal: Math.round(s.stayPerNight * days),
+      };
+    })
+  );
+  const remainingDays = stops.reduce((sum, s) => sum + s.days, 0);
+
+  return rebuildPlan(
+    { ...plan, stops },
+    intent,
+    cities,
+    `Removed ${label} in ${stop.city} — the trip is now ${remainingDays} ${
+      remainingDays === 1 ? "day" : "days"
+    }`
+  );
+}
+
 /* ─── Editing: cities ───────────────────────────────────────────── */
 
 /** Re-labels every day sequentially (Day 1..N) after stops change. */
