@@ -6,8 +6,11 @@ import {
   addActivity,
   addCity,
   makeRainFriendly,
+  moveActivity,
+  moveActivityToDay,
   removeActivity,
   removeCity,
+  removeDay,
   swapActivity,
   unusedPoisForCity,
 } from "./replan";
@@ -204,5 +207,139 @@ describe("removeCity", () => {
     const plan = generateTripPlan(INTENT, CITIES); // single-city custom trip
     expect(plan.stops).toHaveLength(1);
     expect(removeCity(plan, INTENT, plan.stops[0].cityId, CITIES)).toBeNull();
+  });
+});
+
+describe("moveActivity", () => {
+  function daytimeIds(plan: TripPlan, dayId: string): string[] {
+    return plan.itinerary
+      .find((d) => d.id === dayId)!
+      .activities.filter((a) => a.category !== "food" && a.category !== "nightlife")
+      .map((a) => a.id);
+  }
+
+  it("swaps an activity with its scheduling peer, no geo re-sort", () => {
+    const plan = generateTripPlan(INTENT, CITIES);
+    const day = plan.itinerary.find((d) => daytimeIds(plan, d.id).length >= 2)!;
+    const [first, second] = daytimeIds(plan, day.id);
+
+    const next = moveActivity(plan, INTENT, day.id, second, "up", CITIES);
+    expect(next).not.toBeNull();
+    expect(daytimeIds(next!, day.id).slice(0, 2)).toEqual([second, first]);
+
+    // Moving back restores the original order.
+    const restored = moveActivity(next!, INTENT, day.id, second, "down", CITIES);
+    expect(daytimeIds(restored!, day.id).slice(0, 2)).toEqual([first, second]);
+  });
+
+  it("returns null at the edges and for meal-slotted food", () => {
+    const plan = generateTripPlan(INTENT, CITIES);
+    const day = plan.itinerary.find((d) => daytimeIds(plan, d.id).length >= 2)!;
+    const ids = daytimeIds(plan, day.id);
+    expect(moveActivity(plan, INTENT, day.id, ids[0], "up", CITIES)).toBeNull();
+    expect(
+      moveActivity(plan, INTENT, day.id, ids[ids.length - 1], "down", CITIES)
+    ).toBeNull();
+
+    const food = plan.itinerary
+      .flatMap((d) => d.activities.map((a) => ({ day: d, a })))
+      .find(({ a }) => a.category === "food");
+    if (food) {
+      expect(
+        moveActivity(plan, INTENT, food.day.id, food.a.id, "down", CITIES)
+      ).toBeNull();
+    }
+  });
+
+  it("is deterministic and pure", () => {
+    const plan = generateTripPlan(INTENT, CITIES);
+    const day = plan.itinerary.find((d) => daytimeIds(plan, d.id).length >= 2)!;
+    const id = daytimeIds(plan, day.id)[1];
+    const before = JSON.stringify(plan);
+    expect(moveActivity(plan, INTENT, day.id, id, "up", CITIES)).toEqual(
+      moveActivity(plan, INTENT, day.id, id, "up", CITIES)
+    );
+    expect(JSON.stringify(plan)).toBe(before);
+  });
+});
+
+describe("moveActivityToDay", () => {
+  it("moves an activity between two days of the same city", () => {
+    const plan = generateTripPlan(INTENT, CITIES); // 2 days in Paris
+    const [dayA, dayB] = plan.itinerary;
+    const target = dayA.activities[0];
+
+    const next = moveActivityToDay(plan, INTENT, dayA.id, target.id, dayB.id, CITIES);
+    expect(next).not.toBeNull();
+
+    const fromAfter = next!.itinerary.find((d) => d.id === dayA.id)!;
+    const toAfter = next!.itinerary.find((d) => d.id === dayB.id)!;
+    expect(fromAfter.activities.some((a) => a.id === target.id)).toBe(false);
+    expect(toAfter.activities.some((a) => a.id === target.id)).toBe(true);
+
+    // No duplicates, budget still consistent.
+    const ids = next!.itinerary.flatMap((d) => d.activities.map((a) => a.id));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(next!.budget.activities).toBe(plan.budget.activities);
+  });
+
+  it("refuses cross-city and same-day moves", () => {
+    const plan = addCity(generateTripPlan(INTENT, CITIES), INTENT, "brussels-be", CITIES)!;
+    const parisDay = plan.itinerary.find((d) => d.cityId === "paris-fr")!;
+    const brusselsDay = plan.itinerary.find((d) => d.cityId === "brussels-be")!;
+    const activity = parisDay.activities[0];
+
+    expect(
+      moveActivityToDay(plan, INTENT, parisDay.id, activity.id, brusselsDay.id, CITIES)
+    ).toBeNull();
+    expect(
+      moveActivityToDay(plan, INTENT, parisDay.id, activity.id, parisDay.id, CITIES)
+    ).toBeNull();
+  });
+});
+
+describe("removeDay", () => {
+  it("removes one day from a multi-day stop and shrinks the stay", () => {
+    const plan = generateTripPlan(INTENT, CITIES); // 2 days in Paris
+    const day = plan.itinerary[0];
+    const stopBefore = plan.stops[0];
+
+    const next = removeDay(plan, INTENT, day.id, CITIES);
+    expect(next).not.toBeNull();
+    expect(next!.itinerary).toHaveLength(plan.itinerary.length - 1);
+
+    const stopAfter = next!.stops[0];
+    expect(stopAfter.days).toBe(stopBefore.days - 1);
+    expect(stopAfter.stayTotal).toBe(
+      Math.round(stopAfter.stayPerNight * stopAfter.days)
+    );
+    expectSequentialDays(next!);
+    expect(next!.notes.at(-1)).toMatch(/Removed Day 1 in Paris/);
+    expect(next!.budget.perDay).toBe(
+      Math.round(next!.budget.total / next!.itinerary.length)
+    );
+  });
+
+  it("removing a city's only day removes the whole stop", () => {
+    const plan = addCity(generateTripPlan(INTENT, CITIES), INTENT, "brussels-be", CITIES)!;
+    const brussels = plan.stops.find((s) => s.cityId === "brussels-be")!;
+    let next: TripPlan | null = plan;
+    for (let i = 0; i < brussels.days; i++) {
+      const day = next!.itinerary.find((x) => x.cityId === "brussels-be")!;
+      next = removeDay(next!, INTENT, day.id, CITIES);
+    }
+    expect(next).not.toBeNull();
+    expect(next!.stops.some((s) => s.cityId === "brussels-be")).toBe(false);
+    expect(next!.legs).toHaveLength(next!.stops.length - 1);
+    expectSequentialDays(next!);
+  });
+
+  it("refuses to empty the trip", () => {
+    let plan: TripPlan | null = generateTripPlan(INTENT, CITIES);
+    while (plan!.itinerary.length > 1) {
+      plan = removeDay(plan!, INTENT, plan!.itinerary[0].id, CITIES);
+      expect(plan).not.toBeNull();
+    }
+    expect(removeDay(plan!, INTENT, plan!.itinerary[0].id, CITIES)).toBeNull();
   });
 });
