@@ -4,12 +4,12 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { BudgetBreakdown } from "../types";
 
-/** Compact trip-budget card docked over the map; expands to the breakdown. */
+/** Compact trip-budget sidebar card; expands to the breakdown. */
 export default function BudgetOverlay({ budget }: { budget: BudgetBreakdown }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="absolute top-4 right-4 z-10 min-w-[170px] rounded-xl border border-[var(--border)] bg-[var(--card)]/95 backdrop-blur-sm shadow-lg">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)]">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}

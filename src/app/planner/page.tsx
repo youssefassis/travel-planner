@@ -68,6 +68,8 @@ function PlannerPageContent() {
 
     setLoading(false);
     setPhase("revealed");
+    // The reveal replaces the wizard mid-scroll; start at the trip summary.
+    window.scrollTo(0, 0);
   };
 
   // A share link carries a full intent — regenerate that exact plan and skip
@@ -161,6 +163,7 @@ function PlannerPageContent() {
   const startEditing = () => {
     setStepIndex(0);
     setPhase("wizard");
+    window.scrollTo(0, 0);
   };
 
   return (
@@ -201,7 +204,7 @@ function PlannerPageContent() {
                     initial="hidden"
                     animate="visible"
                     exit={{ opacity: 0 }}
-                    className="space-y-10"
+                    className="space-y-6"
                   >
                     <motion.div variants={fadeInUp}>
                       <TripSummaryHeader
@@ -211,62 +214,66 @@ function PlannerPageContent() {
                       />
                     </motion.div>
 
-                    <motion.section variants={fadeInUp} className="space-y-4">
-                      <GroupHeading>Map & route</GroupHeading>
-                      <div className="relative">
+                    {/* Itinerary leads; map/route/budget/share form a
+                        compact context rail that pins while days scroll. */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 lg:gap-8">
+                      <motion.section variants={fadeInUp} className="space-y-4">
+                        <GroupHeading>Day by day</GroupHeading>
+                        <DayTimeline
+                          itinerary={itinerary}
+                          activeDayId={activeDayId}
+                          setActiveDayId={setActiveDayId}
+                        />
+                        <DayDetails
+                          key={activeDayId ?? "no-day"}
+                          day={activeDay}
+                          stops={trip.stops}
+                          pace={planIntent.vibe.pace}
+                          budgetTier={planIntent.vibe.budget}
+                          availablePois={availablePois}
+                          onSwap={handleSwap}
+                          onRainDay={handleRainDay}
+                          onBook={bookFromDay}
+                          onRemove={handleRemoveActivity}
+                          onAdd={handleAddActivity}
+                        />
+                        <BeforeYouGo
+                          itinerary={itinerary}
+                          onBook={bookFromChecklist}
+                        />
+                      </motion.section>
+
+                      {/* Sticky lives on a plain child: framer's inline
+                          transform on the animated wrapper would break it. */}
+                      <motion.aside variants={fadeInUp}>
+                        <div className="space-y-4 lg:sticky lg:top-24">
                         <MapView
                           itinerary={itinerary}
                           activeDayId={activeDayId}
                           onSelectDay={setActiveDayId}
                           stops={trip.stops}
                           legs={trip.legs}
+                          className="h-[260px] lg:h-[300px]"
+                        />
+                        <RouteStrip
+                          stops={trip.stops}
+                          legs={trip.legs}
+                          itinerary={itinerary}
+                          setActiveDayId={setActiveDayId}
+                          onRemoveCity={handleRemoveCity}
+                          onAddCity={handleAddCity}
                         />
                         <BudgetOverlay budget={trip.budget} />
-                      </div>
-                      <RouteStrip
-                        stops={trip.stops}
-                        legs={trip.legs}
-                        itinerary={itinerary}
-                        setActiveDayId={setActiveDayId}
-                        onRemoveCity={handleRemoveCity}
-                        onAddCity={handleAddCity}
-                      />
-                    </motion.section>
-
-                    <motion.section variants={fadeInUp} className="space-y-4">
-                      <GroupHeading>Day by day</GroupHeading>
-                      <DayTimeline
-                        itinerary={itinerary}
-                        activeDayId={activeDayId}
-                        setActiveDayId={setActiveDayId}
-                      />
-                      <DayDetails
-                        key={activeDayId ?? "no-day"}
-                        day={activeDay}
-                        stops={trip.stops}
-                        pace={planIntent.vibe.pace}
-                        budgetTier={planIntent.vibe.budget}
-                        availablePois={availablePois}
-                        onSwap={handleSwap}
-                        onRainDay={handleRainDay}
-                        onBook={bookFromDay}
-                        onRemove={handleRemoveActivity}
-                        onAdd={handleAddActivity}
-                      />
-                      <BeforeYouGo
-                        itinerary={itinerary}
-                        onBook={bookFromChecklist}
-                      />
-                    </motion.section>
-
-                    <motion.section variants={fadeInUp} className="space-y-4">
-                      <GroupHeading>Share & export</GroupHeading>
-                      <ShareTripBar
-                        plan={trip}
-                        intent={planIntent}
-                        pace={planIntent.vibe.pace}
-                      />
-                    </motion.section>
+                        <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+                          <ShareTripBar
+                            plan={trip}
+                            intent={planIntent}
+                            pace={planIntent.vibe.pace}
+                          />
+                        </div>
+                        </div>
+                      </motion.aside>
+                    </div>
                   </motion.div>
                 )
               )}

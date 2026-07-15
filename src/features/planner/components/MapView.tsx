@@ -14,6 +14,8 @@ type Props = {
   onSelectDay?: (dayId: string) => void;
   stops?: CityStay[];
   legs?: TransportLeg[];
+  /** Overrides the default height classes (e.g. for a sidebar placement). */
+  className?: string;
 };
 
 const DAY_COLORS = ["#000000", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
@@ -25,6 +27,7 @@ export default function MapView({
   onSelectDay,
   stops = [],
   legs = [],
+  className,
 }: Props) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -43,14 +46,29 @@ export default function MapView({
       style: "https://tiles.openfreemap.org/styles/liberty",
       center: [2.3522, 48.8566],
       zoom: 3,
+      // Collapsed to the (i) icon — the full bar covers a compact map.
+      attributionControl: { compact: true },
     });
 
     mapRef.current = map;
 
-    const handleLoad = () => setStyleLoaded(true);
+    const handleLoad = () => {
+      setStyleLoaded(true);
+      // The compact attribution control starts expanded; collapse it to the
+      // (i) toggle so it doesn't cover the bottom of a small map.
+      containerRef.current
+        ?.querySelector(".maplibregl-ctrl-attrib")
+        ?.classList.remove("maplibregl-compact-show");
+    };
     map.on("load", handleLoad);
 
+    // MapLibre only self-handles window resizes; layout-driven container
+    // resizes (breakpoint changes, column reflow) need an explicit resize.
+    const resizeObserver = new ResizeObserver(() => map.resize());
+    resizeObserver.observe(containerRef.current);
+
     return () => {
+      resizeObserver.disconnect();
       map.off("load", handleLoad);
       map.remove();
       mapRef.current = null;
@@ -226,7 +244,8 @@ export default function MapView({
 
     if (!bounds.isEmpty()) {
       map.fitBounds(bounds, {
-        padding: 100,
+        // Extra room at the bottom keeps pins clear of the attribution icon.
+        padding: { top: 40, right: 40, left: 40, bottom: 56 },
         duration: 800,
       });
     }
@@ -235,7 +254,9 @@ export default function MapView({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[300px] sm:h-[400px] lg:h-[480px] min-h-[300px] rounded-xl overflow-hidden border border-[var(--border)]"
+      className={`w-full rounded-xl overflow-hidden border border-[var(--border)] ${
+        className ?? "h-[300px] sm:h-[400px] lg:h-[480px] min-h-[300px]"
+      }`}
     />
   );
 }
