@@ -56,7 +56,7 @@ export default function ShareTripBar({ plan, intent, pace }: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden">
-      <span className="text-caption text-[var(--muted)] mr-1">Share &amp; export</span>
+      <span className="w-full text-caption text-[var(--muted)]">Share &amp; export</span>
 
       <button type="button" onClick={copyLink} className={buttonClasses}>
         <Link2 className="w-3.5 h-3.5" /> Copy link
