@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -19,10 +20,13 @@ export default function TripSummaryHeader({
   plan,
   intent,
   onEdit,
+  actions,
 }: {
   plan: TripPlan;
   intent: TripIntent;
   onEdit: () => void;
+  /** Trip-wide actions (e.g. share/export) shown in a footer row. */
+  actions?: ReactNode;
 }) {
   const route = plan.stops.map((stop) => stop.city).join(" → ");
   const days = plan.itinerary.length;
@@ -46,7 +50,7 @@ export default function TripSummaryHeader({
     <Card padding="lg">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-h2 text-[var(--fg)]">
+          <h1 className="text-h1 text-[var(--fg)]">
             {route} · {days} {days === 1 ? "day" : "days"}
           </h1>
           <div className="flex flex-wrap gap-2 mt-3">
@@ -78,6 +82,10 @@ export default function TripSummaryHeader({
             </p>
           ))}
         </div>
+      )}
+
+      {actions && (
+        <div className="mt-4 pt-4 border-t border-[var(--border)]">{actions}</div>
       )}
     </Card>
   );
