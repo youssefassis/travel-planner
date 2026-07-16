@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { BudgetTier, Pace, Poi } from "@/domain/types";
 import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
 import { Activity, CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
 import { buildDaySchedule, formatClock, isReorderable } from "../engine";
 
@@ -286,7 +285,7 @@ export default function DayDetails({
     ) : null;
 
   return (
-    <Card padding="lg">
+    <div className="p-6 sm:p-8">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
@@ -504,6 +503,6 @@ export default function DayDetails({
           Find stays in {day.city}
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useRef } from "react";
+import { useReducedMotion } from "framer-motion";
 import { ItineraryDay, TransportLeg } from "../types";
 import TransportModeIcon from "./TransportModeIcon";
 
@@ -22,6 +23,18 @@ export default function DayTimeline({
   setActiveDayId,
   legs = [],
 }: Props) {
+  const prefersReducedMotion = useReducedMotion();
+  const activeTabRef = useRef<HTMLButtonElement | null>(null);
+
+  // Keep the selected day visible when it changes via the arrows.
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      inline: "nearest",
+      block: "nearest",
+    });
+  }, [activeDayId, prefersReducedMotion]);
+
   if (itinerary.length === 0) return null;
 
   const Connector = ({
@@ -51,7 +64,7 @@ export default function DayTimeline({
 
   return (
     <div
-      className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-hide"
+      className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-hide"
       role="tablist"
     >
       {itinerary.map((day, i) => {
@@ -63,6 +76,7 @@ export default function DayTimeline({
               type="button"
               role="tab"
               aria-selected={isActive}
+              ref={isActive ? activeTabRef : undefined}
               onClick={() => setActiveDayId(day.id)}
               className={`shrink-0 min-w-[124px] p-3 rounded-xl border bg-[var(--card)] text-left transition-all ${
                 isActive

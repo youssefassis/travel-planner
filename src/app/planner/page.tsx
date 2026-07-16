@@ -26,9 +26,8 @@ import TripSummaryHeader from "@/features/planner/components/TripSummaryHeader";
 import MapView from "@/features/planner/components/MapView";
 import BudgetOverlay from "@/features/planner/components/BudgetOverlay";
 import RouteStrip from "@/features/planner/components/RouteStrip";
-import DayTimeline from "@/features/planner/components/DayTimeline";
+import DayByDay from "@/features/planner/components/DayByDay";
 import DayDetails from "@/features/planner/components/DayDetails";
-import DayNav from "@/features/planner/components/DayNav";
 import BeforeYouGo from "@/features/planner/components/BeforeYouGo";
 import ShareTripBar from "@/features/planner/components/ShareTripBar";
 import PrintItinerary from "@/features/planner/components/PrintItinerary";
@@ -248,34 +247,28 @@ function PlannerPageContent() {
                     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 lg:gap-8">
                       <motion.section variants={fadeInUp} className="space-y-4">
                         <GroupHeading>Day by day</GroupHeading>
-                        <DayTimeline
+                        <DayByDay
                           itinerary={itinerary}
                           activeDayId={activeDayId}
                           setActiveDayId={setActiveDayId}
                           legs={trip.legs}
-                        />
-                        <DayDetails
-                          key={activeDayId ?? "no-day"}
-                          day={activeDay}
-                          stops={trip.stops}
-                          pace={planIntent.vibe.pace}
-                          budgetTier={planIntent.vibe.budget}
-                          availablePois={availablePois}
-                          onSwap={handleSwap}
-                          onRainDay={handleRainDay}
-                          onBook={bookFromDay}
-                          onRemove={handleRemoveActivity}
-                          onAdd={handleAddActivity}
-                          onMove={handleMoveActivity}
-                          onMoveToDay={handleMoveToDay}
-                          onRemoveDay={handleRemoveDay}
-                        />
-                        <DayNav
-                          itinerary={itinerary}
-                          activeDayId={activeDayId}
-                          legs={trip.legs}
-                          onSelectDay={setActiveDayId}
-                        />
+                        >
+                          <DayDetails
+                            day={activeDay}
+                            stops={trip.stops}
+                            pace={planIntent.vibe.pace}
+                            budgetTier={planIntent.vibe.budget}
+                            availablePois={availablePois}
+                            onSwap={handleSwap}
+                            onRainDay={handleRainDay}
+                            onBook={bookFromDay}
+                            onRemove={handleRemoveActivity}
+                            onAdd={handleAddActivity}
+                            onMove={handleMoveActivity}
+                            onMoveToDay={handleMoveToDay}
+                            onRemoveDay={handleRemoveDay}
+                          />
+                        </DayByDay>
                         <BeforeYouGo
                           itinerary={itinerary}
                           onBook={bookFromChecklist}
