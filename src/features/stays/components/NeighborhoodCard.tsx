@@ -1,8 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Check, MapPin } from "lucide-react";
-import { fadeInUp } from "@/components/motion";
+import MotionCard from "@/components/ui/MotionCard";
 import { NeighborhoodPick } from "../types";
 
 /** One recommended area and why it fits the traveler's style. */
@@ -10,10 +9,7 @@ export default function NeighborhoodCard({ pick }: { pick: NeighborhoodPick }) {
   const { neighborhood, reasons, avgPricePerNight, stayCount } = pick;
 
   return (
-    <motion.div
-      variants={fadeInUp}
-      className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5"
-    >
+    <MotionCard>
       <div className="flex items-start justify-between gap-3 mb-1">
         <h3 className="text-h3 text-[var(--fg)] flex items-center gap-2">
           <MapPin className="w-4 h-4 text-[var(--primary)]" />
@@ -44,6 +40,6 @@ export default function NeighborhoodCard({ pick }: { pick: NeighborhoodPick }) {
           {stayCount} {stayCount === 1 ? "stay" : "stays"} available in this area
         </p>
       )}
-    </motion.div>
+    </MotionCard>
   );
 }

@@ -7,6 +7,8 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import SegmentedControl from "@/components/ui/SegmentedControl";
+import ResultsHeader from "@/components/ui/ResultsHeader";
+import TogglePill from "@/components/ui/TogglePill";
 import { fadeInUp } from "@/components/motion";
 import { MONTH_FULL, WarmthTarget, WeatherMode, WeatherPrefs, WeatherQuery } from "../types";
 
@@ -15,6 +17,8 @@ type Props = {
   initialPrefs: WeatherPrefs;
   initialCityId: string;
   onSearch: (query: WeatherQuery) => void;
+  /** When set, hides the mode toggle and locks the form to one mode. */
+  lockedMode?: WeatherMode;
 };
 
 const MODE_OPTIONS: { label: string; value: WeatherMode }[] = [
@@ -29,42 +33,14 @@ const WARMTH_OPTIONS: { label: string; value: WarmthTarget }[] = [
   { label: "Any", value: "any" },
 ];
 
-/** Reusable toggle pill for the boolean dryness/sun preferences. */
-function TogglePill({
-  active,
-  onClick,
-  icon,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={`flex items-center gap-2 py-2 px-4 rounded-full font-medium text-sm transition-all ${
-        active
-          ? "bg-[var(--primary)] text-white shadow-sm"
-          : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-      }`}
-    >
-      {icon}
-      {children}
-    </button>
-  );
-}
-
 export default function WeatherSearchForm({
   initialMode,
   initialPrefs,
   initialCityId,
   onSearch,
+  lockedMode,
 }: Props) {
-  const [mode, setMode] = useState<WeatherMode>(initialMode);
+  const [mode, setMode] = useState<WeatherMode>(lockedMode ?? initialMode);
   const [warmth, setWarmth] = useState<WarmthTarget>(initialPrefs.warmth);
   const [dry, setDry] = useState(initialPrefs.dry);
   const [sunny, setSunny] = useState(initialPrefs.sunny);
@@ -83,18 +59,18 @@ export default function WeatherSearchForm({
   return (
     <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
       <Card as="form" padding="lg" onSubmit={handleSubmit}>
-        <div className="mb-6">
-          <SegmentedControl options={MODE_OPTIONS} value={mode} onChange={setMode} />
-        </div>
+        {!lockedMode && (
+          <div className="mb-6">
+            <SegmentedControl options={MODE_OPTIONS} value={mode} onChange={setMode} />
+          </div>
+        )}
 
         {mode === "conditions" ? (
           <>
-            <h2 className="text-h2 text-[var(--fg)] mb-1">
-              What weather are you after?
-            </h2>
-            <p className="text-small text-[var(--muted)] mb-6">
-              Pick the conditions and we&apos;ll rank destinations that deliver.
-            </p>
+            <ResultsHeader
+              title="What weather are you after?"
+              blurb="Pick the conditions and we'll rank destinations that deliver."
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
               <div>
@@ -119,7 +95,7 @@ export default function WeatherSearchForm({
                   onChange={(e) =>
                     setMonthIndex(e.target.value === "any" ? null : Number(e.target.value))
                   }
-                  className="w-full rounded-full border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-2.5 text-sm text-[var(--fg)]"
+                  className="w-full text-sm"
                 >
                   <option value="any">Any month (best per city)</option>
                   {MONTH_FULL.map((name, index) => (
@@ -137,14 +113,16 @@ export default function WeatherSearchForm({
               </span>
               <div className="flex flex-wrap gap-2">
                 <TogglePill
-                  active={dry}
+                  size="md"
+                  selected={dry}
                   onClick={() => setDry((v) => !v)}
                   icon={<CloudSun className="w-4 h-4" />}
                 >
                   Mostly dry
                 </TogglePill>
                 <TogglePill
-                  active={sunny}
+                  size="md"
+                  selected={sunny}
                   onClick={() => setSunny((v) => !v)}
                   icon={<Sun className="w-4 h-4" />}
                 >
@@ -159,12 +137,10 @@ export default function WeatherSearchForm({
           </>
         ) : (
           <>
-            <h2 className="text-h2 text-[var(--fg)] mb-1">
-              When should you go?
-            </h2>
-            <p className="text-small text-[var(--muted)] mb-6">
-              Pick a city — we&apos;ll show the best months and its year-round climate.
-            </p>
+            <ResultsHeader
+              title="When should you go?"
+              blurb="Pick a city — we'll show the best months and its year-round climate."
+            />
 
             <div className="mb-8 max-w-sm">
               <label

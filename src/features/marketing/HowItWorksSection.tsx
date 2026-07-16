@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import SectionHeader from "@/components/ui/SectionHeader";
 import Section from "@/components/ui/Section";
 import Container from "@/components/ui/Container";
+import Card from "@/components/ui/Card";
 import { VIEWPORT_ONCE, DUR, EASE_OUT } from "@/components/motion";
 import type { LucideIcon } from "lucide-react";
 
@@ -26,7 +27,10 @@ const StepCard = ({
     whileInView={{ opacity: 1, y: 0 }}
     viewport={VIEWPORT_ONCE}
     transition={{ duration: DUR.slow, ease: EASE_OUT, delay: Math.min(index * 0.1, 0.3) }}
-    className="relative group rounded-xl p-8 bg-[var(--card)] border border-[var(--border)] shadow-sm hover:shadow-md hover:border-[var(--primary)]/30 transition-all duration-300"
+  >
+  <Card
+    padding="lg"
+    className="relative group h-full transition-colors duration-300 hover:border-[var(--primary)]/30"
   >
     {/* Step number + icon row */}
     <div className="flex items-center gap-4 mb-6">
@@ -44,6 +48,7 @@ const StepCard = ({
 
     {/* Subtle gradient accent on hover */}
     <div className="absolute inset-x-0 bottom-0 h-0.5 rounded-b-xl bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+  </Card>
   </motion.div>
 );
 

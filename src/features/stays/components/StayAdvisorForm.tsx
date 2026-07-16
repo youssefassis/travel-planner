@@ -8,6 +8,8 @@ import Button from "@/components/ui/Button";
 import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import CycleField from "@/components/ui/CycleField";
 import Stepper from "@/components/ui/Stepper";
+import ResultsHeader from "@/components/ui/ResultsHeader";
+import TogglePill from "@/components/ui/TogglePill";
 import { fadeInUp } from "@/components/motion";
 import { StayPreferences, StayStyle, TravelParty } from "../types";
 
@@ -58,10 +60,10 @@ export default function StayAdvisorForm({ initial, onAdvise }: Props) {
   return (
     <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
       <Card as="form" padding="lg" onSubmit={handleSubmit}>
-        <h2 className="text-h2 text-[var(--fg)] mb-1">Tell us how you travel</h2>
-        <p className="text-small text-[var(--muted)] mb-6 sm:mb-8">
-          A few answers — we&apos;ll recommend the neighborhoods and stays that fit.
-        </p>
+        <ResultsHeader
+          title="Tell us how you travel"
+          blurb="A few answers — we'll recommend the neighborhoods and stays that fit."
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 items-end mb-4 sm:mb-5">
           <div>
@@ -115,23 +117,15 @@ export default function StayAdvisorForm({ initial, onAdvise }: Props) {
             What do you enjoy?
           </span>
           <div className="flex flex-wrap gap-2">
-            {STYLE_OPTIONS.map((option) => {
-              const selected = styles.includes(option.value);
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => toggleStyle(option.value)}
-                  className={`py-1.5 px-3 rounded-full font-medium transition-all text-xs ${
-                    selected
-                      ? "bg-[var(--primary)] text-white shadow-sm"
-                      : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
+            {STYLE_OPTIONS.map((option) => (
+              <TogglePill
+                key={option.value}
+                selected={styles.includes(option.value)}
+                onClick={() => toggleStyle(option.value)}
+              >
+                {option.label}
+              </TogglePill>
+            ))}
           </div>
         </div>
 

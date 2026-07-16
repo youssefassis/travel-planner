@@ -1,10 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { CalendarDays, Check, MapPin } from "lucide-react";
-import Link from "next/link";
 import Button from "@/components/ui/Button";
-import { fadeInUp } from "@/components/motion";
+import MotionCard from "@/components/ui/MotionCard";
 import { MONTH_FULL, TripWeatherMatch } from "../types";
 
 type Props = {
@@ -12,12 +10,11 @@ type Props = {
   onSeeMonths: (cityId: string) => void;
 };
 
-/** Score → accent ring color, so higher fits read hotter. */
+/** Score → ring color (great / ok / poor), so higher fits read hotter. */
 function scoreColor(score: number): string {
-  if (score >= 80) return "hsl(150 60% 42%)";
-  if (score >= 60) return "hsl(90 55% 45%)";
-  if (score >= 40) return "hsl(42 90% 50%)";
-  return "hsl(20 75% 55%)";
+  if (score >= 75) return "var(--success)";
+  if (score >= 50) return "var(--warning)";
+  return "var(--danger)";
 }
 
 /** One ranked destination: the fit, the month evaluated, and the ways in. */
@@ -25,11 +22,7 @@ export default function WeatherMatchCard({ match, onSeeMonths }: Props) {
   const { city, monthIndex, score, verdict, reasons } = match;
 
   return (
-    <motion.div
-      variants={fadeInUp}
-      whileHover={{ y: -2 }}
-      className="flex flex-col bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 transition-all hover:shadow-lg"
-    >
+    <MotionCard hover className="flex flex-col">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0">
           <h3 className="text-h3 text-[var(--fg)] truncate">{city.name}</h3>
@@ -65,13 +58,13 @@ export default function WeatherMatchCard({ match, onSeeMonths }: Props) {
         ))}
       </ul>
 
-      <div className="flex flex-wrap items-center gap-2 mt-auto pt-4 border-t border-[var(--border)]">
+      <div className="flex flex-wrap items-center gap-3 mt-auto pt-4 border-t border-[var(--border)]">
         <Button
           asLink
           href={`/planner?destination=${city.id}&month=${monthIndex}`}
           size="sm"
         >
-          Plan a trip
+          Plan this trip
         </Button>
         <button
           type="button"
@@ -80,22 +73,7 @@ export default function WeatherMatchCard({ match, onSeeMonths }: Props) {
         >
           Best months
         </button>
-        <span className="text-[var(--border)]" aria-hidden>
-          ·
-        </span>
-        <Link
-          href={`/stays?city=${city.id}`}
-          className="text-sm font-medium text-[var(--muted)] hover:text-[var(--fg)]"
-        >
-          Stays
-        </Link>
-        <Link
-          href={`/flights?to=${city.id}`}
-          className="text-sm font-medium text-[var(--muted)] hover:text-[var(--fg)]"
-        >
-          Flights
-        </Link>
       </div>
-    </motion.div>
+    </MotionCard>
   );
 }

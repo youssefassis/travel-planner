@@ -2,6 +2,7 @@
 
 import { Interest, Region } from "@/domain/types";
 import Card from "@/components/ui/Card";
+import TogglePill from "@/components/ui/TogglePill";
 import { DiscoverFilters } from "../types";
 
 type Props = {
@@ -36,31 +37,6 @@ const REGION_LABELS: Record<Region, string> = {
 
 const cap = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 
-function Pill({
-  selected,
-  onClick,
-  children,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={`py-1.5 px-3 rounded-full font-medium text-xs transition-all ${
-        selected
-          ? "bg-[var(--primary)] text-white shadow-sm"
-          : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 export default function FilterBar({ filters, onChange, poolSize }: Props) {
   const toggleInterest = (interest: Interest) => {
     const interests = filters.interests.includes(interest)
@@ -84,13 +60,13 @@ export default function FilterBar({ filters, onChange, poolSize }: Props) {
         <span className="text-caption text-[var(--fg)] block mb-2">In the mood for</span>
         <div className="flex flex-wrap gap-2">
           {INTEREST_OPTIONS.map((interest) => (
-            <Pill
+            <TogglePill
               key={interest}
               selected={filters.interests.includes(interest)}
               onClick={() => toggleInterest(interest)}
             >
               {cap(interest)}
-            </Pill>
+            </TogglePill>
           ))}
         </div>
       </div>
@@ -98,17 +74,20 @@ export default function FilterBar({ filters, onChange, poolSize }: Props) {
       <div>
         <span className="text-caption text-[var(--fg)] block mb-2">Region</span>
         <div className="flex flex-wrap gap-2">
-          <Pill selected={filters.region === "any"} onClick={() => setRegion("any")}>
+          <TogglePill
+            selected={filters.region === "any"}
+            onClick={() => setRegion("any")}
+          >
             Anywhere
-          </Pill>
+          </TogglePill>
           {(Object.keys(REGION_LABELS) as Region[]).map((region) => (
-            <Pill
+            <TogglePill
               key={region}
               selected={filters.region === region}
               onClick={() => setRegion(region)}
             >
               {REGION_LABELS[region]}
-            </Pill>
+            </TogglePill>
           ))}
         </div>
       </div>

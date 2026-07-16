@@ -1,5 +1,7 @@
 "use client";
 
+import { pillClasses } from "./TogglePill";
+
 type Option<T extends string> = {
   label: string;
   value: T;
@@ -28,11 +30,7 @@ export default function FilterPills<T extends string>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(option.value)}
-            className={`py-1.5 px-3 rounded-full text-xs font-medium transition-all ${
-              selected
-                ? "bg-[var(--primary)] text-white shadow-sm"
-                : "bg-[var(--card-subtle)] text-[var(--fg)] hover:bg-[var(--border)]"
-            }`}
+            className={pillClasses(selected)}
           >
             {option.label}
           </button>
