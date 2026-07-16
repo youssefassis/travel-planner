@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
@@ -11,6 +12,7 @@ import {
   Plus,
   RefreshCw,
   Star,
+  Sun,
   Ticket,
   Trash2,
   UtensilsCrossed,
@@ -491,17 +493,26 @@ export default function DayDetails({
         ) : (
           <span />
         )}
-        <Button
-          asLink
-          href={`/stays?city=${day.cityId}&budget=${budgetTier}${
-            stop ? `&nights=${stop.days}` : ""
-          }`}
-          variant="accent"
-          size="sm"
-          icon={<ArrowRight className="w-3.5 h-3.5" />}
-        >
-          Find stays in {day.city}
-        </Button>
+        <div className="flex items-center gap-4">
+          <Link
+            href={`/weather?city=${day.cityId}`}
+            className="flex items-center gap-1.5 text-small font-medium text-[var(--muted)] hover:text-[var(--fg)] transition-colors"
+          >
+            <Sun className="w-3.5 h-3.5" />
+            Best time to visit
+          </Link>
+          <Button
+            asLink
+            href={`/stays?city=${day.cityId}&budget=${budgetTier}${
+              stop ? `&nights=${stop.days}` : ""
+            }`}
+            variant="accent"
+            size="sm"
+            icon={<ArrowRight className="w-3.5 h-3.5" />}
+          >
+            Find stays in {day.city}
+          </Button>
+        </div>
       </div>
     </div>
   );
