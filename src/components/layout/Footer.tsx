@@ -6,8 +6,7 @@ const YEAR = new Date().getFullYear();
 
 const NAVIGATION = [
   { label: "Plan a trip", href: "/planner" },
-  { label: "Flights", href: "/flights" },
-  { label: "Stays", href: "/stays" },
+  { label: "Explore", href: "/explore" },
 ];
 
 export default function Footer() {

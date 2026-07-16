@@ -66,7 +66,7 @@ export default function CTA() {
             journey.
           </p>
 
-          <div className="flex justify-center">
+          <div className="flex flex-wrap justify-center gap-3">
             <Button
               asLink
               href="/planner"
@@ -76,6 +76,9 @@ export default function CTA() {
               iconPosition="right"
             >
               Plan a trip
+            </Button>
+            <Button asLink href="/explore" variant="secondary" size="lg">
+              Not sure where? Explore
             </Button>
           </div>
         </motion.div>
