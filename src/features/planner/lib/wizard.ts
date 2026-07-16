@@ -17,8 +17,8 @@ export type WizardStep = {
 export const WIZARD_STEPS: WizardStep[] = [
   {
     id: "route",
-    title: "Where & how long",
-    blurb: "Where you start, how long you're away — and who picks the cities.",
+    title: "Where & when",
+    blurb: "Where you start, how long, when you're going — and who picks the cities.",
   },
   {
     id: "party",

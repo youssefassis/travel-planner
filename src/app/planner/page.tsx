@@ -258,6 +258,7 @@ function PlannerPageContent() {
                             stops={trip.stops}
                             pace={planIntent.vibe.pace}
                             budgetTier={planIntent.vibe.budget}
+                            travelMonth={planIntent.travelMonth}
                             availablePois={availablePois}
                             onSwap={handleSwap}
                             onRainDay={handleRainDay}

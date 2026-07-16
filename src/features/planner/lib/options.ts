@@ -1,4 +1,4 @@
-import { BudgetTier, Climate, Interest, Pace, Region } from "@/domain/types";
+import { BudgetTier, Interest, Pace, Region } from "@/domain/types";
 import { TripIntent, TripMode } from "../types";
 
 /** Shared option lists + labels for the trip intent fields (wizard, summary). */
@@ -38,13 +38,6 @@ export const INTEREST_OPTIONS: Interest[] = [
   "history",
   "art",
   "adventure",
-];
-
-export const CLIMATE_OPTIONS: (Climate | "any")[] = [
-  "any",
-  "cold",
-  "temperate",
-  "warm",
 ];
 
 export const REGION_LABELS: Record<Region, string> = {

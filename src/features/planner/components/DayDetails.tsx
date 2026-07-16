@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { BudgetTier, Pace, Poi } from "@/domain/types";
+import { getMonthNormal, MONTH_NAMES, tempWord } from "@/domain/climate";
 import Button from "@/components/ui/Button";
 import { Activity, CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
 import { buildDaySchedule, formatClock, isReorderable } from "../engine";
@@ -34,6 +35,8 @@ type Props = {
   stops: CityStay[];
   pace: Pace;
   budgetTier: BudgetTier;
+  /** Selected travel month (0-11); when set, shows the city's expected weather. */
+  travelMonth?: number;
   /** What "Add a stop" can offer — the city's POIs not yet in the plan. */
   availablePois: Poi[];
   /** Returns false when no alternative was available. */
@@ -118,6 +121,7 @@ export default function DayDetails({
   stops,
   pace,
   budgetTier,
+  travelMonth,
   availablePois,
   onSwap,
   onRainDay,
@@ -136,6 +140,8 @@ export default function DayDetails({
 
   const stop = stops.find((s) => s.cityId === day.cityId);
   const schedule = buildDaySchedule(day, pace);
+  const weather =
+    travelMonth != null ? getMonthNormal(day.cityId, travelMonth) : undefined;
   const otherSameCityDays =
     stop?.dayPlans.filter((d) => d.id !== day.id) ?? [];
 
@@ -297,6 +303,14 @@ export default function DayDetails({
           <p className="text-small text-[var(--muted)] mt-0.5">
             {schedule.loadNote} · ~{schedule.busyHrs}h on your feet
           </p>
+          {weather && (
+            <p className="flex items-center gap-1.5 text-small text-[var(--muted)] mt-1">
+              <Sun className="w-3.5 h-3.5 text-[var(--primary)]" />
+              {MONTH_NAMES[travelMonth!]}: {tempWord(weather.high)}, {weather.high}° /{" "}
+              {weather.low}° · {weather.rainDays} rainy{" "}
+              {weather.rainDays === 1 ? "day" : "days"} · {weather.sunHours}h sun
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span
