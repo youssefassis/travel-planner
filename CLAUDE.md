@@ -17,17 +17,24 @@ Guidance for Claude Code when working in this repository.
 
 ## Architecture
 
-Imports flow one way: `app → features → domain`. `src/components` may be used by all layers. **Features never import each other** — cross-feature integration happens only through URL links (`/stays?city=…&budget=…&nights=…`, `/flights?from=…&to=…`, and into the planner: `/planner?destination=<cityId>&travelers=<solo|couple|group>&budget=<backpacker|comfort|luxury>` — parsed by `features/planner/lib/heroPrefill.ts` to prefill the wizard; share links `?plan=1&…` take precedence).
+Imports flow one way: `app → features → domain`. `src/components` may be used by all layers. **Features never import each other** — but the `app` layer MAY compose several features on one route. That is how the **trip hub** works: `/planner` is a tabbed hub (Itinerary · Flights · Stays · Budget) whose non-itinerary tabs live in `app/planner/_components/` and pull in the flights/stays/weather features, prefilled from the trip via `app/planner/_lib/derive.ts`. Feature→feature data still never crosses through imports.
+
+Entry points hand off through the URL: hero/cards → `/planner?destination=<cityId>&origin=<cityId>&travelers=<solo|couple|group>&budget=<tier>&month=<0-11>` (parsed by `features/planner/lib/heroPrefill.ts` to prefill the wizard); share links `?plan=1&…` (regenerate the exact plan, skip the wizard) take precedence; the hub tab is carried in `?tab=` (ignored by the share/hero parsers). Legacy `/flights`, `/stays`, `/discover`, `/weather` are **redirects** — `/flights` & `/stays` are server pages that map their query into `/planner?…&tab=…`; `/discover` & `/weather` redirect to `/explore` via `next.config.ts`.
 
 ```
 src/
-  app/         Routes: (marketing) home, /planner, /flights, /stays
-  domain/      Shared vocabulary: types, city dataset, geo helpers
+  app/         Routes: (marketing) home, /planner (hub), /explore;
+               /flights /stays (server redirects → hub)
+    planner/_components/  hub tabs (PlanHub, FlightsTab, StaysTab, BudgetTab, ClimatePanel, HubTabs)
+    planner/_lib/         derive.ts (leg → flight search, stop → stay prefs, party size)
+  domain/      Shared vocabulary: types, city dataset, geo helpers, booking.ts (ref generator)
   components/  ui/ primitives, layout/ (Header, Footer), theme/, motion.ts
   features/
     planner/   engine/ (trip generation), components/ (incl. wizard/), store/ (Zustand), lib/ (share, wizard step machine, heroPrefill)
-    flights/   searchFlights + recommendFlights (decision support)
-    stays/     adviseStays (neighborhood + accommodation advisor)
+    flights/   searchFlights + recommendFlights; FlightLegResults (route-agnostic results)
+    stays/     adviseStays (neighborhood + accommodation advisor); StayAdviceResults
+    weather/   suggestTrips + rateCityMonths (weather match + climate report)
+    discover/  spin-the-globe destination picker
     marketing/ Landing-page sections
 ```
 
@@ -46,14 +53,21 @@ Pipeline: `selectCities → orderRoute → allocateDays → dayPlans → transpo
 
 ## Styling
 
-- Tokens in `globals.css`: `--bg --fg --muted --border --card --card-subtle --input-bg --input-border --primary --accent --gradient-hero --header-bg` (light + dark variants)
-- Type scale utilities: `.text-display .text-h1 .text-h2 .text-h3 .text-body-lg .text-small .text-caption`
-- Radius: buttons/pills `rounded-full`, cards `rounded-xl`, media cards/map `rounded-2xl`
-- Dark mode via next-themes (`attribute="class"`); style both themes
-- Base form styles live in `@layer base` — unlayered rules would beat Tailwind utilities
+- **Theme config is CSS-first** — all in `globals.css`, there is **no `tailwind.config.js`** (Tailwind v4 wouldn't load it). Dark mode is class-based via `@custom-variant dark (&:where(.dark, .dark *))`; next-themes toggles `.dark`, and every color flows through a token, so **never add `dark:` color overrides** — the token carries both themes.
+- Tokens in `globals.css`: surfaces/brand (`--bg --fg --muted --border --card --card-subtle --input-bg --input-border --primary --accent --gradient-hero --header-bg`) and **semantic status** (`--success --warning --danger` each with a `-bg` tint, plus `--rating`). Use as `text-[var(--warning)] bg-[var(--warning-bg)]` — never hardcode amber/emerald/red.
+- Type scale utilities: `.text-display .text-h1 .text-h2 .text-h3 .text-body-lg .text-small .text-caption`. **12px type floor** — nothing below `text-xs`; tiny labels use `.text-caption` or `<Badge>`.
+- Radius rule: `rounded-full` pills/buttons/avatars · `rounded-xl` cards/sub-panels/popovers/inputs · `rounded-2xl` overlays/media/map/hero.
+- Base form styles live in `@layer base` — unlayered rules would beat Tailwind utilities.
 
 ## Conventions
 
 - Server Components by default; `"use client"` only where needed (planner, forms, map)
-- Reuse `src/components/ui` primitives (Button, Card, Container, Section, PageHeader, SectionHeader, CityAutocomplete, SegmentedControl, Stepper, CycleField, ThemeToggle) and the motion vocabulary in `src/components/motion.ts`
+- **Reuse `src/components/ui` primitives, don't re-roll them:**
+  - Surfaces: `Card` (server) / `MotionCard` (client list items) — both from `cardClasses()`. The **only** card hover is the built-in CSS lift (`-translate-y-0.5 hover:shadow-md`), applied only to cards with a primary action; **never `whileHover` on a card**.
+  - Pills: `TogglePill` (multi-select) / `FilterPills` (single-select radiogroup) — both from `pillClasses()`. Never inline pill classes.
+  - Headers: `PageHeader` (the page's one h1) → `ResultsHeader` (h2 over a result group) → `SectionHeader` (marketing bands only).
+  - Overlays: `Modal` + `ModalHeader` / `ModalConfirmation` / `PriceBreakdown`; booking refs from `domain/booking.ts`.
+  - Money: `Price` (serif brand-colored). Small status/label chips: `Badge`.
+  - Also: Button, Container, Section, CityAutocomplete, SegmentedControl, Stepper, CycleField, ThemeToggle; motion vocab in `src/components/motion.ts`.
+- Page shell: `pt-28 md:pt-32 pb-16 sm:pb-20`; result grids `gap-4`, `md:grid-cols-2 xl:grid-cols-3` for compact cards / `md:grid-cols-2` for content-heavy.
 - New engine behavior gets a colocated Vitest test; keep the engine pure and deterministic
