@@ -8,6 +8,7 @@ import { allocateDays } from "./allocateDays";
 import { buildCityDayPlans } from "./dayPlans";
 import { pickTransportLeg } from "./transport";
 import { computeBudget } from "./budget";
+import { weatherWarnings } from "./weatherNotes";
 
 function findCity(cities: City[], id: string): City | undefined {
   return cities.find((c) => c.id === id);
@@ -76,6 +77,10 @@ export function generateTripPlan(intent: TripIntent, cities: City[] = CITIES): T
   }
 
   const legs = stops.slice(1).map((_, i) => pickTransportLeg(allocations[i].city, allocations[i + 1].city, intent));
+
+  if (intent.travelMonth != null) {
+    notes.push(...weatherWarnings(stops, intent.travelMonth));
+  }
 
   const itinerary = stops.flatMap((s) => s.dayPlans);
   const budget = computeBudget(
