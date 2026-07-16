@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
@@ -18,7 +17,7 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
-import { BudgetTier, Pace, Poi } from "@/domain/types";
+import { Pace, Poi } from "@/domain/types";
 import { getMonthNormal, MONTH_NAMES, tempWord } from "@/domain/climate";
 import Button from "@/components/ui/Button";
 import { Activity, CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
@@ -34,7 +33,6 @@ type Props = {
   day: ItineraryDay | null;
   stops: CityStay[];
   pace: Pace;
-  budgetTier: BudgetTier;
   /** Selected travel month (0-11); when set, shows the city's expected weather. */
   travelMonth?: number;
   /** What "Add a stop" can offer — the city's POIs not yet in the plan. */
@@ -55,6 +53,10 @@ type Props = {
   onMoveToDay: (activityId: string, toDayId: string) => boolean;
   /** Remove this whole day. Returns false when it's the trip's last day. */
   onRemoveDay: () => boolean;
+  /** Show the best-time-to-visit report for this city (hub Climate panel). */
+  onShowClimate: (cityId: string) => void;
+  /** Jump to stays advice for this city (hub Stays tab). */
+  onFindStays: (cityId: string) => void;
 };
 
 function isBookable(activity: Activity): boolean {
@@ -120,7 +122,6 @@ export default function DayDetails({
   day,
   stops,
   pace,
-  budgetTier,
   travelMonth,
   availablePois,
   onSwap,
@@ -131,6 +132,8 @@ export default function DayDetails({
   onMove,
   onMoveToDay,
   onRemoveDay,
+  onShowClimate,
+  onFindStays,
 }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [addingStop, setAddingStop] = useState(false);
@@ -508,21 +511,19 @@ export default function DayDetails({
           <span />
         )}
         <div className="flex items-center gap-4">
-          <Link
-            href={`/weather?city=${day.cityId}`}
+          <button
+            type="button"
+            onClick={() => onShowClimate(day.cityId)}
             className="flex items-center gap-1.5 text-small font-medium text-[var(--muted)] hover:text-[var(--fg)] transition-colors"
           >
             <Sun className="w-3.5 h-3.5" />
             Best time to visit
-          </Link>
+          </button>
           <Button
-            asLink
-            href={`/stays?city=${day.cityId}&budget=${budgetTier}${
-              stop ? `&nights=${stop.days}` : ""
-            }`}
             variant="accent"
             size="sm"
             icon={<ArrowRight className="w-3.5 h-3.5" />}
+            onClick={() => onFindStays(day.cityId)}
           >
             Find stays in {day.city}
           </Button>

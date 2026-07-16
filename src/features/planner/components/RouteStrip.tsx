@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Plus, X } from "lucide-react";
 import CityAutocomplete from "@/components/ui/CityAutocomplete";
+import Card from "@/components/ui/Card";
 import { CityStay, ItineraryDay, TransportLeg } from "../types";
 import TransportModeIcon from "./TransportModeIcon";
 
@@ -16,6 +16,8 @@ type Props = {
   onRemoveCity: (cityId: string) => boolean;
   /** Returns false when the city can't be added (already in the trip, trip full). */
   onAddCity: (cityId: string) => boolean;
+  /** Open flight options for a flight leg (in the hub's Flights tab). */
+  onFlightLeg?: (leg: TransportLeg) => void;
 };
 
 export default function RouteStrip({
@@ -25,6 +27,7 @@ export default function RouteStrip({
   setActiveDayId,
   onRemoveCity,
   onAddCity,
+  onFlightLeg,
 }: Props) {
   const [addingCity, setAddingCity] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -55,7 +58,7 @@ export default function RouteStrip({
   };
 
   return (
-    <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+    <Card padding="sm">
       <div className="flex flex-wrap items-center gap-2">
         {stops.map((stop, index) => {
           const nextStop = stops[index + 1];
@@ -79,23 +82,24 @@ export default function RouteStrip({
                   onClick={() => handleRemove(stop)}
                   aria-label={`Remove ${stop.city} from the trip`}
                   title={`Remove ${stop.city}`}
-                  className="pr-2.5 pl-0.5 py-1.5 rounded-r-full text-[var(--muted)] hover:text-red-500 transition-colors"
+                  className="pr-2.5 pl-0.5 py-1.5 rounded-r-full text-[var(--muted)] hover:text-[var(--danger)] transition-colors"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </div>
 
               {leg &&
-                // Flight legs deep-link into the standalone flights search.
-                (leg.mode === "flight" ? (
-                  <Link
-                    href={`/flights?from=${leg.fromCityId}&to=${leg.toCityId}`}
+                // Flight legs open the hub's Flights tab for that route.
+                (leg.mode === "flight" && onFlightLeg ? (
+                  <button
+                    type="button"
+                    onClick={() => onFlightLeg(leg)}
                     className="flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--primary)] transition-colors underline-offset-2 hover:underline"
                   >
                     <TransportModeIcon mode={leg.mode} size={14} />
                     <span>{leg.durationHrs}h</span>
                     <span>€{leg.cost}</span>
-                  </Link>
+                  </button>
                 ) : (
                   <div className="flex items-center gap-1 text-xs text-[var(--muted)]">
                     <TransportModeIcon mode={leg.mode} size={14} />
@@ -142,6 +146,6 @@ export default function RouteStrip({
       {message && (
         <p className="text-xs text-[var(--muted)] mt-2">{message}</p>
       )}
-    </div>
+    </Card>
   );
 }

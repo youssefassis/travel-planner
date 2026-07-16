@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { CalendarCheck, Droplets, Sun, Thermometer } from "lucide-react";
 import Card from "@/components/ui/Card";
@@ -10,6 +11,8 @@ import ClimateStrip from "./ClimateStrip";
 
 type Props = {
   report: CityWeatherReport;
+  /** Replaces the default plan/stays/flights links (e.g. inside the trip hub). */
+  actions?: ReactNode;
 };
 
 function BestMonthCard({ verdict }: { verdict: MonthVerdict }) {
@@ -43,7 +46,7 @@ function BestMonthCard({ verdict }: { verdict: MonthVerdict }) {
 }
 
 /** The city→best-months view: top three windows, then the year-round strip. */
-export default function CityClimateReport({ report }: Props) {
+export default function CityClimateReport({ report, actions }: Props) {
   const { city, months, bestMonths } = report;
   const highlight = bestMonths.map((m) => m.normal.monthIndex);
 
@@ -79,15 +82,19 @@ export default function CityClimateReport({ report }: Props) {
       </Card>
 
       <div className="flex flex-wrap gap-3">
-        <Button asLink href={`/planner?destination=${city.id}`}>
-          Plan a trip to {city.name}
-        </Button>
-        <Button asLink href={`/stays?city=${city.id}`} variant="secondary">
-          Find stays
-        </Button>
-        <Button asLink href={`/flights?to=${city.id}`} variant="secondary">
-          Find flights
-        </Button>
+        {actions ?? (
+          <>
+            <Button asLink href={`/planner?destination=${city.id}`}>
+              Plan a trip to {city.name}
+            </Button>
+            <Button asLink href={`/stays?city=${city.id}`} variant="secondary">
+              Find stays
+            </Button>
+            <Button asLink href={`/flights?to=${city.id}`} variant="secondary">
+              Find flights
+            </Button>
+          </>
+        )}
       </div>
     </motion.div>
   );
