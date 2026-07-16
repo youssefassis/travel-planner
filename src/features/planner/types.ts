@@ -15,6 +15,7 @@ export type TripIntent = {
   originCityId: string;
   selectedCityIds: string[]; // custom mode only
   duration: number; // days, clamped 1..30
+  travelMonth?: number; // 0-11; undefined = "any time" (weather-agnostic)
   companions: "solo" | "couple" | "group";
   interests: Interest[];
   region?: Region | "any";

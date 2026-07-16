@@ -1,4 +1,5 @@
 import { City } from "@/domain/types";
+import { getMonthNormal, monthlyComfort } from "@/domain/climate";
 import { TripIntent } from "../types";
 
 const INTEREST_WEIGHT = 0.5;
@@ -11,7 +12,16 @@ function interestScore(city: City, intent: TripIntent): number {
   return overlap / Math.max(1, intent.interests.length);
 }
 
+/**
+ * When a travel month is set, weather fit is the real monthly comfort of the
+ * city that month (0..1). Otherwise it falls back to the coarse climate-band
+ * preference — which older share links may still carry.
+ */
 function climateScore(city: City, intent: TripIntent): number {
+  if (intent.travelMonth != null) {
+    const normal = getMonthNormal(city.id, intent.travelMonth);
+    return normal ? monthlyComfort(normal) / 100 : 0.7;
+  }
   const wanted = intent.vibe.climate;
   if (!wanted || wanted === "any" || wanted === city.climate) return 1;
   return 0.4;
