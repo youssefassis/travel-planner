@@ -16,6 +16,22 @@ export const MONTHS = [
 
 export type Month = (typeof MONTHS)[number];
 
+/** Full month names, index-aligned with MONTHS (0 = January). */
+export const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
 /** Monthly climate normal for one city. */
 export type MonthlyNormal = {
   month: Month;
