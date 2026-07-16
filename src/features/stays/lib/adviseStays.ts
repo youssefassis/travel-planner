@@ -20,6 +20,11 @@ const STYLE_PHRASES: Record<StayStyle, string> = {
   food: "a dense local food scene",
 };
 
+/** Round a €/night budget to the advisor form's €10 stepper grid. */
+export function roundBudget(value: number): number {
+  return Math.min(600, Math.max(30, Math.round(value / 10) * 10));
+}
+
 /**
  * The advisor: turns preferences into 2 neighborhood recommendations and
  * up to 4 stays with distinct strengths, explained trade-offs, guest-feedback
