@@ -30,6 +30,20 @@ describe("intentFromHeroParams", () => {
     });
   });
 
+  it("maps a valid travel month and ignores an invalid one", () => {
+    const withMonth = intentFromHeroParams(
+      new URLSearchParams("destination=barcelona-es&month=6"),
+      BASE,
+    );
+    expect(withMonth?.travelMonth).toBe(6);
+
+    const badMonth = intentFromHeroParams(
+      new URLSearchParams("destination=barcelona-es&month=13"),
+      BASE,
+    );
+    expect(badMonth?.travelMonth).toBeUndefined();
+  });
+
   it("ignores an unknown destination but keeps the other fields", () => {
     const intent = intentFromHeroParams(
       new URLSearchParams("destination=atlantis&budget=backpacker"),

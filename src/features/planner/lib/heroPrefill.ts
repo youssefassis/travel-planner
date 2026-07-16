@@ -18,13 +18,19 @@ export function intentFromHeroParams(
   const destination = params.get("destination");
   const travelers = params.get("travelers");
   const budget = params.get("budget");
-  if (destination === null && travelers === null && budget === null) return null;
+  const month = params.get("month");
+  if (destination === null && travelers === null && budget === null && month === null)
+    return null;
 
   const intent: TripIntent = { ...base, vibe: { ...base.vibe } };
 
   if (destination && getCity(destination)) {
     intent.mode = "custom";
     intent.selectedCityIds = [destination];
+  }
+  const monthIndex = month === null ? NaN : parseInt(month, 10);
+  if (Number.isInteger(monthIndex) && monthIndex >= 0 && monthIndex <= 11) {
+    intent.travelMonth = monthIndex;
   }
   if (travelers === "solo" || travelers === "couple" || travelers === "group") {
     intent.companions = travelers;

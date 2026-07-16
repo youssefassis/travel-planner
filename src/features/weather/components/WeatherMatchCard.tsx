@@ -66,7 +66,11 @@ export default function WeatherMatchCard({ match, onSeeMonths }: Props) {
       </ul>
 
       <div className="flex flex-wrap items-center gap-2 mt-auto pt-4 border-t border-[var(--border)]">
-        <Button asLink href={`/planner?destination=${city.id}`} size="sm">
+        <Button
+          asLink
+          href={`/planner?destination=${city.id}&month=${monthIndex}`}
+          size="sm"
+        >
           Plan a trip
         </Button>
         <button
