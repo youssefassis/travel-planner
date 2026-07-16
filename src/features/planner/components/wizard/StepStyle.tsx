@@ -3,7 +3,6 @@
 import { Region } from "@/domain/types";
 import { useTripIntentStore } from "../../store/tripIntentStore";
 import {
-  CLIMATE_OPTIONS,
   INTEREST_OPTIONS,
   REGION_LABELS,
   capitalize,
@@ -11,7 +10,7 @@ import {
 import Chip from "../Chip";
 import FieldGroup from "./FieldGroup";
 
-/** Step 3 — interests, plus climate/region when we pick the cities. */
+/** Step 3 — interests, plus region when we pick the cities. */
 export default function StepStyle() {
   const { intent, patchIntent } = useTripIntentStore();
   const interests = intent.interests ?? [];
@@ -53,21 +52,6 @@ export default function StepStyle() {
 
       {intent.mode === "surprise" && (
         <>
-          <FieldGroup label="Climate">
-            <div className="flex flex-wrap gap-2">
-              {CLIMATE_OPTIONS.map((climate) => (
-                <Chip
-                  key={climate}
-                  label={capitalize(climate)}
-                  selected={(intent.vibe?.climate ?? "any") === climate}
-                  onClick={() =>
-                    patchIntent({ vibe: { ...intent.vibe, climate } })
-                  }
-                />
-              ))}
-            </div>
-          </FieldGroup>
-
           <FieldGroup label="Region">
             <div className="flex flex-wrap gap-2">
               <Chip

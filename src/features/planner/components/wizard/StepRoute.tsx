@@ -3,6 +3,7 @@
 import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Stepper from "@/components/ui/Stepper";
+import { MONTH_NAMES } from "@/domain/climate";
 import { useTripIntentStore } from "../../store/tripIntentStore";
 import { MODE_OPTIONS } from "../../lib/options";
 import CityCatalogPicker from "../CityCatalogPicker";
@@ -46,6 +47,27 @@ export default function StepRoute() {
             max={30}
             format={(v) => `${v} ${v === 1 ? "day" : "days"}`}
           />
+        </FieldGroup>
+
+        <FieldGroup label="When">
+          <select
+            aria-label="Travel month"
+            value={intent.travelMonth ?? "any"}
+            onChange={(e) =>
+              patchIntent({
+                travelMonth:
+                  e.target.value === "any" ? undefined : Number(e.target.value),
+              })
+            }
+            className="w-full rounded-full border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-2.5 text-sm text-[var(--fg)]"
+          >
+            <option value="any">Any time</option>
+            {MONTH_NAMES.map((name, index) => (
+              <option key={name} value={index}>
+                {name}
+              </option>
+            ))}
+          </select>
         </FieldGroup>
       </div>
 
