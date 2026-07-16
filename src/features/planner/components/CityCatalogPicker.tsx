@@ -1,7 +1,7 @@
 "use client";
 
 import { citiesByCountry } from "@/domain/cities";
-import Chip from "./Chip";
+import TogglePill from "@/components/ui/TogglePill";
 
 /** The full city catalog, grouped by country, as toggleable chips. */
 export default function CityCatalogPicker({
@@ -25,12 +25,13 @@ export default function CityCatalogPicker({
           </p>
           <div className="flex flex-wrap gap-2">
             {citiesByCountryMap[country].map((city) => (
-              <Chip
+              <TogglePill
                 key={city.id}
-                label={city.name}
                 selected={selectedCityIds.includes(city.id)}
                 onClick={() => onToggleCity(city.id)}
-              />
+              >
+                {city.name}
+              </TogglePill>
             ))}
           </div>
         </div>

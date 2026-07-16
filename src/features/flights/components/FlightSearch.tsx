@@ -150,7 +150,7 @@ export default function FlightSearch({
               value={departDate}
               min={today}
               onChange={(e) => setDepartDate(e.target.value)}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] text-sm focus:outline-none focus:border-[var(--primary)]"
+              className="w-full text-sm"
             />
           </div>
 
@@ -165,7 +165,7 @@ export default function FlightSearch({
                 value={returnDate}
                 min={departDate || today}
                 onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--fg)] text-sm focus:outline-none focus:border-[var(--primary)]"
+                className="w-full text-sm"
               />
             </div>
           )}

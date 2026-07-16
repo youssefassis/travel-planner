@@ -7,7 +7,7 @@ import {
   REGION_LABELS,
   capitalize,
 } from "../../lib/options";
-import Chip from "../Chip";
+import TogglePill from "@/components/ui/TogglePill";
 import FieldGroup from "./FieldGroup";
 
 /** Step 3 — interests, plus region when we pick the cities. */
@@ -40,12 +40,13 @@ export default function StepStyle() {
       >
         <div className="flex flex-wrap gap-2">
           {INTEREST_OPTIONS.map((interest) => (
-            <Chip
+            <TogglePill
               key={interest}
-              label={capitalize(interest)}
               selected={interests.includes(interest)}
               onClick={() => toggleInterest(interest)}
-            />
+            >
+              {capitalize(interest)}
+            </TogglePill>
           ))}
         </div>
       </FieldGroup>
@@ -54,18 +55,20 @@ export default function StepStyle() {
         <>
           <FieldGroup label="Region">
             <div className="flex flex-wrap gap-2">
-              <Chip
-                label="Any"
+              <TogglePill
                 selected={(intent.region ?? "any") === "any"}
                 onClick={() => patchIntent({ region: "any" })}
-              />
+              >
+                Any
+              </TogglePill>
               {(Object.keys(REGION_LABELS) as Region[]).map((region) => (
-                <Chip
+                <TogglePill
                   key={region}
-                  label={REGION_LABELS[region]}
                   selected={intent.region === region}
                   onClick={() => patchIntent({ region })}
-                />
+                >
+                  {REGION_LABELS[region]}
+                </TogglePill>
               ))}
             </div>
           </FieldGroup>

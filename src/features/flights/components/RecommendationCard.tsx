@@ -1,17 +1,17 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Check, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { fadeInUp } from "@/components/motion";
+import MotionCard from "@/components/ui/MotionCard";
+import Price from "@/components/ui/Price";
 import { FlightOption, FlightPick } from "../types";
 import AirlineAvatar from "./AirlineAvatar";
 import FlightTimeline from "./FlightTimeline";
 
 const SIGNAL_STYLES = {
-  book: { icon: TrendingDown, classes: "text-emerald-600 dark:text-emerald-400" },
+  book: { icon: TrendingDown, classes: "text-[var(--success)]" },
   fair: { icon: Minus, classes: "text-[var(--muted)]" },
-  monitor: { icon: TrendingUp, classes: "text-amber-600 dark:text-amber-400" },
+  monitor: { icon: TrendingUp, classes: "text-[var(--warning)]" },
 } as const;
 
 type Props = {
@@ -27,11 +27,7 @@ export default function RecommendationCard({ pick, travelers, onSelect }: Props)
   const totalWithBag = (flight.price + flight.bagFee) * travelers;
 
   return (
-    <motion.div
-      variants={fadeInUp}
-      whileHover={{ y: -2 }}
-      className="flex flex-col bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 transition-all hover:shadow-lg"
-    >
+    <MotionCard hover className="flex flex-col">
       <div className="flex items-center justify-between gap-3 mb-4">
         <span className="text-caption px-2.5 py-1 rounded-full bg-[var(--primary)] text-white">
           {tag}
@@ -64,18 +60,18 @@ export default function RecommendationCard({ pick, travelers, onSelect }: Props)
       </p>
 
       <div className="flex items-end justify-between gap-3 mt-4 pt-4 border-t border-[var(--border)]">
-        <div>
-          <p className="text-2xl font-serif font-bold text-[var(--primary)] leading-none">
-            €{totalWithBag}
-          </p>
-          <p className="text-xs text-[var(--muted)] mt-1">
-            total{travelers > 1 ? ` for ${travelers}` : ""} · incl. 1 checked bag
-          </p>
-        </div>
+        <Price
+          amount={`€${totalWithBag}`}
+          sub={
+            <>
+              total{travelers > 1 ? ` for ${travelers}` : ""} · incl. 1 checked bag
+            </>
+          }
+        />
         <Button size="sm" onClick={() => onSelect(flight)}>
           Select
         </Button>
       </div>
-    </motion.div>
+    </MotionCard>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
-import { fadeInUp } from "@/components/motion";
+import Badge from "@/components/ui/Badge";
+import MotionCard from "@/components/ui/MotionCard";
+import Price from "@/components/ui/Price";
 import { FlightOption } from "../types";
 import AirlineAvatar from "./AirlineAvatar";
 import FlightTimeline from "./FlightTimeline";
@@ -25,15 +26,7 @@ export default function FlightCard({
   const totalWithBag = (flight.price + flight.bagFee) * travelers;
 
   return (
-    <motion.div
-      variants={fadeInUp}
-      whileHover={{ y: -2 }}
-      className={`bg-[var(--card)] border rounded-xl p-5 transition-all hover:shadow-lg ${
-        selected
-          ? "border-transparent ring-2 ring-[var(--primary)]"
-          : "border-[var(--border)]"
-      }`}
-    >
+    <MotionCard hover selected={selected}>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1.6fr_auto] lg:gap-6 items-center">
         {/* Airline */}
         <div className="flex items-center gap-3">
@@ -45,12 +38,7 @@ export default function FlightCard({
             {badges.length > 0 && (
               <span className="inline-flex gap-1.5 mt-1">
                 {badges.map((badge) => (
-                  <span
-                    key={badge}
-                    className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]"
-                  >
-                    {badge}
-                  </span>
+                  <Badge key={badge}>{badge}</Badge>
                 ))}
               </span>
             )}
@@ -62,20 +50,25 @@ export default function FlightCard({
 
         {/* Price & select */}
         <div className="flex items-center justify-between lg:flex-col lg:items-end gap-2 border-t border-[var(--border)] pt-4 lg:border-0 lg:pt-0">
-          <div className="lg:text-right">
-            <p className="text-2xl font-serif font-bold text-[var(--primary)] leading-none">
-              €{flight.price}
-            </p>
-            <p className="text-xs text-[var(--muted)] mt-1">
-              €{totalWithBag} total
-              {travelers > 1 ? ` · ${travelers} travelers` : ""} · incl. 1 bag
-            </p>
-          </div>
-          <Button size="sm" variant={selected ? "secondary" : "primary"} onClick={() => onSelect(flight)}>
+          <Price
+            amount={`€${flight.price}`}
+            align="right"
+            sub={
+              <>
+                €{totalWithBag} total
+                {travelers > 1 ? ` · ${travelers} travelers` : ""} · incl. 1 bag
+              </>
+            }
+          />
+          <Button
+            size="sm"
+            variant={selected ? "secondary" : "primary"}
+            onClick={() => onSelect(flight)}
+          >
             {selected ? "Selected" : "Select"}
           </Button>
         </div>
       </div>
-    </motion.div>
+    </MotionCard>
   );
 }
