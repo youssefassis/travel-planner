@@ -10,8 +10,11 @@ import {
   addCity,
   generateTripPlan,
   makeRainFriendly,
+  moveActivity,
+  moveActivityToDay,
   removeActivity,
   removeCity,
+  removeDay,
   swapActivity,
   unusedPoisForCity,
 } from "@/features/planner/engine";
@@ -25,6 +28,7 @@ import BudgetOverlay from "@/features/planner/components/BudgetOverlay";
 import RouteStrip from "@/features/planner/components/RouteStrip";
 import DayTimeline from "@/features/planner/components/DayTimeline";
 import DayDetails from "@/features/planner/components/DayDetails";
+import DayNav from "@/features/planner/components/DayNav";
 import BeforeYouGo from "@/features/planner/components/BeforeYouGo";
 import ShareTripBar from "@/features/planner/components/ShareTripBar";
 import PrintItinerary from "@/features/planner/components/PrintItinerary";
@@ -118,6 +122,25 @@ function PlannerPageContent() {
     if (next) setTrip(next);
   };
 
+  const handleMoveActivity = (
+    activityId: string,
+    direction: "up" | "down"
+  ): boolean => {
+    if (!trip || !planIntent || !activeDayId) return false;
+    const next = moveActivity(trip, planIntent, activeDayId, activityId, direction);
+    if (!next) return false;
+    setTrip(next);
+    return true;
+  };
+
+  const handleMoveToDay = (activityId: string, toDayId: string): boolean => {
+    if (!trip || !planIntent || !activeDayId) return false;
+    const next = moveActivityToDay(trip, planIntent, activeDayId, activityId, toDayId);
+    if (!next) return false;
+    setTrip(next);
+    return true;
+  };
+
   // City edits renumber every day id — keep the selection on the same city
   // when it survives, otherwise fall back to the first day.
   const applyCityEdit = (next: TripPlan | null): boolean => {
@@ -141,6 +164,12 @@ function PlannerPageContent() {
   const handleRemoveCity = (cityId: string): boolean => {
     if (!trip || !planIntent) return false;
     return applyCityEdit(removeCity(trip, planIntent, cityId));
+  };
+
+  // Day removal renumbers day ids just like city edits do.
+  const handleRemoveDay = (): boolean => {
+    if (!trip || !planIntent || !activeDayId) return false;
+    return applyCityEdit(removeDay(trip, planIntent, activeDayId));
   };
 
   const availablePois = useMemo(
@@ -223,6 +252,7 @@ function PlannerPageContent() {
                           itinerary={itinerary}
                           activeDayId={activeDayId}
                           setActiveDayId={setActiveDayId}
+                          legs={trip.legs}
                         />
                         <DayDetails
                           key={activeDayId ?? "no-day"}
@@ -236,6 +266,15 @@ function PlannerPageContent() {
                           onBook={bookFromDay}
                           onRemove={handleRemoveActivity}
                           onAdd={handleAddActivity}
+                          onMove={handleMoveActivity}
+                          onMoveToDay={handleMoveToDay}
+                          onRemoveDay={handleRemoveDay}
+                        />
+                        <DayNav
+                          itinerary={itinerary}
+                          activeDayId={activeDayId}
+                          legs={trip.legs}
+                          onSelectDay={setActiveDayId}
                         />
                         <BeforeYouGo
                           itinerary={itinerary}

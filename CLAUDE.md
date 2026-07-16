@@ -38,7 +38,7 @@ Pure and **deterministic**: the same `TripIntent` always produces the identical 
 Pipeline: `selectCities → orderRoute → allocateDays → dayPlans → transport → budget → generatePlan`. Plus:
 
 - `schedule.ts` — timed day schedule; food POIs become lunch/dinner venues, nightlife lands after dinner
-- `replan.ts` — pure plan-in → plan-out edits: `swapActivity`, `makeRainFriendly`, `addActivity`/`removeActivity`, `addCity`/`removeCity` (cheapest-insertion, day renumbering, budget recompute)
+- `replan.ts` — pure plan-in → plan-out edits: `swapActivity`, `makeRainFriendly`, `addActivity`/`removeActivity`, `moveActivity` (reorder within a day, scheduling-class scoped), `moveActivityToDay` (same-city only), `removeDay` (city's last day removes the stop), `addCity`/`removeCity` (cheapest-insertion, day renumbering, budget recompute)
 
 ### Coordinates
 

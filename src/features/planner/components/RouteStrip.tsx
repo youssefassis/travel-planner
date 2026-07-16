@@ -2,16 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Car, Bus, TrainFront, Plane, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import CityAutocomplete from "@/components/ui/CityAutocomplete";
-import { CityStay, ItineraryDay, TransportLeg, TransportMode } from "../types";
-
-const MODE_ICONS: Record<TransportMode, typeof Car> = {
-  car: Car,
-  bus: Bus,
-  train: TrainFront,
-  flight: Plane,
-};
+import { CityStay, ItineraryDay, TransportLeg } from "../types";
+import TransportModeIcon from "./TransportModeIcon";
 
 type Props = {
   stops: CityStay[];
@@ -66,7 +60,6 @@ export default function RouteStrip({
         {stops.map((stop, index) => {
           const nextStop = stops[index + 1];
           const leg = nextStop ? legBetween(stop.cityId, nextStop.cityId) : undefined;
-          const Icon = leg ? MODE_ICONS[leg.mode] : null;
 
           return (
             <div key={stop.cityId} className="flex items-center gap-2">
@@ -92,25 +85,24 @@ export default function RouteStrip({
                 </button>
               </div>
 
-              {leg && Icon && (
+              {leg &&
                 // Flight legs deep-link into the standalone flights search.
-                leg.mode === "flight" ? (
+                (leg.mode === "flight" ? (
                   <Link
                     href={`/flights?from=${leg.fromCityId}&to=${leg.toCityId}`}
                     className="flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--primary)] transition-colors underline-offset-2 hover:underline"
                   >
-                    <Icon size={14} />
+                    <TransportModeIcon mode={leg.mode} size={14} />
                     <span>{leg.durationHrs}h</span>
                     <span>€{leg.cost}</span>
                   </Link>
                 ) : (
                   <div className="flex items-center gap-1 text-xs text-[var(--muted)]">
-                    <Icon size={14} />
+                    <TransportModeIcon mode={leg.mode} size={14} />
                     <span>{leg.durationHrs}h</span>
                     <span>€{leg.cost}</span>
                   </div>
-                )
-              )}
+                ))}
             </div>
           );
         })}
