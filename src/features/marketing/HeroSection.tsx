@@ -301,6 +301,15 @@ export default function HeroSection() {
               </motion.button>
             );
           })}
+          <motion.button
+            onClick={() => router.push("/explore")}
+            className="px-4 py-1.5 rounded-full text-[var(--primary)] text-sm font-medium hover:underline underline-offset-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.95, duration: 0.35 }}
+          >
+            or explore ideas →
+          </motion.button>
         </motion.div>
 
         {/* Trust strip */}

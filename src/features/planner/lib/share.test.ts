@@ -67,6 +67,13 @@ describe("share link round trip", () => {
     expect(generateTripPlan(decoded, CITIES)).toEqual(generateTripPlan(SURPRISE, CITIES));
   });
 
+  it("ignores an extra tab param (hub deep-links) — parses identically", () => {
+    const base = intentToShareParams(CUSTOM);
+    const withTab = new URLSearchParams(base.toString());
+    withTab.set("tab", "stays");
+    expect(intentFromShareParams(withTab)).toEqual(intentFromShareParams(base));
+  });
+
   it("rejects non-share params and unknown cities", () => {
     expect(intentFromShareParams(new URLSearchParams("from=paris-fr&d=7"))).toBeNull();
     expect(

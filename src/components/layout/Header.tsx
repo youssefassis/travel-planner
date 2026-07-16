@@ -10,10 +10,7 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAVIGATION = [
   { href: "/planner", label: "Plan a trip" },
-  { href: "/discover", label: "Discover" },
-  { href: "/weather", label: "Weather" },
-  { href: "/flights", label: "Flights" },
-  { href: "/stays", label: "Stays" },
+  { href: "/explore", label: "Explore" },
 ];
 
 const BRAND_NAME = "Wanderly";

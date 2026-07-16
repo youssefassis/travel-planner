@@ -2,15 +2,20 @@
 
 import { motion } from "framer-motion";
 import { MapPin, Sparkles } from "lucide-react";
-import Link from "next/link";
 import { City } from "@/domain/types";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 
 const cap = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 
-/** The landed destination: where it is, what it's about, and every way in. */
-export default function DestinationReveal({ city }: { city: City }) {
+/** The landed destination: where it is, what it's about, and the way in. */
+export default function DestinationReveal({
+  city,
+  onSeeMonths,
+}: {
+  city: City;
+  onSeeMonths?: (cityId: string) => void;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -41,29 +46,17 @@ export default function DestinationReveal({ city }: { city: City }) {
 
         <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-[var(--border)]">
           <Button asLink href={`/planner?destination=${city.id}`}>
-            Plan a trip
+            Plan this trip
           </Button>
-          <Link
-            href={`/weather?city=${city.id}`}
-            className="text-sm font-medium text-[var(--primary)] hover:underline underline-offset-2"
-          >
-            Best time to go
-          </Link>
-          <span className="text-[var(--border)]" aria-hidden>
-            ·
-          </span>
-          <Link
-            href={`/stays?city=${city.id}`}
-            className="text-sm font-medium text-[var(--muted)] hover:text-[var(--fg)]"
-          >
-            Stays
-          </Link>
-          <Link
-            href={`/flights?to=${city.id}`}
-            className="text-sm font-medium text-[var(--muted)] hover:text-[var(--fg)]"
-          >
-            Flights
-          </Link>
+          {onSeeMonths && (
+            <button
+              type="button"
+              onClick={() => onSeeMonths(city.id)}
+              className="text-sm font-medium text-[var(--primary)] hover:underline underline-offset-2"
+            >
+              Best time to go
+            </button>
+          )}
         </div>
       </Card>
     </motion.div>

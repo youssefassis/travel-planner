@@ -68,6 +68,25 @@ describe("intentFromHeroParams", () => {
     });
   });
 
+  it("maps a valid origin (from /flights redirects) and ignores an unknown one", () => {
+    const withOrigin = intentFromHeroParams(
+      new URLSearchParams("destination=rome-it&origin=barcelona-es"),
+      BASE,
+    );
+    expect(withOrigin?.originCityId).toBe("barcelona-es");
+
+    const badOrigin = intentFromHeroParams(
+      new URLSearchParams("destination=rome-it&origin=atlantis"),
+      BASE,
+    );
+    expect(badOrigin?.originCityId).toBe("paris-fr");
+
+    // origin alone is still a valid hero handoff.
+    expect(
+      intentFromHeroParams(new URLSearchParams("origin=rome-it"), BASE)?.originCityId,
+    ).toBe("rome-it");
+  });
+
   it("returns null for share links, no relevant params, or date alone", () => {
     expect(
       intentFromHeroParams(
