@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Dark mode is class-based (next-themes sets .dark on <html>). Without this,
+   Tailwind v4 keys dark: on the OS prefers-color-scheme instead of the toggle. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* =========================
    DESIGN TOKENS
 ========================= */
@@ -40,27 +44,16 @@
   --header-bg: rgba(251, 248, 245, 0.65);
   --header-bg-scrolled: rgba(251, 248, 245, 0.92);
 
-  /* Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
-
-  /* Spacing */
-  --space-0: 0;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-14: 56px;
-  --space-16: 64px;
-  --space-20: 80px;
+  /* Semantic status — dark values live in .dark, so components never need
+     per-site dark: color overrides. Use as text-[var(--warning)]
+     bg-[var(--warning-bg)]. --rating is decorative (star fills), not stateful. */
+  --success: #178a55;
+  --success-bg: rgba(23, 138, 85, 0.12);
+  --warning: #b45309;
+  --warning-bg: rgba(217, 119, 6, 0.14);
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.1);
+  --rating: #f59e0b;
 
   /* Typography */
   --font-sans:
@@ -117,6 +110,14 @@
   --shadow-md: 0 6px 14px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
   --shadow-primary: 0 10px 30px rgba(240, 114, 48, 0.25);
+
+  --success: #34d399;
+  --success-bg: rgba(52, 211, 153, 0.14);
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.14);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.12);
+  --rating: #fbbf24;
 }
 
 /* =========================
@@ -227,8 +228,8 @@ p {
   select {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
-    border-radius: var(--radius-md);
-    padding: var(--space-3) var(--space-4);
+    border-radius: 0.75rem; /* = rounded-xl */
+    padding: 0.75rem 1rem; /* = py-3 px-4 */
     color: var(--fg);
     font-family: inherit;
     transition: all var(--duration-base);
@@ -267,6 +268,20 @@ p {
 }
 .shadow-xl {
   box-shadow: var(--shadow-xl);
+}
+.shadow-brand {
+  box-shadow: var(--shadow-primary);
+}
+
+/* Transition durations (Button/Header/Footer/layout consume these) */
+.duration-fast {
+  transition-duration: var(--duration-fast);
+}
+.duration-base {
+  transition-duration: var(--duration-base);
+}
+.duration-slow {
+  transition-duration: var(--duration-slow);
 }
 
 /* Scroll */
