@@ -43,6 +43,25 @@ describe("share link round trip", () => {
     expect(decoded).toEqual(CUSTOM);
   });
 
+  it("round-trips the travel month", () => {
+    const withMonth: TripIntent = { ...SURPRISE, travelMonth: 6 };
+    const decoded = intentFromShareParams(intentToShareParams(withMonth));
+    expect(decoded?.travelMonth).toBe(6);
+    expect(decoded).toEqual(withMonth);
+  });
+
+  it("omits the month param when no month is set (back-compat)", () => {
+    const params = intentToShareParams(SURPRISE);
+    expect(params.has("m")).toBe(false);
+    expect(intentFromShareParams(params)?.travelMonth).toBeUndefined();
+  });
+
+  it("ignores an out-of-range month param", () => {
+    const params = intentToShareParams(SURPRISE);
+    params.set("m", "13");
+    expect(intentFromShareParams(params)?.travelMonth).toBeUndefined();
+  });
+
   it("a shared link regenerates the identical plan", () => {
     const decoded = intentFromShareParams(intentToShareParams(SURPRISE))!;
     expect(generateTripPlan(decoded, CITIES)).toEqual(generateTripPlan(SURPRISE, CITIES));
