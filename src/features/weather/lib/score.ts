@@ -1,5 +1,14 @@
-import { MonthlyNormal } from "@/domain/climate";
+import { pleasantWarmth } from "@/domain/climate";
 import { WarmthTarget } from "../types";
+
+// Shared climate math lives in the domain so the planner can use it too.
+export {
+  drynessScore,
+  sunScore,
+  tempWord,
+  rainWord,
+  monthlyComfort as comfortScore,
+} from "@/domain/climate";
 
 const clamp01 = (v: number): number => Math.max(0, Math.min(1, v));
 
@@ -23,45 +32,6 @@ export function warmthScore(high: number, target: WarmthTarget): number {
         ? clamp01(1 - (high - 15) / 10)
         : clamp01(1 - (9 - high) / 12);
     case "any":
-      return clamp01(1 - Math.abs(high - 21) / 18);
+      return pleasantWarmth(high);
   }
-}
-
-/** Fewer rainy days is better: 0 days → 1, 15+ days → 0. */
-export function drynessScore(rainDays: number): number {
-  return clamp01(1 - rainDays / 15);
-}
-
-/** More sunshine is better: 10+ h/day → 1. */
-export function sunScore(sunHours: number): number {
-  return clamp01(sunHours / 10);
-}
-
-/**
- * General pleasantness of a month, independent of any stated preference:
- * comfortable daytime highs, low rain, decent sun — with a penalty for
- * oppressive heat above ~32°C. Returns 0-100.
- */
-export function comfortScore(n: MonthlyNormal): number {
-  const warmth = warmthScore(n.high, "any");
-  const heatPenalty = n.high > 32 ? (n.high - 32) / 12 : 0;
-  const raw =
-    0.5 * warmth + 0.3 * drynessScore(n.rainDays) + 0.2 * sunScore(n.sunHours);
-  return Math.round(clamp01(raw - heatPenalty) * 100);
-}
-
-/** Short temperature descriptor from a daytime high. */
-export function tempWord(high: number): string {
-  if (high >= 28) return "hot";
-  if (high >= 22) return "warm";
-  if (high >= 16) return "mild";
-  if (high >= 10) return "cool";
-  return "cold";
-}
-
-/** Short precipitation descriptor from rainy-day count. */
-export function rainWord(rainDays: number): string {
-  if (rainDays <= 4) return "dry";
-  if (rainDays <= 8) return "some rain";
-  return "wet";
 }

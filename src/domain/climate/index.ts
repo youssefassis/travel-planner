@@ -2,6 +2,7 @@ import { CLIMATE_NORMALS } from "./normals";
 import { CityClimate, ClimateSource, MonthlyNormal, MONTHS } from "./types";
 
 export * from "./types";
+export * from "./comfort";
 
 /** Zip a city's four seasonal arrays into 12 per-month normals. */
 function buildMonths(source: ClimateSource): MonthlyNormal[] {

@@ -1,21 +1,8 @@
 import { City } from "@/domain/types";
-import { MonthlyNormal } from "@/domain/climate";
+import { MonthlyNormal, MONTH_NAMES } from "@/domain/climate";
 
 /** Full month names for display, January-first (index-aligned with domain MONTHS). */
-export const MONTH_FULL = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
+export const MONTH_FULL = MONTH_NAMES;
 
 /** Which way the search runs. */
 export type WeatherMode = "conditions" | "city";
