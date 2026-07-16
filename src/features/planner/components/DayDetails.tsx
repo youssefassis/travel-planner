@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import {
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
   CalendarDays,
-  ChevronDown,
-  ChevronUp,
   CloudRain,
   Footprints,
+  MoreHorizontal,
   Plus,
   RefreshCw,
   Star,
@@ -20,13 +21,14 @@ import {
 import { Pace, Poi } from "@/domain/types";
 import { getMonthNormal, MONTH_NAMES, tempWord } from "@/domain/climate";
 import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
 import { Activity, CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
 import { buildDaySchedule, formatClock, isReorderable } from "../engine";
 
 const LOAD_STYLES: Record<DayLoad, string> = {
   relaxed: "bg-[var(--card-subtle)] text-[var(--muted)]",
   balanced: "bg-[var(--primary)]/10 text-[var(--primary)]",
-  packed: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  packed: "bg-[var(--warning-bg)] text-[var(--warning)]",
 };
 
 type Props = {
@@ -106,14 +108,14 @@ const Rail = ({
 const ActivityChips = ({ activity }: { activity: Activity }) => (
   <>
     {activity.mustSee && (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
-        <Star className="w-2.5 h-2.5" /> Must-see
-      </span>
+      <Badge tone="brand" icon={<Star className="w-2.5 h-2.5" />}>
+        Must-see
+      </Badge>
     )}
     {activity.bookAhead && (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
-        <Ticket className="w-2.5 h-2.5" /> Book ahead
-      </span>
+      <Badge tone="warning" icon={<Ticket className="w-2.5 h-2.5" />}>
+        Book ahead
+      </Badge>
     )}
   </>
 );
@@ -137,7 +139,7 @@ export default function DayDetails({
 }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [addingStop, setAddingStop] = useState(false);
-  const [movingActivityId, setMovingActivityId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   if (!day) return null;
 
@@ -195,95 +197,134 @@ export default function DayDetails({
       </Button>
     ) : null;
 
-  const RemoveButton = ({ activity }: { activity: Activity }) => (
-    <button
-      type="button"
-      onClick={() => onRemove(activity.id)}
-      aria-label={`Remove ${activity.name} from this day`}
-      title="Remove from this day"
-      className={`${iconButtonClasses} hover:bg-[var(--card-subtle)] hover:text-red-500`}
-    >
-      <Trash2 className="w-3.5 h-3.5" />
-    </button>
-  );
+  const menuItemClasses =
+    "w-full flex items-center gap-2 text-left text-sm px-2 py-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-default";
 
-  /** Send an activity to another day of the same city via a small popover. */
-  const MoveToDayButton = ({ activity }: { activity: Activity }) => {
-    if (otherSameCityDays.length === 0) return null;
-    const open = movingActivityId === activity.id;
+  /**
+   * Every per-stop edit (reorder, move to another day, swap, remove) behind a
+   * single overflow menu, so each row stays calm. `swappable` is false for
+   * meals (there's no alternative to swap to).
+   */
+  const ActionMenu = ({
+    activity,
+    swappable,
+  }: {
+    activity: Activity;
+    swappable: boolean;
+  }) => {
+    const open = openMenuId === activity.id;
+    const reorderable = isReorderable(activity);
+    const { index, count } = reorderable
+      ? peerPosition(activity)
+      : { index: 0, count: 0 };
+    const close = () => setOpenMenuId(null);
+
     return (
       <div className="relative">
         <button
           type="button"
-          onClick={() => setMovingActivityId(open ? null : activity.id)}
+          onClick={() => setOpenMenuId(open ? null : activity.id)}
+          aria-haspopup="menu"
           aria-expanded={open}
-          aria-label={`Move ${activity.name} to another day`}
-          title="Move to another day"
-          className={`${iconButtonClasses} hover:bg-[var(--card-subtle)] hover:text-[var(--primary)] ${
-            open ? "bg-[var(--card-subtle)] text-[var(--primary)]" : ""
+          aria-label={`More actions for ${activity.name}`}
+          title="More actions"
+          className={`${iconButtonClasses} hover:bg-[var(--card-subtle)] hover:text-[var(--fg)] ${
+            open ? "bg-[var(--card-subtle)] text-[var(--fg)]" : ""
           }`}
         >
-          <CalendarDays className="w-3.5 h-3.5" />
+          <MoreHorizontal className="w-4 h-4" />
         </button>
         {open && (
           <>
+            <div className="fixed inset-0 z-10" onClick={close} />
             <div
-              className="fixed inset-0 z-10"
-              onClick={() => setMovingActivityId(null)}
-            />
-            <div className="absolute right-0 top-8 z-20 min-w-[150px] rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg p-1.5">
-              <p className="text-caption text-[var(--muted)] px-2 pt-1 pb-1.5">
-                Move to
-              </p>
-              {otherSameCityDays.map((d) => (
+              role="menu"
+              className="absolute right-0 top-9 z-20 min-w-[190px] rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg p-1.5"
+            >
+              {reorderable && (
+                <>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={index <= 0}
+                    onClick={() => {
+                      close();
+                      onMove(activity.id, "up");
+                    }}
+                    className={`${menuItemClasses} text-[var(--fg)] hover:bg-[var(--card-subtle)]`}
+                  >
+                    <ArrowUp className="w-3.5 h-3.5 text-[var(--muted)]" /> Move earlier
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={index === count - 1}
+                    onClick={() => {
+                      close();
+                      onMove(activity.id, "down");
+                    }}
+                    className={`${menuItemClasses} text-[var(--fg)] hover:bg-[var(--card-subtle)]`}
+                  >
+                    <ArrowDown className="w-3.5 h-3.5 text-[var(--muted)]" /> Move later
+                  </button>
+                </>
+              )}
+
+              {otherSameCityDays.length > 0 && (
+                <>
+                  <p className="text-caption text-[var(--muted)] px-2 pt-2 pb-1">
+                    Move to
+                  </p>
+                  {otherSameCityDays.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        close();
+                        onMoveToDay(activity.id, d.id);
+                      }}
+                      className={`${menuItemClasses} text-[var(--fg)] hover:bg-[var(--card-subtle)]`}
+                    >
+                      <CalendarDays className="w-3.5 h-3.5 text-[var(--muted)]" />
+                      {d.label}
+                      <span className="text-xs text-[var(--muted)] ml-auto">
+                        {d.activities.length}
+                      </span>
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {swappable && (
                 <button
-                  key={d.id}
                   type="button"
+                  role="menuitem"
                   onClick={() => {
-                    setMovingActivityId(null);
-                    onMoveToDay(activity.id, d.id);
+                    close();
+                    handleSwap(activity.id);
                   }}
-                  className="w-full text-left text-sm text-[var(--fg)] px-2 py-1.5 rounded-lg hover:bg-[var(--card-subtle)] transition-colors"
+                  className={`${menuItemClasses} text-[var(--fg)] hover:bg-[var(--card-subtle)]`}
                 >
-                  {d.label}
-                  <span className="text-xs text-[var(--muted)] ml-1.5">
-                    {d.activities.length}{" "}
-                    {d.activities.length === 1 ? "stop" : "stops"}
-                  </span>
+                  <RefreshCw className="w-3.5 h-3.5 text-[var(--muted)]" /> Swap for
+                  something else
                 </button>
-              ))}
+              )}
+
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  close();
+                  onRemove(activity.id);
+                }}
+                className={`${menuItemClasses} text-[var(--danger)] hover:bg-[var(--danger-bg)]`}
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Remove from this day
+              </button>
             </div>
           </>
         )}
-      </div>
-    );
-  };
-
-  const ReorderButtons = ({ activity }: { activity: Activity }) => {
-    if (!isReorderable(activity)) return null;
-    const { index, count } = peerPosition(activity);
-    return (
-      <div className="flex flex-col">
-        <button
-          type="button"
-          onClick={() => onMove(activity.id, "up")}
-          disabled={index <= 0}
-          aria-label={`Move ${activity.name} earlier`}
-          title="Move earlier"
-          className={`${iconButtonClasses} h-4 hover:text-[var(--primary)]`}
-        >
-          <ChevronUp className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onMove(activity.id, "down")}
-          disabled={index === count - 1}
-          aria-label={`Move ${activity.name} later`}
-          title="Move later"
-          className={`${iconButtonClasses} h-4 hover:text-[var(--primary)]`}
-        >
-          <ChevronDown className="w-3.5 h-3.5" />
-        </button>
       </div>
     );
   };
@@ -335,7 +376,7 @@ export default function DayDetails({
             onClick={handleRemoveDay}
             aria-label={`Remove ${day.label} from the trip`}
             title="Remove this day from the trip"
-            className="flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium text-[var(--muted)] hover:bg-red-500/10 hover:text-red-500 transition-colors"
+            className="flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium text-[var(--muted)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" /> Remove day
           </button>
@@ -383,8 +424,7 @@ export default function DayDetails({
                         activity={item.activity}
                         startMin={item.startMin}
                       />
-                      <MoveToDayButton activity={item.activity} />
-                      <RemoveButton activity={item.activity} />
+                      <ActionMenu activity={item.activity} swappable={false} />
                     </div>
                   </>
                 ) : (
@@ -419,18 +459,7 @@ export default function DayDetails({
               </div>
               <div className="shrink-0 flex items-center gap-1 self-start">
                 <BookButton activity={item.activity} startMin={item.startMin} />
-                <ReorderButtons activity={item.activity} />
-                <MoveToDayButton activity={item.activity} />
-                <button
-                  type="button"
-                  onClick={() => handleSwap(item.activity.id)}
-                  aria-label={`Swap ${item.activity.name} for something else`}
-                  title="Swap for something else"
-                  className={`${iconButtonClasses} hover:bg-[var(--card-subtle)] hover:text-[var(--primary)]`}
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                </button>
-                <RemoveButton activity={item.activity} />
+                <ActionMenu activity={item.activity} swappable />
               </div>
             </div>
           );
