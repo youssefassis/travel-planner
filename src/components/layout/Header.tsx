@@ -80,6 +80,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className="relative text-sm font-medium transition-colors py-1"
                 style={{
                   color: isActive ? "var(--fg)" : "var(--muted)",
@@ -159,6 +160,7 @@ export default function Header() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
+                  aria-current={isActive ? "page" : undefined}
                   className="flex items-center gap-2 text-sm font-medium transition-colors"
                   style={{
                     color: isActive ? "var(--fg)" : "var(--muted)",

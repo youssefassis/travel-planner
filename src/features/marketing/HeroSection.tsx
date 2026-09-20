@@ -121,7 +121,7 @@ export default function HeroSection() {
         <motion.div className="mb-10 sm:mb-14" variants={itemVariants}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-sm font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>One plan, start to finish</span>
+            <span>The route, the days, the budget — one plan</span>
           </div>
           <h1 className="text-display text-[var(--fg)] mb-5">
             Your next{" "}

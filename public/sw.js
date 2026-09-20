@@ -11,7 +11,7 @@
  * once if this logic ever needs undoing.
  */
 
-const CACHE = "wanderly-v1";
+const CACHE = "wanderly-v2";
 
 /** Enough to open the app cold with no network. */
 const SHELL = ["/", "/planner", "/explore", "/manifest.webmanifest"];
