@@ -17,6 +17,7 @@ Everything runs client-side on a curated city dataset. No backend, no API keys �
 - **Saved trips** — the planner restores what you were last looking at after a refresh, and trips you save are listed before the wizard so you can pick one back up. Everything stays in your browser.
 - **Today** — while the trip is running, the planner opens on the day you're actually on: what's happening now, what's next, what's done, and directions to it.
 - **Works offline** — installable as a PWA. The engine, the city data, and your saved trips all live in the browser, so the itinerary, budget, and packing list work with no signal. The map needs one.
+- **Compare alternatives** — other ways to take the same trip, each changing exactly one thing: the budget tier, the pace, a stop that isn't earning its place, or a flight in the middle of the route. Every one is a real plan with the money, days, cities, and carbon it would cost you; adopt one and it becomes your trip.
 - **Share & export** — copy a link that regenerates the identical plan (the engine is deterministic), add it to a calendar, open the route in Google Maps, share as text, or print to PDF.
 - **Flights** (`/flights`) — decision support: a handful of recommendations tailored to your priorities with trade-offs and full expected cost, not an endless results list.
 - **Stays** (`/stays`) — advisor-style picks: matching neighborhoods with reasoning, a shortlist of accommodations with strengths and totals including taxes and fees.
