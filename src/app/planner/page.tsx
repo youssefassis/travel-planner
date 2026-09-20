@@ -24,17 +24,13 @@ import Link from "next/link";
 import TripWizard from "@/features/planner/components/wizard/TripWizard";
 import PrintItinerary from "@/features/planner/components/PrintItinerary";
 import PlanHub from "./_components/PlanHub";
-import { HubTab, HUB_TABS } from "./_components/HubTabs";
+import { HubTab, parseTab } from "./_lib/tabs";
 
 import { Booking, Bookings, TripIntent, TripPlan } from "@/features/planner/types";
 
 import Container from "@/components/ui/Container";
 import PageHeader from "@/components/ui/PageHeader";
 import { fadeIn } from "@/components/motion";
-
-function parseTab(value: string | null): HubTab {
-  return HUB_TABS.some((t) => t.value === value) ? (value as HubTab) : "itinerary";
-}
 
 function PlannerPageContent() {
   const searchParams = useSearchParams();
@@ -50,7 +46,7 @@ function PlannerPageContent() {
   const [planIntent, setPlanIntent] = useState<TripIntent | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
-  const [initialTab, setInitialTab] = useState<HubTab>("itinerary");
+  const [initialTab, setInitialTab] = useState<HubTab | null>(null);
   const [saved, setSaved] = useState<StoredTrip[]>([]);
   const [bookings, setBookings] = useState<Bookings>({});
 
