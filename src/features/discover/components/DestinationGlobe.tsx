@@ -9,46 +9,34 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 type Props = {
   pool: City[];
-  /** Increment to trigger a spin toward `winner`. 0 = no spin yet. */
-  spinToken: number;
-  /** The city to land on when spinToken changes. */
-  winner: City | null;
-  /** Fired once the globe finishes flying to the winner. */
-  onLanded: (city: City) => void;
+  /** The landed city to fly to; null keeps the globe at its world view. */
+  focus: City | null;
   className?: string;
 };
 
 const POOL_SOURCE = "discover-pool";
-const SPIN_MS = 2200;
 const POOL_COLOR = "#bc3f2b";
+const WORLD_VIEW = { center: [10, 25] as [number, number], zoom: 1.4 };
 
-export default function GlobeSpinner({
-  pool,
-  spinToken,
-  winner,
-  onLanded,
-  className,
-}: Props) {
+/**
+ * The reveal half of Spin the globe: a draggable globe showing every city
+ * the spin could pick, which flies to the one the departure board settled on.
+ */
+export default function DestinationGlobe({ pool, focus, className }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const winnerMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const onLandedRef = useRef(onLanded);
-  useEffect(() => {
-    onLandedRef.current = onLanded;
-  }, [onLanded]);
+  const markerRef = useRef<maplibregl.Marker | null>(null);
 
   const [styleLoaded, setStyleLoaded] = useState(false);
 
-  // INIT — a draggable globe, scroll-zoom off so it stays a contained toy.
+  // INIT — scroll-zoom off so it stays a contained toy inside the page.
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: "https://tiles.openfreemap.org/styles/liberty",
-      center: [10, 25],
-      zoom: 1.4,
+      ...WORLD_VIEW,
       attributionControl: { compact: true },
       scrollZoom: false,
     });
@@ -68,7 +56,6 @@ export default function GlobeSpinner({
 
     return () => {
       resizeObserver.disconnect();
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       map.off("load", handleLoad);
       map.remove();
       mapRef.current = null;
@@ -115,55 +102,37 @@ export default function GlobeSpinner({
     });
   }, [pool, styleLoaded]);
 
-  // SPIN — reset to a full-globe view, spin with an ease-out, then fly to the
-  // winner and drop a marker. Runs once per spinToken bump.
+  // FOCUS — fly to the destination the board landed on and pin it. Clearing
+  // the focus (a new spin) returns the globe to the world view.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !styleLoaded || spinToken === 0 || !winner) return;
+    if (!map || !styleLoaded) return;
 
-    winnerMarkerRef.current?.remove();
-    winnerMarkerRef.current = null;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    markerRef.current?.remove();
+    markerRef.current = null;
 
-    map.jumpTo({ center: [map.getCenter().lng, 20], zoom: 1.4 });
-    const startLng = map.getCenter().lng;
-    const totalSpin = 2.5 * 360;
-    let startTime: number | null = null;
+    if (!focus) {
+      map.flyTo({ ...WORLD_VIEW, duration: 900, essential: true });
+      return;
+    }
 
-    const step = (t: number) => {
-      if (startTime === null) startTime = t;
-      const p = Math.min(1, (t - startTime) / SPIN_MS);
-      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic — fast then settling
-      map.setCenter([startLng + totalSpin * eased, 20]);
+    const dest = toLngLat(focus.coords);
+    map.flyTo({ center: dest, zoom: 4.2, duration: 1600, essential: true });
 
-      if (p < 1) {
-        rafRef.current = requestAnimationFrame(step);
-        return;
-      }
-
-      rafRef.current = null;
-      const dest = toLngLat(winner.coords);
-      map.flyTo({ center: dest, zoom: 4.2, duration: 1600, essential: true });
-      map.once("moveend", () => {
-        const el = document.createElement("div");
-        el.className =
-          "px-2.5 py-1 rounded-full bg-[var(--primary)] text-white text-xs font-semibold shadow-md whitespace-nowrap border-2 border-white";
-        el.textContent = winner.name;
-        winnerMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" })
-          .setLngLat(dest)
-          .addTo(map);
-        onLandedRef.current(winner);
-      });
-    };
-
-    rafRef.current = requestAnimationFrame(step);
-  }, [spinToken, winner, styleLoaded]);
+    const el = document.createElement("div");
+    el.className =
+      "px-2.5 py-1 rounded-full bg-[var(--primary)] text-white text-xs font-semibold shadow-md whitespace-nowrap border-2 border-white";
+    el.textContent = focus.name;
+    markerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" })
+      .setLngLat(dest)
+      .addTo(map);
+  }, [focus, styleLoaded]);
 
   return (
     <div
       ref={containerRef}
       className={`w-full rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--card-subtle)] ${
-        className ?? "h-[360px] sm:h-[440px]"
+        className ?? "h-[320px] sm:h-[400px]"
       }`}
     />
   );
