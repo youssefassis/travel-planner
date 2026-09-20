@@ -94,7 +94,7 @@ export default function BudgetBreakdownView({
                     <Icon className="w-4 h-4 text-[var(--primary)]" />
                     {label}
                   </span>
-                  <span className="text-[var(--muted)]">
+                  <span className="text-data text-xs text-[var(--muted)]">
                     €{value} · {pct}%
                     {key === "activities" && booked > 0 && (
                       <span className="text-[var(--success)]"> · €{booked} booked</span>
@@ -130,7 +130,7 @@ export default function BudgetBreakdownView({
                     {stop.stayPerNight}/night
                   </p>
                 </div>
-                <span className="text-[var(--fg)] shrink-0">€{stop.stayTotal}</span>
+                <span className="text-data text-[var(--fg)] shrink-0">€{stop.stayTotal}</span>
               </li>
             ))}
           </ul>
@@ -151,11 +151,11 @@ export default function BudgetBreakdownView({
                     <span className="text-[var(--fg)] truncate">
                       {leg.from} → {leg.to}
                     </span>
-                    <span className="text-xs text-[var(--muted)] shrink-0">
+                    <span className="text-xs text-data text-[var(--muted)] shrink-0">
                       {leg.durationHrs}h
                     </span>
                   </div>
-                  <span className="text-[var(--fg)] shrink-0">€{leg.cost}</span>
+                  <span className="text-data text-[var(--fg)] shrink-0">€{leg.cost}</span>
                 </li>
               ))}
             </ul>

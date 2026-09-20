@@ -56,7 +56,7 @@ const variantStyles = {
     "text-[var(--primary)] hover:text-[var(--primary-dark)] underline-offset-2 hover:underline",
   // Deliberately hardcoded dark text: this variant sits on colored/gradient
   // surfaces, and var(--fg) flips to near-white in dark mode.
-  white: "bg-white text-[#1c140d] hover:bg-white/90 shadow-md hover:shadow-lg",
+  white: "bg-white text-[#1d2935] hover:bg-white/90 shadow-md hover:shadow-lg",
 };
 
 export default function Button({

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Compass } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
@@ -15,6 +15,8 @@ const NAVIGATION = [
 
 const BRAND_NAME = "Wanderly";
 
+/** Full-width instrument bar: frosted paper, a hairline that appears on
+ *  scroll, and the wordmark set in the display serif. */
 export default function Header() {
   const pathname = usePathname();
 
@@ -23,7 +25,7 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
+      setIsScrolled(window.scrollY > 24);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -32,32 +34,34 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close the mobile sheet when navigation happens under it — state adjusted
+  // during render (not in an effect) so it can't cascade re-renders.
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setIsMenuOpen(false);
+  }
+
   return (
     <header
-      className={`
-        fixed left-1/2 -translate-x-1/2 top-4 z-50 print:hidden
-        w-[92%] max-w-[1200px] rounded-full border
-        transition-all duration-base
-        ${isScrolled ? "border-[var(--border)]" : "border-transparent"}
-      `}
+      className={`fixed inset-x-0 top-0 z-50 print:hidden border-b transition-all duration-base ${
+        isScrolled || isMenuOpen ? "border-[var(--border)]" : "border-transparent"
+      }`}
       style={{
-        background: isScrolled ? "var(--header-bg-scrolled)" : "var(--header-bg)",
+        background:
+          isScrolled || isMenuOpen ? "var(--header-bg-scrolled)" : "var(--header-bg)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
       }}
     >
       <div
-        className={`
-          px-6 flex items-center justify-between
-          transition-all duration-base
-          ${isScrolled ? "h-14" : "h-16"}
-        `}
+        className={`mx-auto max-w-[1200px] px-4 sm:px-6 flex items-center justify-between transition-all duration-base ${
+          isScrolled ? "h-14" : "h-16"
+        }`}
       >
         <Link
           href="/"
-          className={`flex items-center gap-2 font-semibold tracking-tight transition-all duration-base ${
-            isScrolled ? "text-lg" : "text-xl"
-          }`}
+          className="flex items-center gap-2 font-serif font-semibold tracking-tight text-xl"
         >
           <Compass
             className={`text-[var(--primary)] transition-all duration-base ${
@@ -81,18 +85,15 @@ export default function Header() {
                 }}
               >
                 {item.label}
-                <AnimatePresence>
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-indicator"
-                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--primary)]"
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0 }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  )}
-                </AnimatePresence>
+                {isActive && (
+                  // The route line: a short red underline that travels
+                  // between links like a leg on the map.
+                  <motion.span
+                    layoutId="nav-indicator"
+                    className="absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full bg-[var(--primary)]"
+                    transition={{ duration: 0.25 }}
+                  />
+                )}
               </Link>
             );
           })}
@@ -139,18 +140,15 @@ export default function Header() {
         </div>
       </div>
 
+      {/* Mobile sheet — slides out under the bar, full width, hairline-framed. */}
       <div
-        className={`
-          md:hidden absolute top-full left-0 w-full
-          transition-all duration-base
-          ${
-            isMenuOpen
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 -translate-y-2 pointer-events-none"
-          }
-        `}
+        className={`md:hidden absolute top-full left-0 w-full transition-all duration-base ${
+          isMenuOpen
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-2 pointer-events-none"
+        }`}
       >
-        <div className="m-4 p-6 rounded-2xl border bg-[var(--card)] border-[var(--border)]">
+        <div className="border-b border-[var(--border)] bg-[var(--card)] px-6 py-5 shadow-lg">
           <nav className="flex flex-col gap-4">
             {NAVIGATION.map((item) => {
               const isActive = pathname === item.href;
@@ -166,12 +164,19 @@ export default function Header() {
                   }}
                 >
                   {isActive && (
-                    <span className="w-1 h-1 rounded-full bg-[var(--primary)]" />
+                    <span className="w-3 h-[2px] rounded-full bg-[var(--primary)]" />
                   )}
                   {item.label}
                 </Link>
               );
             })}
+            <Link
+              href="/planner"
+              onClick={() => setIsMenuOpen(false)}
+              className="mt-1 inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)]"
+            >
+              Plan a trip <ArrowRight className="w-4 h-4" />
+            </Link>
           </nav>
         </div>
       </div>

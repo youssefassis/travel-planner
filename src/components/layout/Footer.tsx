@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Compass } from "lucide-react";
 import Container from "@/components/ui/Container";
 
 const BRAND_NAME = "Wanderly";
@@ -9,9 +10,25 @@ const NAVIGATION = [
   { label: "Explore", href: "/explore" },
 ];
 
+/** A decorative leg of the route: dot — dotted line — dot. */
+function RouteOrnament() {
+  return (
+    <div
+      aria-hidden
+      className="flex items-center gap-3 mb-12 text-[var(--border)]"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
+      <span className="flex-1 border-t-2 border-dotted border-current" />
+      <Compass className="w-4 h-4 text-[var(--muted)]" />
+      <span className="flex-1 border-t-2 border-dotted border-current" />
+      <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
+    </div>
+  );
+}
+
 export default function Footer() {
   return (
-    <footer className="relative pt-16 pb-12 overflow-hidden border-t border-[var(--border)] bg-[var(--bg)] print:hidden">
+    <footer className="relative pt-14 pb-12 overflow-hidden border-t border-[var(--border)] bg-[var(--bg)] print:hidden">
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/3 pointer-events-none select-none">
         <span
           className="text-[14vw] font-serif whitespace-nowrap"
@@ -22,17 +39,22 @@ export default function Footer() {
       </div>
 
       <Container size="wide" className="relative z-10">
+        <RouteOrnament />
+
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-10 mb-14">
           <div className="flex flex-col gap-4">
             <Link
               href="/"
-              className="inline-block text-2xl font-semibold tracking-tight transition-colors hover:opacity-80"
+              className="inline-block font-serif text-2xl font-semibold tracking-tight transition-colors hover:opacity-80"
               style={{ color: "var(--primary)" }}
             >
               {BRAND_NAME}
             </Link>
             <p className="text-[0.9rem] leading-relaxed max-w-sm text-[var(--muted)]">
               Plan the route, the days, and the budget — in one place.
+            </p>
+            <p className="text-caption text-[var(--muted)]">
+              Charted for 41 cities · 20 countries
             </p>
           </div>
 
