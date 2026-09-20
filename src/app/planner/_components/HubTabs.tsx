@@ -1,30 +1,35 @@
 "use client";
 
-import { Calendar, Plane, BedDouble, Wallet, Luggage, Sun } from "lucide-react";
+import {
+  BedDouble,
+  Calendar,
+  Luggage,
+  Map,
+  Plane,
+  Sun,
+  Wallet,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { HubTab } from "../_lib/tabs";
 
-export type HubTab =
-  | "itinerary"
-  | "today"
-  | "flights"
-  | "stays"
-  | "budget"
-  | "prepare";
-
-export const HUB_TABS: { value: HubTab; label: string; Icon: LucideIcon }[] = [
-  { value: "itinerary", label: "Itinerary", Icon: Calendar },
-  { value: "today", label: "Today", Icon: Sun },
-  { value: "flights", label: "Flights", Icon: Plane },
-  { value: "stays", label: "Stays", Icon: BedDouble },
-  { value: "budget", label: "Budget", Icon: Wallet },
-  { value: "prepare", label: "Prepare", Icon: Luggage },
-];
+const TAB_META: Record<HubTab, { label: string; Icon: LucideIcon }> = {
+  overview: { label: "Overview", Icon: Map },
+  today: { label: "Today", Icon: Sun },
+  itinerary: { label: "Itinerary", Icon: Calendar },
+  flights: { label: "Flights", Icon: Plane },
+  stays: { label: "Stays", Icon: BedDouble },
+  budget: { label: "Budget", Icon: Wallet },
+  prepare: { label: "Prepare", Icon: Luggage },
+};
 
 /** The sticky tab bar for the trip hub. Scrolls horizontally on mobile. */
 export default function HubTabs({
+  tabs,
   active,
   onChange,
 }: {
+  /** Which sections this trip has right now (see _lib/tabs.ts). */
+  tabs: HubTab[];
   active: HubTab;
   onChange: (tab: HubTab) => void;
 }) {
@@ -34,7 +39,8 @@ export default function HubTabs({
       aria-label="Trip sections"
       className="flex gap-1 overflow-x-auto scrollbar-hide -mx-1 px-1"
     >
-      {HUB_TABS.map(({ value, label, Icon }) => {
+      {tabs.map((value) => {
+        const { label, Icon } = TAB_META[value];
         const selected = value === active;
         return (
           <button

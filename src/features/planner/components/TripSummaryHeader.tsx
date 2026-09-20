@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { BookmarkCheck, BookmarkPlus, Pencil, Scale } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, Pencil } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { MONTH_NAMES } from "@/domain/climate";
@@ -24,7 +24,6 @@ export default function TripSummaryHeader({
   onEdit,
   onSave,
   isSaved,
-  onCompare,
   actions,
 }: {
   plan: TripPlan;
@@ -33,8 +32,6 @@ export default function TripSummaryHeader({
   /** Keep this trip in the browser so it outlives the session. */
   onSave?: () => void;
   isSaved?: boolean;
-  /** Show other ways to take the same trip. */
-  onCompare?: () => void;
   /** Trip-wide actions (e.g. share/export) shown in a footer row. */
   actions?: ReactNode;
 }) {
@@ -92,16 +89,6 @@ export default function TripSummaryHeader({
               disabled={isSaved}
             >
               {isSaved ? "Saved" : "Save trip"}
-            </Button>
-          )}
-          {onCompare && (
-            <Button
-              variant="outline"
-              icon={<Scale size={14} />}
-              iconPosition="left"
-              onClick={onCompare}
-            >
-              Compare
             </Button>
           )}
           <Button
