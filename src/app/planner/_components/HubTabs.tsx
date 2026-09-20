@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  BedDouble,
-  Calendar,
-  Luggage,
-  Map,
-  Plane,
-  Sun,
-  Wallet,
-} from "lucide-react";
+import { Calendar, Luggage, Map, Sun, Ticket, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { HubTab } from "../_lib/tabs";
 
@@ -16,8 +8,7 @@ const TAB_META: Record<HubTab, { label: string; Icon: LucideIcon }> = {
   overview: { label: "Overview", Icon: Map },
   today: { label: "Today", Icon: Sun },
   itinerary: { label: "Itinerary", Icon: Calendar },
-  flights: { label: "Flights", Icon: Plane },
-  stays: { label: "Stays", Icon: BedDouble },
+  book: { label: "Book", Icon: Ticket },
   budget: { label: "Budget", Icon: Wallet },
   prepare: { label: "Prepare", Icon: Luggage },
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultTab, parseTab, resolveTab, visibleTabs } from "./tabs";
+import { defaultTab, parseBookMode, parseTab, resolveTab, visibleTabs } from "./tabs";
 
 describe("visibleTabs", () => {
   it("hides Today and Prepare for an undated trip", () => {
@@ -37,6 +37,7 @@ describe("where the hub opens", () => {
 
   it("honors a URL that names a section that exists right now", () => {
     expect(resolveTab("budget", "undated")).toBe("budget");
+    expect(resolveTab("book", "undated")).toBe("book");
     expect(resolveTab("prepare", "before")).toBe("prepare");
   });
 
@@ -46,8 +47,16 @@ describe("where the hub opens", () => {
   });
 
   it("reads only real tab names from the URL", () => {
-    expect(parseTab("stays")).toBe("stays");
+    expect(parseTab("book")).toBe("book");
     expect(parseTab("nonsense")).toBeNull();
     expect(parseTab(null)).toBeNull();
+  });
+
+  it("keeps pre-merge flight/stay links working", () => {
+    expect(parseTab("flights")).toBe("book");
+    expect(parseTab("stays")).toBe("book");
+    expect(parseBookMode("stays")).toBe("stays");
+    expect(parseBookMode("flights")).toBe("flights");
+    expect(parseBookMode(null)).toBe("flights");
   });
 });
