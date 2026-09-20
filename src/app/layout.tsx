@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -9,18 +9,26 @@ import OfflineNotice from "@/components/pwa/OfflineNotice";
 
 import "./globals.css";
 
-const sans = Inter({
+const sans = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
   weight: ["400", "500", "600", "700"],
 });
 
-const serif = Playfair_Display({
+const serif = Newsreader({
   subsets: ["latin"],
   variable: "--font-serif",
   display: "swap",
   weight: ["400", "500", "600", "700"],
+});
+
+// Timetable digits — every time, fare, and distance the app shows.
+const data = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-data",
+  display: "swap",
+  weight: ["400", "500", "600"],
 });
 
 export const viewport: Viewport = {
@@ -65,18 +73,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${serif.variable}`}
+      className={`${sans.variable} ${serif.variable} ${data.variable}`}
       suppressHydrationWarning
     >
       <head>
         <meta
           name="theme-color"
-          content="#fbf8f5"
+          content="#f3f1e8"
           media="(prefers-color-scheme: light)"
         />
         <meta
           name="theme-color"
-          content="#0f0c08"
+          content="#10161d"
           media="(prefers-color-scheme: dark)"
         />
       </head>

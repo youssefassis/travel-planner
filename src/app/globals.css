@@ -8,65 +8,74 @@
    DESIGN TOKENS
 ========================= */
 :root {
+  /* Atlas: ink on chart paper. Ivory ground, ink-navy text, and the red
+     atlases use to draw the route — spent on actions and the journey line. */
+
   /* Backgrounds & text */
-  --bg: #fbf8f5;
-  --fg: #1c140d;
-  --muted: #7c6f64;
+  --bg: #f3f1e8;
+  --fg: #1d2935;
+  --muted: #5f6a72;
 
   /* Surfaces */
-  --border: #ebe3db;
-  --card: #ffffff;
-  --card-subtle: #f6f1ec;
-  --card-border: rgba(231, 101, 28, 0.06);
+  --border: #dcd6c6;
+  --card: #fcfaf3;
+  --card-subtle: #edeadb;
+  --card-border: rgba(188, 63, 43, 0.06);
 
   /* Form controls — deliberately more contrast than --card-subtle so
      inputs/selects read as clickable against both white cards and the
      page background. */
-  --input-bg: #f4efe7;
-  --input-border: #ddccb8;
+  --input-bg: #ece8d9;
+  --input-border: #c8c1a9;
 
-  /* Brand */
-  --primary: #e7651c;
-  --primary-dark: #c6531a;
-  --primary-light: #f28c45;
+  /* Brand — route red */
+  --primary: #bc3f2b;
+  --primary-dark: #a03424;
+  --primary-light: #d05a41;
 
-  /* Secondary accent (reduced dominance) */
-  --accent: #6d5dfc;
-  --accent-light: #a9a0ff;
-  --accent-dark: #5748d6;
+  /* Secondary accent — chart teal (the map's water; links, weather) */
+  --accent: #2a6f74;
+  --accent-light: #4b8f94;
+  --accent-dark: #1f575b;
 
   /* Gradients */
-  --gradient-brand: linear-gradient(135deg, #e7651c 0%, #6d5dfc 100%);
-  --gradient-hero: linear-gradient(135deg, #e7651c 0%, #c94d17 45%, #6d5dfc 100%);
-  --gradient-warm: linear-gradient(145deg, #fffaf6, #f6f1ff);
+  --gradient-brand: linear-gradient(135deg, #bc3f2b 0%, #a8823a 100%);
+  --gradient-hero: linear-gradient(135deg, #22333f 0%, #1d2935 50%, #2a6f74 100%);
+  --gradient-warm: linear-gradient(145deg, #fdfbf4, #edefe6);
 
   /* Header (frosted pill) */
-  --header-bg: rgba(251, 248, 245, 0.65);
-  --header-bg-scrolled: rgba(251, 248, 245, 0.92);
+  --header-bg: rgba(243, 241, 232, 0.65);
+  --header-bg-scrolled: rgba(243, 241, 232, 0.92);
 
   /* Semantic status — dark values live in .dark, so components never need
      per-site dark: color overrides. Use as text-[var(--warning)]
-     bg-[var(--warning-bg)]. --rating is decorative (star fills), not stateful. */
-  --success: #178a55;
-  --success-bg: rgba(23, 138, 85, 0.12);
-  --warning: #b45309;
-  --warning-bg: rgba(217, 119, 6, 0.14);
-  --danger: #dc2626;
-  --danger-bg: rgba(220, 38, 38, 0.1);
-  --rating: #f59e0b;
+     bg-[var(--warning-bg)]. --rating is decorative (star fills), not
+     stateful. --danger is a colder crimson than --primary on purpose:
+     route-red means "act", crimson means "wrong". */
+  --success: #256d4f;
+  --success-bg: rgba(37, 109, 79, 0.12);
+  --warning: #96610e;
+  --warning-bg: rgba(165, 110, 20, 0.13);
+  --danger: #a92433;
+  --danger-bg: rgba(169, 36, 51, 0.1);
+  --rating: #a8823a;
 
-  /* Typography */
+  /* Typography — Newsreader for display, Source Sans for UI, and Plex Mono
+     for data: every time, fare, distance, and coordinate the app produces
+     is set timetable-style (see .text-data). */
   --font-sans:
-    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-serif: "Playfair Display", serif;
+    "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
-  --shadow-primary: 0 10px 30px rgba(231, 101, 28, 0.18);
-  --shadow-glow: 0 0 40px rgba(231, 101, 28, 0.12);
+  /* Shadows — ink-tinted, never pure black on paper */
+  --shadow-sm: 0 1px 3px rgba(29, 41, 53, 0.05);
+  --shadow-md: 0 4px 10px rgba(29, 41, 53, 0.07);
+  --shadow-lg: 0 10px 24px rgba(29, 41, 53, 0.09);
+  --shadow-xl: 0 20px 40px rgba(29, 41, 53, 0.11);
+  --shadow-primary: 0 10px 30px rgba(188, 63, 43, 0.16);
+  --shadow-glow: 0 0 40px rgba(188, 63, 43, 0.1);
 
   /* Motion */
   --duration-fast: 150ms;
@@ -79,45 +88,46 @@
    DARK THEME
 ========================= */
 .dark {
-  --bg: #0f0c08;
-  --fg: #f5f0eb;
-  --muted: #8a7f75;
+  /* Night navigation chart: navy ground, paper-toned text, embered red. */
+  --bg: #10161d;
+  --fg: #e9e4d3;
+  --muted: #8d9493;
 
-  --border: rgba(255, 255, 255, 0.08);
-  --card: #1a1410;
-  --card-subtle: #221c16;
-  --card-border: rgba(240, 138, 62, 0.1);
+  --border: rgba(233, 228, 211, 0.1);
+  --card: #182029;
+  --card-subtle: #1e2833;
+  --card-border: rgba(224, 100, 76, 0.1);
 
-  --input-bg: #2b2019;
-  --input-border: #493628;
+  --input-bg: #212d3a;
+  --input-border: #3a4a5b;
 
-  --primary: #f07a3a;
-  --primary-dark: #e7651c;
-  --primary-light: #f59a5c;
+  --primary: #e0644c;
+  --primary-dark: #c94f38;
+  --primary-light: #ea8168;
 
-  --accent: #8b7cff;
-  --accent-light: #b8aaff;
-  --accent-dark: #6d5dfc;
+  --accent: #5ba7ab;
+  --accent-light: #7fc0c3;
+  --accent-dark: #3f8589;
 
-  --gradient-brand: linear-gradient(135deg, #f07a3a 0%, #8b7cff 100%);
-  --gradient-hero: linear-gradient(135deg, #f07a3a 0%, #d15a20 45%, #8b7cff 100%);
-  --gradient-warm: linear-gradient(145deg, #2a2218, #3b2f52);
+  --gradient-brand: linear-gradient(135deg, #e0644c 0%, #cfa64f 100%);
+  --gradient-hero: linear-gradient(135deg, #182029 0%, #10161d 50%, #1e4d51 100%);
+  --gradient-warm: linear-gradient(145deg, #182029, #16232b);
 
-  --header-bg: rgba(15, 12, 8, 0.6);
-  --header-bg-scrolled: rgba(15, 12, 8, 0.88);
+  --header-bg: rgba(16, 22, 29, 0.6);
+  --header-bg-scrolled: rgba(16, 22, 29, 0.88);
 
   --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 6px 14px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
-  --shadow-primary: 0 10px 30px rgba(240, 114, 48, 0.25);
+  --shadow-primary: 0 10px 30px rgba(224, 100, 76, 0.22);
 
-  --success: #34d399;
-  --success-bg: rgba(52, 211, 153, 0.14);
-  --warning: #fbbf24;
-  --warning-bg: rgba(251, 191, 36, 0.14);
-  --danger: #f87171;
-  --danger-bg: rgba(248, 113, 113, 0.12);
-  --rating: #fbbf24;
+  --success: #54b98d;
+  --success-bg: rgba(84, 185, 141, 0.14);
+  --warning: #dda748;
+  --warning-bg: rgba(221, 167, 72, 0.14);
+  --danger: #f27d86;
+  --danger-bg: rgba(242, 125, 134, 0.12);
+  --rating: #cfa64f;
 }
 
 /* =========================
@@ -153,18 +163,18 @@ body {
 ========================= */
 .text-display {
   font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: 600;
   font-size: clamp(2.75rem, 2rem + 3.5vw, 4.5rem);
   line-height: 1.05;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 
 .text-h1 {
   font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: 600;
   font-size: clamp(2.25rem, 1.8rem + 2.2vw, 3.25rem);
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 
 .text-h2 {
@@ -197,12 +207,21 @@ body {
 }
 
 .text-caption {
-  font-family: var(--font-sans);
-  font-weight: 600;
+  /* Map-label energy: caps, letter-spaced, set in the data face. */
+  font-family: var(--font-data);
+  font-weight: 500;
   font-size: 0.75rem;
   line-height: 1.4;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+/* Timetable digits: times, fares, distances, coordinates, countdowns.
+   Tabular numerals so columns of figures align. */
+.text-data {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 p {
@@ -211,7 +230,7 @@ p {
 
 /* Selection */
 ::selection {
-  background: rgba(231, 101, 28, 0.2);
+  background: rgba(188, 63, 43, 0.18);
   color: var(--fg);
 }
 
@@ -250,7 +269,7 @@ p {
     outline: none;
     background: var(--card);
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(231, 101, 28, 0.12);
+    box-shadow: 0 0 0 2px rgba(188, 63, 43, 0.14);
   }
 }
 
