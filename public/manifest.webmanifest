@@ -41,6 +41,12 @@
       "short_name": "Explore",
       "description": "Find somewhere to go",
       "url": "/explore"
+    },
+    {
+      "name": "My trips",
+      "short_name": "Trips",
+      "description": "Trips saved in this browser",
+      "url": "/trips"
     }
   ]
 }
