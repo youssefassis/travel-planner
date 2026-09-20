@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import ThemeProvider from "@/components/theme/ThemeProvider";
 import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
 import OfflineNotice from "@/components/pwa/OfflineNotice";
+import { SITE_URL } from "@/domain/site";
 
 import "./globals.css";
 
@@ -39,7 +40,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://wanderly.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Wanderly — Trip Planner",
     template: "%s · Wanderly",

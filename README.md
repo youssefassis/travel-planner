@@ -48,6 +48,8 @@ npm start          # http://localhost:3000
 | `npm run lint` | ESLint — the baseline is zero errors and zero warnings |
 | `npm t` | Vitest; tests sit next to the code as `*.test.ts` |
 
+There is nothing to configure — no API keys, no services. The one optional variable is `NEXT_PUBLIC_SITE_URL` (see [`.env.example`](.env.example)), which tells a deployment its own public origin so canonical URLs, the sitemap and `robots.txt` agree; locally it defaults to `http://localhost:3000`.
+
 ## What you get
 
 **Planning the trip**
@@ -96,3 +98,4 @@ The layering rules, engine internals and design tokens are written up for contri
 ## Credits
 
 Destination photography comes from Wikimedia Commons under CC0 and CC BY-SA. Photographers, licences and source pages are listed in [`public/credits.txt`](public/credits.txt), which the site links from its footer.
+
