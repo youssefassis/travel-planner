@@ -1,6 +1,6 @@
 "use client";
 
-import { PenLine, Map, Zap, SlidersHorizontal } from "lucide-react";
+import { PenLine, Map, Zap, SlidersHorizontal, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import SectionHeader from "@/components/ui/SectionHeader";
 import Section from "@/components/ui/Section";
@@ -9,47 +9,65 @@ import Card from "@/components/ui/Card";
 import { VIEWPORT_ONCE, DUR, EASE_OUT } from "@/components/motion";
 import type { LucideIcon } from "lucide-react";
 
+/** A waypoint marker on the route: the step number in a solid pin. */
+const Waypoint = ({ number }: { number: number }) => (
+  <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-white text-lg font-bold shadow-brand ring-4 ring-[var(--card-subtle)]">
+    {number}
+  </div>
+);
+
 const StepCard = ({
   number,
   title,
   description,
   Icon,
   index,
+  isLast,
 }: {
   number: number;
   title: string;
   description: string;
   Icon: LucideIcon;
   index: number;
+  isLast: boolean;
 }) => (
-  <motion.div
+  <motion.li
     initial={{ opacity: 0, y: 32 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={VIEWPORT_ONCE}
     transition={{ duration: DUR.slow, ease: EASE_OUT, delay: Math.min(index * 0.1, 0.3) }}
+    className="relative flex flex-row gap-4 md:flex-col md:items-center md:gap-0"
   >
-  <Card
-    padding="lg"
-    className="relative group h-full transition-colors duration-300 hover:border-[var(--primary)]/30"
-  >
-    {/* Step number + icon row */}
-    <div className="flex items-center gap-4 mb-6">
-      <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5" />
-      </div>
-      <span className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
-        Step {number}
-      </span>
+    {/* Marker column: on mobile this is a real flex column (pin + line
+        stretched to the row's height); at md it becomes `contents` so the
+        pin joins the vertical stack below and the mobile connector just
+        stays hidden. */}
+    <div className="flex flex-col items-center md:contents">
+      <Waypoint number={number} />
+      {!isLast && (
+        <div
+          aria-hidden
+          className="my-1 w-px flex-1 border-l-2 border-dashed border-[var(--primary)]/30 md:hidden"
+        />
+      )}
     </div>
 
-    <h3 className="text-h2 text-[var(--fg)] mb-3">{title}</h3>
+    <Card
+      padding="lg"
+      className="group h-full flex-1 transition-colors duration-300 hover:border-[var(--primary)]/30 md:mt-6 md:w-full"
+    >
+      <div className="flex items-center gap-3 mb-3 md:flex-col md:gap-2 md:text-center">
+        <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center shrink-0">
+          <Icon className="w-5 h-5" />
+        </div>
+        <h3 className="text-h2 text-[var(--fg)]">{title}</h3>
+      </div>
 
-    <p className="text-[var(--muted)] text-base leading-relaxed">{description}</p>
-
-    {/* Subtle gradient accent on hover */}
-    <div className="absolute inset-x-0 bottom-0 h-0.5 rounded-b-xl bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-  </Card>
-  </motion.div>
+      <p className="text-[var(--muted)] text-base leading-relaxed md:text-center">
+        {description}
+      </p>
+    </Card>
+  </motion.li>
 );
 
 export default function HowItWorksSection() {
@@ -91,12 +109,18 @@ export default function HowItWorksSection() {
           />
         </motion.div>
 
-        {/* Steps with connector */}
+        {/* Steps laid out as a route: numbered waypoints on a dashed path */}
         <div className="relative">
-          {/* Desktop connector line */}
-          <div className="hidden md:block absolute top-[52px] left-[calc(16.66%+20px)] right-[calc(16.66%+20px)] h-px bg-gradient-to-r from-[var(--primary)]/30 via-[var(--accent)]/30 to-[var(--primary)]/30" />
+          {/* Desktop route line, running through the waypoints' centers */}
+          <div
+            aria-hidden
+            className="hidden md:block absolute top-6 left-[16.667%] right-[16.667%] border-t-2 border-dashed border-[var(--primary)]/30"
+          >
+            <ChevronRight className="absolute left-1/4 top-0 w-4 h-4 -translate-x-1/2 -translate-y-1/2 text-[var(--primary)]/50" />
+            <ChevronRight className="absolute left-3/4 top-0 w-4 h-4 -translate-x-1/2 -translate-y-1/2 text-[var(--primary)]/50" />
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <ol className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {steps.map((step, i) => (
               <StepCard
                 key={step.number}
@@ -105,9 +129,10 @@ export default function HowItWorksSection() {
                 description={step.description}
                 Icon={step.Icon}
                 index={i}
+                isLast={i === steps.length - 1}
               />
             ))}
-          </div>
+          </ol>
         </div>
 
       </Container>
