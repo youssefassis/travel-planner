@@ -7,11 +7,13 @@ import Section from "@/components/ui/Section";
 import Container from "@/components/ui/Container";
 import { VIEWPORT_ONCE } from "@/components/motion";
 
+// Mirrored pairs on purpose: an asymmetric scatter drags the eye off-axis
+// and the centered column stops reading as centered.
 const FLOATING_PILLS = [
-  { label: "🗺️ Paris · 5 days", delay: 0, left: "-8%", top: "-12%", rotate: -8 },
-  { label: "🏝️ Bali · 8 days", delay: 0.15, left: "104%", top: "-6%", rotate: 6 },
-  { label: "🏯 Tokyo · 7 days", delay: 0.3, left: "-6%", top: "108%", rotate: -5 },
-  { label: "🌆 NYC · 4 days", delay: 0.45, left: "106%", top: "100%", rotate: 7 },
+  { label: "🗺️ Paris · 5 days", delay: 0, left: "-8%", top: "-10%", rotate: -8 },
+  { label: "🏝️ Lisbon · 8 days", delay: 0.15, left: "108%", top: "-10%", rotate: 8 },
+  { label: "🏯 Prague · 7 days", delay: 0.3, left: "-8%", top: "110%", rotate: -7 },
+  { label: "🌆 Rome · 4 days", delay: 0.45, left: "108%", top: "110%", rotate: 7 },
 ];
 
 export default function CTA() {
@@ -62,7 +64,7 @@ export default function CTA() {
             ?
           </h2>
 
-          <p className="text-body-lg text-[var(--muted)] text-center mx-auto mb-10 max-w-xl">
+          <p className="text-body-lg text-[var(--muted)] text-balance mx-auto mb-10 max-w-xl">
             Plan routes, compare stays, and receive recommendations adapted to your
             journey.
           </p>
