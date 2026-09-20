@@ -23,10 +23,12 @@ Entry points hand off through the URL: hero/cards → `/planner?destination=<cit
 
 ```
 src/
-  app/         Routes: (marketing) home, /planner (hub), /explore;
+  app/         Routes: (marketing) home, /planner (hub), /explore (spin · weather · budget);
                /flights /stays (server redirects → hub)
-    planner/_components/  hub tabs (PlanHub, FlightsTab, StaysTab, BudgetTab, ClimatePanel, HubTabs)
+    planner/_components/  hub tabs (PlanHub, FlightsTab, StaysTab, BudgetTab, PrepareTab, ClimatePanel, HubTabs, SavedTrips)
     planner/_lib/         derive.ts (leg → flight search, stop → stay prefs, party size)
+    explore/_components/  AffordabilityPanel (budget-first discovery)
+    explore/_lib/         affordable.ts (budget → destinations, priced by the real engine)
   domain/      Shared vocabulary: types, city dataset, geo helpers, booking.ts (ref generator)
   components/  ui/ primitives, layout/ (Header, Footer), theme/, motion.ts
   features/
@@ -47,6 +49,8 @@ Pipeline: `selectCities → orderRoute → allocateDays → transport → dayPla
 **Home is not a stop.** `intent.originCityId` is where the traveler lives: `selectCities` never picks it as a destination, and `routeLegs` bookends the route with an `outbound` (home → first stop) and a `homebound` (last stop → home), each omitted when home already *is* that stop. They live outside `plan.legs` so the "`legs[i]` connects `stops[i]` to `stops[i+1]`" invariant still holds — use `allLegs(plan)` for everything the traveler actually rides. On edit, `replan` recovers home from those legs, so it survives adding and removing cities.
 
 **Trips persist in `localStorage`** via `lib/tripStorage.ts` — a draft (auto-saved, restored on refresh) and a capped list of saved trips. The **plan** is stored, not just the intent, because `replan` edits aren't reconstructible from the wizard's answers. Keys are versioned (`wanderly.v1.*`): bump on a shape change and old entries are ignored. Stored values are validated on read and every access is try/caught — storage is absent in private windows. On mount, precedence is **share link → hero params → stored draft**.
+
+**Bookings, packing, and country facts.** Reservations are trip state (`Bookings` in `planner/types.ts`), stored with the plan and shown on the *Prepare* tab. `lib/packing.ts` derives the packing list on demand from climate normals, the itinerary's categories, trip length, and `domain/countries.ts` — never stored, so it follows plan edits. `domain/countries.ts` covers exactly the countries the city dataset can reach, and a test enforces that in both directions.
 
 **Travel days are real.** `travelDays.ts` maps legs onto the days they consume — the traveler arrives on a stay's **first** day (off `outbound` for the first stop, off `legs[i-1]` for the rest) and leaves home on the trip's **last** day, matching how `lib/tripDates.ts` dates those legs. `ItineraryDay.arrival` / `.departure` carry it; `dayPlans` sizes each day's activity count to the hours left after travel (always ≥ 1), and `schedule.ts` starts an arrival day late, ends a departure day early, and emits a `kind: "travel"` `ScheduleItem`. On replan only the bracketing is recomputed, never the activity counts — rebuilding those would discard the traveler's edits.
 
