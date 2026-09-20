@@ -1,5 +1,6 @@
 import { Interest, Pace, Region } from "@/domain/types";
 import { getCity } from "@/domain/cities";
+import { isISODate, monthOfISODate } from "@/domain/dates";
 import { CityStay, TripIntent, TripPlan } from "../types";
 import { buildDaySchedule, formatClock } from "../engine";
 
@@ -41,6 +42,7 @@ export function intentToShareParams(intent: TripIntent): URLSearchParams {
   params.set("from", intent.originCityId);
   params.set("d", String(intent.duration));
   if (intent.travelMonth != null) params.set("m", String(intent.travelMonth));
+  if (intent.startDate) params.set("sd", intent.startDate);
   params.set("who", intent.companions);
   params.set("pace", intent.vibe.pace);
   params.set("budget", intent.vibe.budget);
@@ -63,9 +65,15 @@ export function intentFromShareParams(params: URLSearchParams): TripIntent | nul
   const duration = parseInt(params.get("d") ?? "", 10);
   if (!Number.isFinite(duration) || duration < 1 || duration > 30) return null;
 
+  // A start date pins the month, so it wins over whatever `m` says.
+  const sharedDate = params.get("sd");
+  const startDate = isISODate(sharedDate) ? sharedDate : undefined;
   const monthRaw = parseInt(params.get("m") ?? "", 10);
   const travelMonth =
-    Number.isInteger(monthRaw) && monthRaw >= 0 && monthRaw <= 11 ? monthRaw : undefined;
+    monthOfISODate(startDate) ??
+    (Number.isInteger(monthRaw) && monthRaw >= 0 && monthRaw <= 11
+      ? monthRaw
+      : undefined);
 
   const mode = params.get("mode") === "custom" ? "custom" : "surprise";
   const who = params.get("who");
@@ -91,6 +99,7 @@ export function intentFromShareParams(params: URLSearchParams): TripIntent | nul
     selectedCityIds,
     duration,
     travelMonth,
+    startDate,
     companions: who === "couple" || who === "group" ? who : "solo",
     interests,
     region: REGIONS.includes(region as Region) ? (region as Region) : "any",
