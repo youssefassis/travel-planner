@@ -1,0 +1,31 @@
+Photo credits
+=============
+
+Destination photography used on the Wanderly home page.
+
+Rome — /images/rome.jpg
+  Colosseum of Rome, Italy.jpg
+  by Wilfredor, licensed CC0
+  https://commons.wikimedia.org/wiki/File:Colosseum_of_Rome,_Italy.jpg
+  Resized for the web; the resized version is offered under the same licence.
+
+Prague — /images/prague.jpg
+  North view of Charles Bridge from Mánesův most, Prague 20160808 1.jpg
+  by DXR, licensed CC BY-SA 4.0
+  https://commons.wikimedia.org/wiki/File:North_view_of_Charles_Bridge_from_M%C3%A1nes%C5%AFv_most,_Prague_20160808_1.jpg
+  Resized for the web; the resized version is offered under the same licence.
+
+Vienna — /images/vienna.jpg
+  Palacio de Schönbrunn, Viena, Austria, 2020-02-02, DD 07-09 HDR.jpg
+  by Diego Delso, licensed CC BY-SA 4.0
+  https://commons.wikimedia.org/wiki/File:Palacio_de_Sch%C3%B6nbrunn,_Viena,_Austria,_2020-02-02,_DD_07-09_HDR.jpg
+  Resized for the web; the resized version is offered under the same licence.
+
+Amsterdam — /images/amsterdam.jpg
+  Amsterdam (NL), Herengracht -- 2015 -- 7174.jpg
+  by Dietmar Rabich, licensed CC BY-SA 4.0
+  https://commons.wikimedia.org/wiki/File:Amsterdam_(NL),_Herengracht_--_2015_--_7174.jpg
+  Resized for the web; the resized version is offered under the same licence.
+
+CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
+CC0 1.0:      https://creativecommons.org/publicdomain/zero/1.0/
