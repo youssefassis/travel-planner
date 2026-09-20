@@ -6,7 +6,7 @@ import { selectCities } from "./selectCities";
 import { orderRoute } from "./orderRoute";
 import { allocateDays } from "./allocateDays";
 import { buildCityDayPlans } from "./dayPlans";
-import { pickTransportLeg } from "./transport";
+import { allLegs, routeLegs } from "./transport";
 import { computeBudget } from "./budget";
 import { weatherWarnings } from "./weatherNotes";
 
@@ -76,7 +76,8 @@ export function generateTripPlan(intent: TripIntent, cities: City[] = CITIES): T
     dayIndex += days;
   }
 
-  const legs = stops.slice(1).map((_, i) => pickTransportLeg(allocations[i].city, allocations[i + 1].city, intent));
+  const route = allocations.map((a) => a.city);
+  const { legs, outbound, homebound } = routeLegs(route, origin, intent);
 
   if (intent.travelMonth != null) {
     notes.push(...weatherWarnings(stops, intent.travelMonth));
@@ -85,12 +86,12 @@ export function generateTripPlan(intent: TripIntent, cities: City[] = CITIES): T
   const itinerary = stops.flatMap((s) => s.dayPlans);
   const budget = computeBudget(
     stops,
-    legs,
+    allLegs({ legs, outbound, homebound }),
     intent,
-    allocations.map((a) => a.city)
+    route
   );
 
   const id = `plan-${stops.map((s) => s.cityId).join("-")}-${intent.duration}`;
 
-  return { id, stops, legs, itinerary, budget, notes };
+  return { id, stops, legs, outbound, homebound, itinerary, budget, notes };
 }

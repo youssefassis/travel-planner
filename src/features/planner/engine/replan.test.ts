@@ -343,3 +343,59 @@ describe("removeDay", () => {
     expect(removeDay(plan!, INTENT, plan!.itinerary[0].id, CITIES)).toBeNull();
   });
 });
+
+/* ─── Home legs across edits ──────────────────────────────────── */
+
+// A real round trip: home in Paris, two stops in Italy.
+const AWAY_INTENT: TripIntent = {
+  mode: "custom",
+  originCityId: "paris-fr",
+  selectedCityIds: ["rome-it", "florence-it"],
+  duration: 4,
+  companions: "solo",
+  interests: ["culture"],
+  region: "any",
+  vibe: { pace: "chill", budget: "comfort", climate: "any" },
+};
+
+/** The home legs always bookend whatever the route currently is. */
+function expectBookendedByHome(plan: TripPlan, homeId: string) {
+  expect(plan.outbound).toMatchObject({
+    fromCityId: homeId,
+    toCityId: plan.stops[0].cityId,
+  });
+  expect(plan.homebound).toMatchObject({
+    fromCityId: plan.stops[plan.stops.length - 1].cityId,
+    toCityId: homeId,
+  });
+}
+
+describe("home legs", () => {
+  it("survive adding a city, following the new first and last stop", () => {
+    const plan = generateTripPlan(AWAY_INTENT, CITIES);
+    expectBookendedByHome(plan, "paris-fr");
+
+    const next = addCity(plan, AWAY_INTENT, "naples-it", CITIES);
+    expect(next).not.toBeNull();
+    expectBookendedByHome(next!, "paris-fr");
+  });
+
+  it("survive removing a city", () => {
+    const plan = generateTripPlan(AWAY_INTENT, CITIES);
+
+    const next = removeCity(plan, AWAY_INTENT, plan.stops[0].cityId, CITIES);
+    expect(next).not.toBeNull();
+    expectBookendedByHome(next!, "paris-fr");
+  });
+
+  it("stay in the budget after an edit", () => {
+    const plan = generateTripPlan(AWAY_INTENT, CITIES);
+    const next = addCity(plan, AWAY_INTENT, "naples-it", CITIES)!;
+
+    const legTotal =
+      next.legs.reduce((sum, l) => sum + l.cost, 0) +
+      next.outbound!.cost +
+      next.homebound!.cost;
+    expect(next.budget.transport).toBe(legTotal);
+  });
+});

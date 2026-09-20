@@ -12,8 +12,10 @@ function findCity(cities: City[], id: string): City | undefined {
   return cities.find((c) => c.id === id);
 }
 
+/** Candidate destinations: everything matching the filters, minus home. */
 function filterPool(cities: City[], intent: TripIntent, useRegion: boolean, useClimate: boolean): City[] {
   return cities.filter((c) => {
+    if (c.id === intent.originCityId) return false;
     if (useRegion && intent.region && intent.region !== "any" && c.region !== intent.region) {
       return false;
     }
@@ -55,18 +57,18 @@ export function selectCities(intent: TripIntent, cities: City[]): { cities: City
   }
 
   if (pool.length < n) {
-    pool = cities.slice();
+    pool = cities.filter((c) => c.id !== intent.originCityId);
   }
 
-  const origin = findCity(cities, intent.originCityId);
+  // Nothing but home matched — a stay at home beats an empty trip.
+  if (pool.length === 0) {
+    const origin = findCity(cities, intent.originCityId);
+    notes.push("Only your home city matched — planned a stay there instead");
+    return { cities: origin ? [origin] : [], notes };
+  }
+
   const picked: City[] = [];
   const remaining = pool.slice();
-
-  if (origin && remaining.some((c) => c.id === origin.id)) {
-    picked.push(origin);
-    const idx = remaining.findIndex((c) => c.id === origin.id);
-    remaining.splice(idx, 1);
-  }
 
   const maxDist = maxPairwiseDistance(pool);
 

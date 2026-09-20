@@ -29,13 +29,13 @@ export default function StepRoute() {
             htmlFor="origin-city"
             className="text-caption text-[var(--fg)] block mb-2"
           >
-            From
+            Travelling from
           </label>
           <CityAutocomplete
             id="origin-city"
             value={intent.originCityId}
             onChange={(cityId) => patchIntent({ originCityId: cityId })}
-            placeholder="Origin city"
+            placeholder="Your home city"
           />
         </div>
 

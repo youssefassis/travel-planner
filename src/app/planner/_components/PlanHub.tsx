@@ -249,6 +249,8 @@ export default function PlanHub({
               <RouteStrip
                 stops={trip.stops}
                 legs={trip.legs}
+                outbound={trip.outbound}
+                homebound={trip.homebound}
                 itinerary={itinerary}
                 setActiveDayId={setActiveDayId}
                 onRemoveCity={handleRemoveCity}

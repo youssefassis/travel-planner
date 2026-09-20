@@ -55,7 +55,7 @@ function makeCities(n: number): City[] {
 }
 
 describe("generateTripPlan", () => {
-  it("yields 1 stop and 0 legs with transport cost 0 for a 1-day trip", () => {
+  it("yields 1 stop and no inter-city legs for a 1-day trip, but still flies you there and back", () => {
     const cities = makeCities(4);
     const intent = fixtureIntent({ originCityId: "city0", duration: 1 });
 
@@ -63,6 +63,70 @@ describe("generateTripPlan", () => {
 
     expect(plan.stops).toHaveLength(1);
     expect(plan.legs).toHaveLength(0);
+    expect(plan.outbound?.fromCityId).toBe("city0");
+    expect(plan.outbound?.toCityId).toBe(plan.stops[0].cityId);
+    expect(plan.homebound?.fromCityId).toBe(plan.stops[0].cityId);
+    expect(plan.homebound?.toCityId).toBe("city0");
+    expect(plan.budget.transport).toBe(plan.outbound!.cost + plan.homebound!.cost);
+  });
+
+  it("never makes home a stop on the trip", () => {
+    const cities = makeCities(6);
+    const intent = fixtureIntent({ originCityId: "city0", duration: 12 });
+
+    const plan = generateTripPlan(intent, cities);
+
+    expect(plan.stops.length).toBeGreaterThan(1);
+    expect(plan.stops.some((s) => s.cityId === "city0")).toBe(false);
+  });
+
+  it("bookends the route with home legs and counts them in the budget", () => {
+    const cities = makeCities(6);
+    const intent = fixtureIntent({ originCityId: "city0", duration: 12 });
+
+    const plan = generateTripPlan(intent, cities);
+    const first = plan.stops[0].cityId;
+    const last = plan.stops[plan.stops.length - 1].cityId;
+
+    expect(plan.outbound).toMatchObject({ fromCityId: "city0", toCityId: first });
+    expect(plan.homebound).toMatchObject({ fromCityId: last, toCityId: "city0" });
+
+    const legTotal =
+      plan.legs.reduce((sum, l) => sum + l.cost, 0) +
+      plan.outbound!.cost +
+      plan.homebound!.cost;
+    expect(plan.budget.transport).toBe(legTotal);
+  });
+
+  it("skips the outbound leg when the traveler explicitly starts at home", () => {
+    const cities = makeCities(5);
+    const intent = fixtureIntent({
+      mode: "custom",
+      originCityId: "city0",
+      selectedCityIds: ["city0", "city2"],
+      duration: 6,
+    });
+
+    const plan = generateTripPlan(intent, cities);
+
+    expect(plan.stops[0].cityId).toBe("city0");
+    expect(plan.outbound).toBeUndefined();
+    expect(plan.homebound).toMatchObject({ fromCityId: "city2", toCityId: "city0" });
+  });
+
+  it("has no home legs at all when the trip is a stay at home", () => {
+    const cities = makeCities(3);
+    const intent = fixtureIntent({
+      mode: "custom",
+      originCityId: "city0",
+      selectedCityIds: ["city0"],
+      duration: 3,
+    });
+
+    const plan = generateTripPlan(intent, cities);
+
+    expect(plan.outbound).toBeUndefined();
+    expect(plan.homebound).toBeUndefined();
     expect(plan.budget.transport).toBe(0);
   });
 

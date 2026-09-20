@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Home, Plus, X } from "lucide-react";
 import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import Card from "@/components/ui/Card";
 import { CityStay, ItineraryDay, TransportLeg } from "../types";
@@ -10,6 +10,10 @@ import TransportModeIcon from "./TransportModeIcon";
 type Props = {
   stops: CityStay[];
   legs: TransportLeg[];
+  /** Home → first stop. Absent when the trip starts where you live. */
+  outbound?: TransportLeg;
+  /** Last stop → home. Absent when the trip ends where you live. */
+  homebound?: TransportLeg;
   itinerary: ItineraryDay[];
   setActiveDayId: (id: string) => void;
   /** Returns false when the city can't be removed (last one left). */
@@ -23,6 +27,8 @@ type Props = {
 export default function RouteStrip({
   stops,
   legs,
+  outbound,
+  homebound,
   itinerary,
   setActiveDayId,
   onRemoveCity,
@@ -36,6 +42,36 @@ export default function RouteStrip({
 
   const legBetween = (fromCityId: string, toCityId: string) =>
     legs.find((leg) => leg.fromCityId === fromCityId && leg.toCityId === toCityId);
+
+  // Flight legs open the hub's Flights tab for that route; everything else
+  // is a plain read-out.
+  const renderLeg = (leg: TransportLeg) => {
+    const body = (
+      <>
+        <TransportModeIcon mode={leg.mode} size={14} />
+        <span>{leg.durationHrs}h</span>
+        <span>€{leg.cost}</span>
+      </>
+    );
+    return leg.mode === "flight" && onFlightLeg ? (
+      <button
+        type="button"
+        onClick={() => onFlightLeg(leg)}
+        className="flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--primary)] transition-colors underline-offset-2 hover:underline"
+      >
+        {body}
+      </button>
+    ) : (
+      <div className="flex items-center gap-1 text-xs text-[var(--muted)]">{body}</div>
+    );
+  };
+
+  const homeChip = (cityName: string) => (
+    <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-dashed border-[var(--border)] text-[var(--muted)]">
+      <Home className="w-3 h-3" />
+      {cityName}
+    </div>
+  );
 
   const firstDayIdForCity = (cityId: string) =>
     itinerary.find((day) => day.cityId === cityId)?.id;
@@ -60,6 +96,13 @@ export default function RouteStrip({
   return (
     <Card padding="sm">
       <div className="flex flex-wrap items-center gap-2">
+        {outbound && (
+          <div className="flex items-center gap-2">
+            {homeChip(outbound.from)}
+            {renderLeg(outbound)}
+          </div>
+        )}
+
         {stops.map((stop, index) => {
           const nextStop = stops[index + 1];
           const leg = nextStop ? legBetween(stop.cityId, nextStop.cityId) : undefined;
@@ -88,28 +131,17 @@ export default function RouteStrip({
                 </button>
               </div>
 
-              {leg &&
-                // Flight legs open the hub's Flights tab for that route.
-                (leg.mode === "flight" && onFlightLeg ? (
-                  <button
-                    type="button"
-                    onClick={() => onFlightLeg(leg)}
-                    className="flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--primary)] transition-colors underline-offset-2 hover:underline"
-                  >
-                    <TransportModeIcon mode={leg.mode} size={14} />
-                    <span>{leg.durationHrs}h</span>
-                    <span>€{leg.cost}</span>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-1 text-xs text-[var(--muted)]">
-                    <TransportModeIcon mode={leg.mode} size={14} />
-                    <span>{leg.durationHrs}h</span>
-                    <span>€{leg.cost}</span>
-                  </div>
-                ))}
+              {leg && renderLeg(leg)}
             </div>
           );
         })}
+
+        {homebound && (
+          <div className="flex items-center gap-2">
+            {renderLeg(homebound)}
+            {homeChip(homebound.to)}
+          </div>
+        )}
 
         {addingCity ? (
           <div className="flex items-center gap-1.5 min-w-[220px]">

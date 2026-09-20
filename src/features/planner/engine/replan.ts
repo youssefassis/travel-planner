@@ -4,7 +4,7 @@ import { distanceKm } from "@/domain/geo";
 import { Activity, CityStay, ItineraryDay, TripIntent, TripPlan } from "../types";
 import { OUTDOOR_CATEGORIES, STAY_SHARE } from "./constants";
 import { buildCityDayPlans, orderDayActivities, toActivity } from "./dayPlans";
-import { pickTransportLeg } from "./transport";
+import { allLegs, routeLegs } from "./transport";
 import { computeBudget } from "./budget";
 
 const MAX_TRIP_DAYS = 30;
@@ -34,7 +34,7 @@ function rebuildPlan(plan: TripPlan, intent: TripIntent, cities: City[], note?: 
   return {
     ...plan,
     itinerary: plan.stops.flatMap((s) => s.dayPlans),
-    budget: computeBudget(plan.stops, plan.legs, intent, stopCities),
+    budget: computeBudget(plan.stops, allLegs(plan), intent, stopCities),
     notes: note ? [...plan.notes, note] : plan.notes,
   };
 }
@@ -379,14 +379,30 @@ function renumberDays(stops: CityStay[]): CityStay[] {
   }));
 }
 
-function rebuildLegs(stops: CityStay[], intent: TripIntent, cities: City[]) {
-  const legs = [];
-  for (let i = 0; i < stops.length - 1; i++) {
-    const from = findCity(cities, stops[i].cityId);
-    const to = findCity(cities, stops[i + 1].cityId);
-    if (from && to) legs.push(pickTransportLeg(from, to, intent));
-  }
-  return legs;
+/**
+ * The traveler's home city. The home legs carry it, so it survives edits even
+ * though `TripPlan` has no origin field of its own; the intent is the fallback
+ * for a trip that starts and ends at home.
+ */
+function homeCity(plan: TripPlan, intent: TripIntent, cities: City[]): City | undefined {
+  const homeId =
+    plan.outbound?.fromCityId ?? plan.homebound?.toCityId ?? intent.originCityId;
+  return findCity(cities, homeId);
+}
+
+/** Reconnects the whole round trip after the stops change. */
+function rebuildRoute(
+  plan: TripPlan,
+  stops: CityStay[],
+  intent: TripIntent,
+  cities: City[]
+): Pick<TripPlan, "legs" | "outbound" | "homebound"> {
+  const route = stops
+    .map((stop) => findCity(cities, stop.cityId))
+    .filter((c): c is City => c !== undefined);
+  const home = homeCity(plan, intent, cities);
+  if (!home) return { legs: [], outbound: undefined, homebound: undefined };
+  return routeLegs(route, home, intent);
 }
 
 /**
@@ -447,7 +463,7 @@ export function addCity(
   ]);
 
   return rebuildPlan(
-    { ...plan, stops, legs: rebuildLegs(stops, intent, cities) },
+    { ...plan, stops, ...rebuildRoute(plan, stops, intent, cities) },
     intent,
     cities,
     `Added ${city.name} (${days} ${days === 1 ? "day" : "days"}) — the trip is now ${
@@ -474,7 +490,7 @@ export function removeCity(
   const remainingDays = stops.reduce((sum, s) => sum + s.days, 0);
 
   return rebuildPlan(
-    { ...plan, stops, legs: rebuildLegs(stops, intent, cities) },
+    { ...plan, stops, ...rebuildRoute(plan, stops, intent, cities) },
     intent,
     cities,
     `Removed ${stop.city} — the trip is now ${remainingDays} ${

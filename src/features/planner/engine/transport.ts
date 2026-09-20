@@ -1,6 +1,6 @@
 import { City } from "@/domain/types";
 import { distanceKm } from "@/domain/geo";
-import { TransportLeg, TransportMode, TripIntent } from "../types";
+import { TransportLeg, TransportMode, TripIntent, TripPlan } from "../types";
 import { TIER_TRANSPORT_MULT } from "./constants";
 
 function pickModeAndRates(
@@ -37,4 +37,44 @@ export function pickTransportLeg(from: City, to: City, intent: TripIntent): Tran
     durationHrs: roundedDuration,
     cost,
   };
+}
+
+/**
+ * Every leg of the round trip. `legs[i]` connects `route[i]` to `route[i+1]`;
+ * `outbound` and `homebound` are the journeys to and from the traveler's home
+ * city, omitted when home is already the first (or last) stop.
+ */
+export function routeLegs(
+  route: City[],
+  origin: City,
+  intent: TripIntent
+): { legs: TransportLeg[]; outbound?: TransportLeg; homebound?: TransportLeg } {
+  const legs: TransportLeg[] = [];
+  for (let i = 0; i < route.length - 1; i++) {
+    legs.push(pickTransportLeg(route[i], route[i + 1], intent));
+  }
+
+  const first = route[0];
+  const last = route[route.length - 1];
+
+  return {
+    legs,
+    outbound:
+      first && first.id !== origin.id
+        ? pickTransportLeg(origin, first, intent)
+        : undefined,
+    homebound:
+      last && last.id !== origin.id
+        ? pickTransportLeg(last, origin, intent)
+        : undefined,
+  };
+}
+
+/** Every leg the traveler actually takes, in travel order: out, between, home. */
+export function allLegs(
+  plan: Pick<TripPlan, "legs" | "outbound" | "homebound">
+): TransportLeg[] {
+  return [plan.outbound, ...plan.legs, plan.homebound].filter(
+    (leg): leg is TransportLeg => leg !== undefined
+  );
 }

@@ -80,14 +80,25 @@ describe("selectCities", () => {
     expect(notes.some((n) => n.includes("cold") && n.includes("included other climates"))).toBe(true);
   });
 
-  it("always includes the origin city if it passes filters", () => {
+  it("never picks the origin city — home is where the trip starts, not a stop", () => {
     const origin = fixtureCity({ id: "origin", name: "Origin", region: "france", coords: { lat: 0, lng: 0 } });
     const others = grid("fr", "france", "temperate", 5);
     const intent = fixtureIntent({ originCityId: "origin", region: "france", duration: 9 });
 
     const { cities } = selectCities(intent, [origin, ...others]);
 
-    expect(cities.some((c) => c.id === "origin")).toBe(true);
+    expect(cities.length).toBeGreaterThan(0);
+    expect(cities.some((c) => c.id === "origin")).toBe(false);
+  });
+
+  it("falls back to a stay at home when nothing else exists", () => {
+    const origin = fixtureCity({ id: "origin", name: "Origin" });
+    const intent = fixtureIntent({ originCityId: "origin", duration: 3 });
+
+    const { cities, notes } = selectCities(intent, [origin]);
+
+    expect(cities.map((c) => c.id)).toEqual(["origin"]);
+    expect(notes.some((n) => n.includes("Only your home city matched"))).toBe(true);
   });
 
   it("picks more cities for intense pace than chill pace at the same duration", () => {
