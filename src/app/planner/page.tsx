@@ -24,7 +24,7 @@ import Link from "next/link";
 import TripWizard from "@/features/planner/components/wizard/TripWizard";
 import PrintItinerary from "@/features/planner/components/PrintItinerary";
 import PlanHub from "./_components/PlanHub";
-import { HubTab, parseTab } from "./_lib/tabs";
+import { BookMode, HubTab, parseBookMode, parseTab } from "./_lib/tabs";
 
 import { Booking, Bookings, TripIntent, TripPlan } from "@/features/planner/types";
 
@@ -47,6 +47,7 @@ function PlannerPageContent() {
   const [loading, setLoading] = useState(false);
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
   const [initialTab, setInitialTab] = useState<HubTab | null>(null);
+  const [initialBookMode, setInitialBookMode] = useState<BookMode>("flights");
   const [saved, setSaved] = useState<StoredTrip[]>([]);
   const [bookings, setBookings] = useState<Bookings>({});
 
@@ -72,6 +73,7 @@ function PlannerPageContent() {
   // prefill the wizard's answers; everyone else starts at step 1.
   useEffect(() => {
     setInitialTab(parseTab(searchParams.get("tab")));
+    setInitialBookMode(parseBookMode(searchParams.get("tab")));
     const stored = loadTrips();
     setSaved(stored);
 
@@ -220,6 +222,7 @@ function PlannerPageContent() {
                       setActiveDayId={setActiveDayId}
                       onEdit={startEditing}
                       initialTab={initialTab}
+                      initialBookMode={initialBookMode}
                       onSave={handleSaveTrip}
                       isSaved={isSaved}
                       bookings={bookings}

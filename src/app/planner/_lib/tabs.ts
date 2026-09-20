@@ -9,8 +9,7 @@ export type HubTab =
   | "overview"
   | "today"
   | "itinerary"
-  | "flights"
-  | "stays"
+  | "book"
   | "budget"
   | "prepare";
 
@@ -18,11 +17,19 @@ export const ALL_TABS: HubTab[] = [
   "overview",
   "today",
   "itinerary",
-  "flights",
-  "stays",
+  "book",
   "budget",
   "prepare",
 ];
+
+/** Which half of Book is showing. */
+export type BookMode = "flights" | "stays";
+
+/** Pre-merge deep links (and the /flights, /stays redirects) still land. */
+const LEGACY_TABS: Record<string, HubTab> = {
+  flights: "book",
+  stays: "book",
+};
 
 export function visibleTabs(phase: TripProgress["phase"]): HubTab[] {
   return ALL_TABS.filter((tab) => {
@@ -39,7 +46,13 @@ export function defaultTab(phase: TripProgress["phase"]): HubTab {
 
 /** A `?tab=` value from the URL, or null when absent/unknown. */
 export function parseTab(value: string | null): HubTab | null {
+  if (value !== null && value in LEGACY_TABS) return LEGACY_TABS[value];
   return ALL_TABS.includes(value as HubTab) ? (value as HubTab) : null;
+}
+
+/** The Book half a `?tab=` value points at — only "stays" means stays. */
+export function parseBookMode(value: string | null): BookMode {
+  return value === "stays" ? "stays" : "flights";
 }
 
 /**

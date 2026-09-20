@@ -38,7 +38,7 @@ import { dateOfDay } from "@/features/planner/lib/tripDates";
 import { localISODate, tripProgress } from "@/features/planner/lib/today";
 import { fadeInUp } from "@/components/motion";
 
-import { HubTab, defaultTab, resolveTab, visibleTabs } from "../_lib/tabs";
+import { BookMode, HubTab, defaultTab, resolveTab, visibleTabs } from "../_lib/tabs";
 import HubTabs from "./HubTabs";
 import ClimatePanel from "./ClimatePanel";
 import VariantsPanel from "./VariantsPanel";
@@ -46,8 +46,7 @@ import { partySize } from "../_lib/derive";
 
 // Non-overview tabs pull in the flights/stays/weather features + their data;
 // splitting them keeps the initial /planner chunk lean.
-const FlightsTab = dynamic(() => import("./FlightsTab"), { loading: TabSpinner });
-const StaysTab = dynamic(() => import("./StaysTab"), { loading: TabSpinner });
+const BookTab = dynamic(() => import("./BookTab"), { loading: TabSpinner });
 const BudgetTab = dynamic(() => import("./BudgetTab"), { loading: TabSpinner });
 const PrepareTab = dynamic(() => import("./PrepareTab"), { loading: TabSpinner });
 const TodayTab = dynamic(() => import("./TodayTab"), { loading: TabSpinner });
@@ -65,6 +64,8 @@ type Props = {
   onEdit: () => void;
   /** The tab the URL asked for, or null when it didn't. */
   initialTab: HubTab | null;
+  /** Which half of Book a legacy flights/stays link pointed at. */
+  initialBookMode: BookMode;
   /** Keep this trip in the browser so it survives beyond the session. */
   onSave: () => void;
   isSaved: boolean;
@@ -86,6 +87,7 @@ export default function PlanHub({
   setActiveDayId,
   onEdit,
   initialTab,
+  initialBookMode,
   onSave,
   isSaved,
   bookings,
@@ -118,6 +120,7 @@ export default function PlanHub({
   const [booking, setBooking] = useState<BookingTarget | null>(null);
   const [climateCityId, setClimateCityId] = useState<string | null>(null);
   const [flightFocus, setFlightFocus] = useState<{ legId: string } | null>(null);
+  const [bookMode, setBookMode] = useState<BookMode>(initialBookMode);
   const [staysCityId, setStaysCityId] = useState<string>(
     () => trip.stops[0]?.cityId ?? "",
   );
@@ -217,13 +220,15 @@ export default function PlanHub({
 
   const goToStays = (cityId: string) => {
     if (trip.stops.some((s) => s.cityId === cityId)) setStaysCityId(cityId);
-    selectTab("stays");
+    setBookMode("stays");
+    selectTab("book");
   };
 
   // A fresh object each click, so re-clicking the same leg scrolls again.
   const goToFlights = (leg?: TransportLeg) => {
     setFlightFocus(leg ? { legId: leg.id } : null);
-    selectTab("flights");
+    setBookMode("flights");
+    selectTab("book");
   };
 
   const goToDay = (dayId: string) => {
@@ -325,20 +330,16 @@ export default function PlanHub({
         </div>
       )}
 
-      {/* Flights */}
-      {mounted.has("flights") && (
-        <div hidden={activeTab !== "flights"}>
-          <FlightsTab trip={trip} intent={planIntent} focus={flightFocus} />
-        </div>
-      )}
-
-      {/* Stays */}
-      {mounted.has("stays") && (
-        <div hidden={activeTab !== "stays"}>
-          <StaysTab
+      {/* Book — flights and stays, one reservation desk. */}
+      {mounted.has("book") && (
+        <div hidden={activeTab !== "book"}>
+          <BookTab
             trip={trip}
             intent={planIntent}
-            cityId={validStaysCityId}
+            mode={bookMode}
+            onModeChange={setBookMode}
+            focus={flightFocus}
+            staysCityId={validStaysCityId}
             onCityChange={setStaysCityId}
           />
         </div>
@@ -350,8 +351,8 @@ export default function PlanHub({
           <BudgetTab
             trip={trip}
             bookings={bookings}
-            onGoToFlights={() => selectTab("flights")}
-            onGoToStays={() => selectTab("stays")}
+            onGoToFlights={() => goToFlights()}
+            onGoToStays={() => goToStays(validStaysCityId)}
           />
         </div>
       )}
