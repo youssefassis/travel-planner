@@ -9,7 +9,8 @@ Everything runs client-side on a curated city dataset. No backend, no API keys.
 - **Trip planner** (`/planner`) — three quick questions, then a full plan: optimized route, realistic timed daily schedules (meals at restaurants, nightlife after dinner), pace-aware load, booking checklist, and an interactive map (MapLibre + OpenFreeMap). Your home city bookends the trip instead of appearing as a stop on it, so getting there and back is costed like every other leg.
 - **Editable plans** — swap a stop, remove a museum, add an unused sight, make a day rain-friendly, add or remove whole cities; the route, day numbering, and budget recompute instantly.
 - **Budgets in one unit** — every figure is per person, with the whole party's total alongside it.
-- **Share & export** — copy a link that regenerates the identical plan (the engine is deterministic), open the route in Google Maps, share as text, or print to PDF.
+- **Real dates** — pin a start date and the itinerary picks up weekdays and calendar dates, flight legs search their actual departure day, and the trip exports to `.ics`. Leave it out and the plan works in Day 1..N as before.
+- **Share & export** — copy a link that regenerates the identical plan (the engine is deterministic), add it to a calendar, open the route in Google Maps, share as text, or print to PDF.
 - **Flights** (`/flights`) — decision support: a handful of recommendations tailored to your priorities with trade-offs and full expected cost, not an endless results list.
 - **Stays** (`/stays`) — advisor-style picks: matching neighborhoods with reasoning, a shortlist of accommodations with strengths and totals including taxes and fees.
 

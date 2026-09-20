@@ -19,7 +19,7 @@ Guidance for Claude Code when working in this repository.
 
 Imports flow one way: `app → features → domain`. `src/components` may be used by all layers. **Features never import each other** — but the `app` layer MAY compose several features on one route. That is how the **trip hub** works: `/planner` is a tabbed hub (Itinerary · Flights · Stays · Budget) whose non-itinerary tabs live in `app/planner/_components/` and pull in the flights/stays/weather features, prefilled from the trip via `app/planner/_lib/derive.ts`. Feature→feature data still never crosses through imports.
 
-Entry points hand off through the URL: hero/cards → `/planner?destination=<cityId>&origin=<cityId>&travelers=<solo|couple|group>&budget=<tier>&month=<0-11>` (parsed by `features/planner/lib/heroPrefill.ts` to prefill the wizard); share links `?plan=1&…` (regenerate the exact plan, skip the wizard) take precedence; the hub tab is carried in `?tab=` (ignored by the share/hero parsers). Legacy `/flights`, `/stays`, `/discover`, `/weather` are **redirects** — `/flights` & `/stays` are server pages that map their query into `/planner?…&tab=…`; `/discover` & `/weather` redirect to `/explore` via `next.config.ts`.
+Entry points hand off through the URL: hero/cards → `/planner?destination=<cityId>&origin=<cityId>&travelers=<solo|couple|group>&budget=<tier>&month=<0-11>&date=<YYYY-MM-DD>` (parsed by `features/planner/lib/heroPrefill.ts` to prefill the wizard); share links `?plan=1&…` (regenerate the exact plan, skip the wizard) take precedence; the hub tab is carried in `?tab=` (ignored by the share/hero parsers). Legacy `/flights`, `/stays`, `/discover`, `/weather` are **redirects** — `/flights` & `/stays` are server pages that map their query into `/planner?…&tab=…`; `/discover` & `/weather` redirect to `/explore` via `next.config.ts`.
 
 ```
 src/
@@ -45,6 +45,8 @@ Pure and **deterministic**: the same `TripIntent` always produces the identical 
 Pipeline: `selectCities → orderRoute → allocateDays → dayPlans → transport → budget → generatePlan`.
 
 **Home is not a stop.** `intent.originCityId` is where the traveler lives: `selectCities` never picks it as a destination, and `routeLegs` bookends the route with an `outbound` (home → first stop) and a `homebound` (last stop → home), each omitted when home already *is* that stop. They live outside `plan.legs` so the "`legs[i]` connects `stops[i]` to `stops[i+1]`" invariant still holds — use `allLegs(plan)` for everything the traveler actually rides. On edit, `replan` recovers home from those legs, so it survives adding and removing cities.
+
+**Dates sit on top of the engine, not inside it.** The engine plans in Day 1..N and never sees a calendar, which is what keeps share links reproducible. `TripIntent.startDate` (optional, `YYYY-MM-DD`) is mapped onto those days by `lib/tripDates.ts`, and all date arithmetic lives in `domain/dates.ts` in **UTC** so nothing drifts across a timezone or DST boundary. `startDate` and `travelMonth` must agree — write them together via `withStartDate` / `withTravelMonth`, never directly. `lib/calendar.ts` turns a dated plan into `.ics`.
 
 **Budget figures are per person** (`STAY_SHARE` is a share of a room; food and activities are per head; a leg cost is one seat). `travelers` and `partyTotal` carry what the whole group pays, and `PARTY_SIZE` in `engine/constants.ts` is the one definition of party size — the booking panels read the same table.
 
