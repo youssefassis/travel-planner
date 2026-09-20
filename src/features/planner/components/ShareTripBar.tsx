@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Link2, Map, Printer, Share2 } from "lucide-react";
+import { CalendarPlus, Check, Link2, Map, Printer, Share2 } from "lucide-react";
 import { Pace } from "@/domain/types";
 import { TripIntent, TripPlan } from "../types";
+import { icsFilename, planToICS } from "../lib/calendar";
 import { buildShareUrl, googleMapsRouteUrl, planToText } from "../lib/share";
 
 type Props = {
@@ -54,6 +55,23 @@ export default function ShareTripBar({ plan, intent, pace }: Props) {
     }
   };
 
+  // Only offered for a dated trip — an undated itinerary has nothing to
+  // put on a calendar.
+  const calendar = planToICS(plan, pace, intent.startDate);
+
+  const downloadCalendar = () => {
+    if (!calendar) return;
+    const url = URL.createObjectURL(
+      new Blob([calendar], { type: "text/calendar;charset=utf-8" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = icsFilename(plan);
+    link.click();
+    URL.revokeObjectURL(url);
+    flash("Calendar file downloaded — open it to add the trip");
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden">
       <span className="w-full text-caption text-[var(--muted)]">Share &amp; export</span>
@@ -74,6 +92,12 @@ export default function ShareTripBar({ plan, intent, pace }: Props) {
       >
         <Map className="w-3.5 h-3.5" /> Route in Google Maps
       </a>
+
+      {calendar && (
+        <button type="button" onClick={downloadCalendar} className={buttonClasses}>
+          <CalendarPlus className="w-3.5 h-3.5" /> Add to calendar
+        </button>
+      )}
 
       <button type="button" onClick={() => window.print()} className={buttonClasses}>
         <Printer className="w-3.5 h-3.5" /> Print / PDF
