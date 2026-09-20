@@ -12,18 +12,18 @@ import {
   StoredTrip,
   loadDraft,
   loadTrips,
-  removeTrip,
   saveDraft,
   saveTrips,
   tripId,
   tripName,
   upsertTrip,
 } from "@/features/planner/lib/tripStorage";
+import { refreshTripShelf } from "@/features/planner/lib/useTripShelf";
 
+import Link from "next/link";
 import TripWizard from "@/features/planner/components/wizard/TripWizard";
 import PrintItinerary from "@/features/planner/components/PrintItinerary";
 import PlanHub from "./_components/PlanHub";
-import SavedTrips from "./_components/SavedTrips";
 import { HubTab, HUB_TABS } from "./_components/HubTabs";
 
 import { Booking, Bookings, TripIntent, TripPlan } from "@/features/planner/types";
@@ -76,12 +76,23 @@ function PlannerPageContent() {
   // prefill the wizard's answers; everyone else starts at step 1.
   useEffect(() => {
     setInitialTab(parseTab(searchParams.get("tab")));
-    setSaved(loadTrips());
+    const stored = loadTrips();
+    setSaved(stored);
 
     const shared = intentFromShareParams(searchParams);
     if (shared) {
       patchIntent(shared);
       generateFrom(shared);
+      return;
+    }
+    // /trips hands off a saved trip by id — open it exactly as stored.
+    const tripParam = searchParams.get("trip");
+    const savedTrip = tripParam
+      ? stored.find((trip) => trip.id === tripParam)
+      : undefined;
+    if (savedTrip) {
+      patchIntent(savedTrip.intent);
+      openPlan(savedTrip.intent, savedTrip.plan, savedTrip.bookings);
       return;
     }
     // A hero link is an explicit "plan this", so it wins over what was here
@@ -101,7 +112,10 @@ function PlannerPageContent() {
 
   // Survive a refresh: whatever is on screen is what comes back.
   useEffect(() => {
-    if (trip && planIntent) saveDraft({ intent: planIntent, plan: trip, bookings });
+    if (trip && planIntent) {
+      saveDraft({ intent: planIntent, plan: trip, bookings });
+      refreshTripShelf();
+    }
   }, [trip, planIntent, bookings]);
 
   const handleBooked = (booking: Booking) =>
@@ -124,6 +138,7 @@ function PlannerPageContent() {
   const persist = (trips: StoredTrip[]) => {
     setSaved(trips);
     saveTrips(trips);
+    refreshTripShelf();
   };
 
   const handleSaveTrip = () => {
@@ -145,11 +160,6 @@ function PlannerPageContent() {
   const handleAdoptVariant = (plan: TripPlan, source: TripIntent) => {
     patchIntent(source);
     openPlan(source, plan, bookings);
-  };
-
-  const handleOpenTrip = (entry: StoredTrip) => {
-    patchIntent(entry.intent);
-    openPlan(entry.intent, entry.plan, entry.bookings);
   };
 
   const startEditing = () => {
@@ -185,11 +195,17 @@ function PlannerPageContent() {
                     loading={loading}
                     onCancel={trip ? () => setPhase("revealed") : undefined}
                   />
-                  <SavedTrips
-                    trips={saved}
-                    onOpen={handleOpenTrip}
-                    onDelete={(id) => persist(removeTrip(saved, id))}
-                  />
+                  {saved.length > 0 && (
+                    <p className="text-center text-sm text-[var(--muted)]">
+                      Looking for a trip you already planned?{" "}
+                      <Link
+                        href="/trips"
+                        className="font-medium text-[var(--primary)] hover:underline underline-offset-2"
+                      >
+                        Your trips →
+                      </Link>
+                    </p>
+                  )}
                 </motion.div>
               ) : (
                 trip &&

@@ -8,6 +8,7 @@ const YEAR = new Date().getFullYear();
 const NAVIGATION = [
   { label: "Plan a trip", href: "/planner" },
   { label: "Explore", href: "/explore" },
+  { label: "My trips", href: "/trips" },
 ];
 
 /** A decorative leg of the route: dot — dotted line — dot. */
