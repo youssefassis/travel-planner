@@ -42,7 +42,13 @@ src/
 
 Pure and **deterministic**: the same `TripIntent` always produces the identical `TripPlan`. No `Date.now`/`Math.random`; ids are content-derived. This powers backend-free share links — the URL encodes the intent and the recipient regenerates the exact same plan (`lib/share.ts`).
 
-Pipeline: `selectCities → orderRoute → allocateDays → dayPlans → transport → budget → generatePlan`. Plus:
+Pipeline: `selectCities → orderRoute → allocateDays → dayPlans → transport → budget → generatePlan`.
+
+**Home is not a stop.** `intent.originCityId` is where the traveler lives: `selectCities` never picks it as a destination, and `routeLegs` bookends the route with an `outbound` (home → first stop) and a `homebound` (last stop → home), each omitted when home already *is* that stop. They live outside `plan.legs` so the "`legs[i]` connects `stops[i]` to `stops[i+1]`" invariant still holds — use `allLegs(plan)` for everything the traveler actually rides. On edit, `replan` recovers home from those legs, so it survives adding and removing cities.
+
+**Budget figures are per person** (`STAY_SHARE` is a share of a room; food and activities are per head; a leg cost is one seat). `travelers` and `partyTotal` carry what the whole group pays, and `PARTY_SIZE` in `engine/constants.ts` is the one definition of party size — the booking panels read the same table.
+
+Plus:
 
 - `schedule.ts` — timed day schedule; food POIs become lunch/dinner venues, nightlife lands after dinner
 - `replan.ts` — pure plan-in → plan-out edits: `swapActivity`, `makeRainFriendly`, `addActivity`/`removeActivity`, `moveActivity` (reorder within a day, scheduling-class scoped), `moveActivityToDay` (same-city only), `removeDay` (city's last day removes the stop), `addCity`/`removeCity` (cheapest-insertion, day renumbering, budget recompute)

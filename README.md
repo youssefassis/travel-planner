@@ -1,13 +1,14 @@
 # Wanderly
 
-One place to plan a trip. Set your preferences — or pick cities directly — and Wanderly builds a full round trip: route, day-by-day itinerary, transport between cities, budget breakdown, plus flight recommendations and stay advice.
+One place to plan a trip. Set your preferences — or pick cities directly — and Wanderly builds a full round trip from your front door: the journey out, the route between cities, a day-by-day itinerary, a budget breakdown, the journey home, plus flight recommendations and stay advice.
 
 Everything runs client-side on a curated city dataset. No backend, no API keys.
 
 ## Features
 
-- **Trip planner** (`/planner`) — three quick questions, then a full plan: optimized route, realistic timed daily schedules (meals at restaurants, nightlife after dinner), pace-aware load, booking checklist, and an interactive map (MapLibre + OpenFreeMap).
+- **Trip planner** (`/planner`) — three quick questions, then a full plan: optimized route, realistic timed daily schedules (meals at restaurants, nightlife after dinner), pace-aware load, booking checklist, and an interactive map (MapLibre + OpenFreeMap). Your home city bookends the trip instead of appearing as a stop on it, so getting there and back is costed like every other leg.
 - **Editable plans** — swap a stop, remove a museum, add an unused sight, make a day rain-friendly, add or remove whole cities; the route, day numbering, and budget recompute instantly.
+- **Budgets in one unit** — every figure is per person, with the whole party's total alongside it.
 - **Share & export** — copy a link that regenerates the identical plan (the engine is deterministic), open the route in Google Maps, share as text, or print to PDF.
 - **Flights** (`/flights`) — decision support: a handful of recommendations tailored to your priorities with trade-offs and full expected cost, not an endless results list.
 - **Stays** (`/stays`) — advisor-style picks: matching neighborhoods with reasoning, a shortlist of accommodations with strengths and totals including taxes and fees.

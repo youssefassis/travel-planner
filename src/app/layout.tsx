@@ -35,12 +35,12 @@ export const metadata: Metadata = {
     template: "%s · Wanderly",
   },
   description:
-    "Plan routes, compare stays, and organize travel with AI-powered itineraries.",
+    "Plan routes, compare stays, and organize travel — a full itinerary, route, and budget in seconds.",
   keywords: ["travel", "planner", "trip", "itinerary", "flights", "stays"],
   openGraph: {
     title: "Wanderly — Trip Planner",
     description:
-      "Plan routes, compare stays, and organize travel with AI-powered itineraries.",
+      "Plan routes, compare stays, and organize travel — a full itinerary, route, and budget in seconds.",
     type: "website",
   },
 };
