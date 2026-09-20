@@ -7,7 +7,9 @@ import { motion } from "framer-motion";
 import SectionHeader from "@/components/ui/SectionHeader";
 import Section from "@/components/ui/Section";
 import Container from "@/components/ui/Container";
-import { fadeInUp, VIEWPORT_ONCE, DUR, EASE_OUT } from "@/components/motion";
+import MotionCard from "@/components/ui/MotionCard";
+import { getCity } from "@/domain/cities";
+import { fadeInUp, VIEWPORT_ONCE, DUR, EASE_OUT, staggerChildren } from "@/components/motion";
 
 // Only cities from the planner dataset — every card starts a real trip.
 const DESTINATIONS = [
@@ -40,6 +42,27 @@ const DESTINATIONS = [
     image: "/images/italy.jpg",
   },
 ];
+
+// The rest of the shortlist. No photography exists for these, so they wear
+// the chart-card treatment instead of a stretched or borrowed image — the
+// city dataset supplies country and interests, so nothing here can drift.
+const MORE_PICK_IDS = [
+  "rome-it",
+  "prague-cz",
+  "vienna-at",
+  "porto-pt",
+  "amsterdam-nl",
+  "budapest-hu",
+  "edinburgh-uk",
+  "split-hr",
+];
+
+const MORE_PICKS = MORE_PICK_IDS.flatMap((id) => {
+  const city = getCity(id);
+  return city ? [city] : [];
+});
+
+const cap = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 
 const DestinationCard = ({
   cityId,
@@ -120,6 +143,36 @@ export default function FeaturedDestinations() {
             <DestinationCard key={dest.cityId} {...dest} index={i} />
           ))}
         </div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          variants={staggerChildren(0.06)}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4"
+        >
+          {MORE_PICKS.map((city) => (
+            <MotionCard key={city.id} padding="none" hover>
+              <Link
+                href={`/planner?destination=${city.id}`}
+                className="group flex h-full flex-col gap-1 p-4 rounded-xl"
+              >
+                <span className="flex items-center gap-1.5 text-[var(--primary)]">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-base font-serif font-semibold text-[var(--fg)] truncate">
+                    {city.name}
+                  </span>
+                </span>
+                <span className="text-caption text-[var(--muted)] truncate">
+                  {city.country}
+                </span>
+                <span className="text-small text-[var(--muted)] truncate mt-auto pt-2">
+                  {city.interests.slice(0, 2).map(cap).join(" · ")}
+                </span>
+              </Link>
+            </MotionCard>
+          ))}
+        </motion.div>
       </Container>
     </Section>
   );
