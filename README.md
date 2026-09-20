@@ -6,6 +6,8 @@ Everything runs client-side on a curated city dataset. No backend, no API keys �
 
 ## Features
 
+- **Real journeys** — high-speed corridors are timed as they actually run (Milan–Rome is 3 hours, not 5), and no route puts a train across the Irish Sea. Every duration is door to door, so rail and air compare honestly.
+- **Carbon footprint** — what the journeys cost per traveller, per leg, and how far below flying the route keeps you. Where a flight has a train that genuinely runs, the itinerary says so.
 - **Budget-first discovery** (`/explore`) — name your money, your dates, and who's coming, and see every destination it reaches, best trip first. Each figure is a real generated plan, so the estimate is what you get when you click through.
 - **Trip planner** (`/planner`) — three quick questions, then a full plan: optimized route, realistic timed daily schedules (meals at restaurants, nightlife after dinner), pace-aware load, booking checklist, and an interactive map (MapLibre + OpenFreeMap). Your home city bookends the trip instead of appearing as a stop on it, so getting there and back is costed like every other leg.
 - **Editable plans** — swap a stop, remove a museum, add an unused sight, make a day rain-friendly, add or remove whole cities; the route, day numbering, and budget recompute instantly.

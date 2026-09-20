@@ -25,6 +25,8 @@ export type Region =
   | "balkans"
   | "east";
 
+export type TransportMode = "car" | "bus" | "train" | "flight";
+
 export type PoiCategory =
   | "sight"
   | "museum"

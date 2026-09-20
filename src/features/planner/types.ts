@@ -6,7 +6,10 @@ import {
   Pace,
   PoiCategory,
   Region,
+  TransportMode,
 } from "@/domain/types";
+
+export type { TransportMode };
 
 export type TripMode = "surprise" | "custom";
 
@@ -46,8 +49,6 @@ export type Activity = {
   /** Why the engine chose it, in plain language. */
   why: string;
 };
-
-export type TransportMode = "car" | "bus" | "train" | "flight";
 
 /** A journey that eats into a day: arriving into a city, or leaving for home. */
 export type DayTravel = {

@@ -1,5 +1,6 @@
 import { City } from "@/domain/types";
 import { distanceKm } from "@/domain/geo";
+import { getCorridor } from "@/domain/corridors";
 import { TransportLeg, TransportMode, TripIntent, TripPlan } from "../types";
 import { TIER_TRANSPORT_MULT } from "./constants";
 
@@ -21,7 +22,13 @@ function pickModeAndRates(
 
 export function pickTransportLeg(from: City, to: City, intent: TripIntent): TransportLeg {
   const d = distanceKm(from.coords, to.coords);
-  const { mode, durationHrs, baseCost } = pickModeAndRates(d, intent);
+
+  // A real journey beats an estimate: high-speed rail is roughly twice as
+  // fast as the distance model assumes, and some pairs have water in between.
+  const corridor = getCorridor(from.id, to.id);
+  const { mode, durationHrs, baseCost } = corridor
+    ? { mode: corridor.mode, durationHrs: corridor.durationHrs, baseCost: corridor.fare }
+    : pickModeAndRates(d, intent);
 
   const cost = Math.round((baseCost * TIER_TRANSPORT_MULT[intent.vibe.budget]) / 5) * 5;
   const roundedDuration = Math.round(durationHrs * 4) / 4;
