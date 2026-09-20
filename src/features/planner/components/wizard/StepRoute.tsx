@@ -6,6 +6,7 @@ import Stepper from "@/components/ui/Stepper";
 import { MONTH_NAMES } from "@/domain/climate";
 import { useTripIntentStore } from "../../store/tripIntentStore";
 import { MODE_OPTIONS } from "../../lib/options";
+import { withStartDate, withTravelMonth } from "../../lib/tripDates";
 import CityCatalogPicker from "../CityCatalogPicker";
 import FieldGroup from "./FieldGroup";
 
@@ -54,10 +55,11 @@ export default function StepRoute() {
             aria-label="Travel month"
             value={intent.travelMonth ?? "any"}
             onChange={(e) =>
-              patchIntent({
-                travelMonth:
+              patchIntent(
+                withTravelMonth(
                   e.target.value === "any" ? undefined : Number(e.target.value),
-              })
+                ),
+              )
             }
             className="w-full rounded-full border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-2.5 text-sm text-[var(--fg)]"
           >
@@ -68,6 +70,19 @@ export default function StepRoute() {
               </option>
             ))}
           </select>
+        </FieldGroup>
+
+        <FieldGroup label="Start date">
+          <input
+            type="date"
+            aria-label="Trip start date"
+            value={intent.startDate ?? ""}
+            onChange={(e) => patchIntent(withStartDate(e.target.value))}
+            className="w-full rounded-full border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-2.5 text-sm text-[var(--fg)]"
+          />
+          <p className="text-caption text-[var(--muted)] mt-1.5">
+            Optional — pin the exact days and the itinerary picks up real dates.
+          </p>
         </FieldGroup>
       </div>
 

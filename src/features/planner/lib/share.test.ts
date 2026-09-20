@@ -50,6 +50,36 @@ describe("share link round trip", () => {
     expect(decoded).toEqual(withMonth);
   });
 
+  it("round-trips a start date and the month it pins", () => {
+    const dated: TripIntent = {
+      ...SURPRISE,
+      startDate: "2026-05-04",
+      travelMonth: 4,
+    };
+    const decoded = intentFromShareParams(intentToShareParams(dated));
+    expect(decoded).toEqual(dated);
+  });
+
+  it("lets a shared start date correct a contradictory month param", () => {
+    const params = intentToShareParams({ ...SURPRISE, travelMonth: 0 });
+    params.set("sd", "2026-05-04");
+    const decoded = intentFromShareParams(params);
+    expect(decoded?.startDate).toBe("2026-05-04");
+    expect(decoded?.travelMonth).toBe(4);
+  });
+
+  it("ignores an impossible start date and keeps the month", () => {
+    const params = intentToShareParams({ ...SURPRISE, travelMonth: 6 });
+    params.set("sd", "2026-02-30");
+    const decoded = intentFromShareParams(params);
+    expect(decoded?.startDate).toBeUndefined();
+    expect(decoded?.travelMonth).toBe(6);
+  });
+
+  it("omits the date param when no date is set (back-compat)", () => {
+    expect(intentToShareParams(SURPRISE).has("sd")).toBe(false);
+  });
+
   it("omits the month param when no month is set (back-compat)", () => {
     const params = intentToShareParams(SURPRISE);
     expect(params.has("m")).toBe(false);

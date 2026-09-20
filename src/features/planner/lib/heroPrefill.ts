@@ -1,17 +1,12 @@
 import { getCity } from "@/domain/cities";
+import { isISODate } from "@/domain/dates";
 import { TripIntent } from "../types";
+import { withStartDate } from "./tripDates";
 
 /** A 0-11 month index, or null when the value isn't one. */
 function parseMonth(value: string | null): number | null {
   const parsed = value === null ? NaN : parseInt(value, 10);
   return Number.isInteger(parsed) && parsed >= 0 && parsed <= 11 ? parsed : null;
-}
-
-/** The month of a YYYY-MM-DD date, or null when it isn't one. */
-function monthFromDate(value: string | null): number | null {
-  if (value === null || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const month = parseInt(value.slice(5, 7), 10) - 1;
-  return month >= 0 && month <= 11 ? month : null;
 }
 
 /**
@@ -20,8 +15,8 @@ function monthFromDate(value: string | null): number | null {
  * `/planner?destination=<cityId>&origin=<cityId>&date=<iso>&travelers=<companions>&budget=<tier>`.
  * This maps those params onto a trip intent to prefill the wizard.
  *
- * `date` (YYYY-MM-DD) narrows to the travel month, which is all the
- * date-free engine can use today.
+ * `date` (YYYY-MM-DD) becomes the trip's start date, which also pins the
+ * travel month.
  */
 export function intentFromHeroParams(
   params: URLSearchParams,
@@ -55,9 +50,11 @@ export function intentFromHeroParams(
     intent.selectedCityIds = [destination];
   }
   // A picked date is the more specific signal, so it wins over a bare month.
-  const monthIndex = monthFromDate(date) ?? parseMonth(month);
-  if (monthIndex !== null) {
-    intent.travelMonth = monthIndex;
+  if (isISODate(date)) {
+    Object.assign(intent, withStartDate(date));
+  } else {
+    const monthIndex = parseMonth(month);
+    if (monthIndex !== null) intent.travelMonth = monthIndex;
   }
   if (travelers === "solo" || travelers === "couple" || travelers === "group") {
     intent.companions = travelers;

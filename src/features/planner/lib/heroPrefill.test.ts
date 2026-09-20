@@ -26,6 +26,7 @@ describe("intentFromHeroParams", () => {
       mode: "custom",
       selectedCityIds: ["barcelona-es"],
       companions: "couple",
+      startDate: "2026-08-01",
       travelMonth: 7,
       vibe: { ...BASE.vibe, budget: "luxury" },
     });
@@ -98,28 +99,36 @@ describe("intentFromHeroParams", () => {
     expect(intentFromHeroParams(new URLSearchParams(""), BASE)).toBeNull();
   });
 
-  it("narrows a picked date to its travel month", () => {
-    expect(
-      intentFromHeroParams(new URLSearchParams("date=2026-08-01"), BASE)
-        ?.travelMonth,
-    ).toBe(7);
-    expect(
-      intentFromHeroParams(
-        new URLSearchParams("destination=rome-it&date=2026-01-15"),
-        BASE,
-      )?.travelMonth,
-    ).toBe(0);
+  it("carries a picked date and pins the month it falls in", () => {
+    const august = intentFromHeroParams(
+      new URLSearchParams("date=2026-08-01"),
+      BASE,
+    );
+    expect(august?.startDate).toBe("2026-08-01");
+    expect(august?.travelMonth).toBe(7);
+
+    const january = intentFromHeroParams(
+      new URLSearchParams("destination=rome-it&date=2026-01-15"),
+      BASE,
+    );
+    expect(january?.startDate).toBe("2026-01-15");
+    expect(january?.travelMonth).toBe(0);
   });
 
-  it("ignores a malformed date and falls back to an explicit month", () => {
-    expect(
-      intentFromHeroParams(new URLSearchParams("date=next-summer"), BASE)
-        ?.travelMonth,
-    ).toBeUndefined();
-    expect(
-      intentFromHeroParams(new URLSearchParams("date=2026-13-01&month=4"), BASE)
-        ?.travelMonth,
-    ).toBe(4);
+  it("ignores an impossible date and falls back to an explicit month", () => {
+    const vague = intentFromHeroParams(
+      new URLSearchParams("date=next-summer"),
+      BASE,
+    );
+    expect(vague?.startDate).toBeUndefined();
+    expect(vague?.travelMonth).toBeUndefined();
+
+    const fallback = intentFromHeroParams(
+      new URLSearchParams("date=2026-02-30&month=4"),
+      BASE,
+    );
+    expect(fallback?.startDate).toBeUndefined();
+    expect(fallback?.travelMonth).toBe(4);
   });
 
   it("does not mutate the base intent", () => {

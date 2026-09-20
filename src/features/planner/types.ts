@@ -16,6 +16,9 @@ export type TripIntent = {
   selectedCityIds: string[]; // custom mode only
   duration: number; // days, clamped 1..30
   travelMonth?: number; // 0-11; undefined = "any time" (weather-agnostic)
+  /** First day of the trip, YYYY-MM-DD. Undefined = dates not settled yet.
+   *  Always agrees with `travelMonth` — set the pair via `tripDates.ts`. */
+  startDate?: string;
   companions: "solo" | "couple" | "group";
   interests: Interest[];
   region?: Region | "any";
