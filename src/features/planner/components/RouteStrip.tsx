@@ -57,12 +57,12 @@ export default function RouteStrip({
       <button
         type="button"
         onClick={() => onFlightLeg(leg)}
-        className="flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--primary)] transition-colors underline-offset-2 hover:underline"
+        className="flex items-center gap-1 text-xs text-data text-[var(--muted)] hover:text-[var(--primary)] transition-colors underline-offset-2 hover:underline"
       >
         {body}
       </button>
     ) : (
-      <div className="flex items-center gap-1 text-xs text-[var(--muted)]">{body}</div>
+      <div className="flex items-center gap-1 text-xs text-data text-[var(--muted)]">{body}</div>
     );
   };
 

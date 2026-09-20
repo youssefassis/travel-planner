@@ -78,7 +78,7 @@ const iconButtonClasses =
   "w-7 h-7 flex items-center justify-center rounded-full text-[var(--muted)] transition-colors disabled:opacity-30 disabled:cursor-default";
 
 const TimeCell = ({ item }: { item: ScheduleItem }) => (
-  <div className="shrink-0 w-16 sm:w-20 text-right text-xs text-[var(--muted)] pt-1">
+  <div className="shrink-0 w-16 sm:w-20 text-right text-xs text-data text-[var(--muted)] pt-1">
     <span className="block font-medium text-[var(--fg)]">
       {formatClock(item.startMin)}
     </span>

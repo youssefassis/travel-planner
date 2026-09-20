@@ -18,8 +18,8 @@ type Props = {
   className?: string;
 };
 
-const DAY_COLORS = ["#000000", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
-const ROUTE_COLOR = "#94a3b8";
+const DAY_COLORS = ["#1d2935", "#2a6f74", "#bc3f2b", "#a8823a", "#4a6741"];
+const ROUTE_COLOR = "#8a9499";
 
 export default function MapView({
   itinerary,

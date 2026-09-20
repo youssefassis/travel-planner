@@ -86,7 +86,7 @@ const DestinationCard = ({
             <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold border border-white/30 shadow-sm">
               {climate}
             </span>
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[#1c140d] text-xs font-semibold shadow-sm">
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[#1d2935] text-xs font-semibold shadow-sm">
               Plan a trip
               <ArrowRight className="w-3 h-3" />
             </span>

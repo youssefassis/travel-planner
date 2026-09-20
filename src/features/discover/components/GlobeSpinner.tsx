@@ -20,7 +20,7 @@ type Props = {
 
 const POOL_SOURCE = "discover-pool";
 const SPIN_MS = 2200;
-const POOL_COLOR = "#f97316";
+const POOL_COLOR = "#bc3f2b";
 
 export default function GlobeSpinner({
   pool,
