@@ -54,6 +54,9 @@ type Props = {
   setActiveDayId: (id: string | null) => void;
   onEdit: () => void;
   initialTab: HubTab;
+  /** Keep this trip in the browser so it survives beyond the session. */
+  onSave: () => void;
+  isSaved: boolean;
 };
 
 /** The revealed trip: a tabbed hub over one plan — itinerary, flights, stays,
@@ -66,6 +69,8 @@ export default function PlanHub({
   setActiveDayId,
   onEdit,
   initialTab,
+  onSave,
+  isSaved,
 }: Props) {
   const [tab, setTab] = useState<HubTab>(initialTab);
   // Keep-alive: a tab mounts on first visit, then hides — so its entrance
@@ -194,6 +199,8 @@ export default function PlanHub({
         plan={trip}
         intent={planIntent}
         onEdit={onEdit}
+        onSave={onSave}
+        isSaved={isSaved}
         actions={
           <ShareTripBar plan={trip} intent={planIntent} pace={planIntent.vibe.pace} />
         }

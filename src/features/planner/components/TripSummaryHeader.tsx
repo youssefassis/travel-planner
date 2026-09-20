@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Pencil } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, Pencil } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { MONTH_NAMES } from "@/domain/climate";
@@ -22,11 +22,16 @@ export default function TripSummaryHeader({
   plan,
   intent,
   onEdit,
+  onSave,
+  isSaved,
   actions,
 }: {
   plan: TripPlan;
   intent: TripIntent;
   onEdit: () => void;
+  /** Keep this trip in the browser so it outlives the session. */
+  onSave?: () => void;
+  isSaved?: boolean;
   /** Trip-wide actions (e.g. share/export) shown in a footer row. */
   actions?: ReactNode;
 }) {
@@ -72,14 +77,29 @@ export default function TripSummaryHeader({
             ))}
           </div>
         </div>
-        <Button
-          variant="outline"
-          icon={<Pencil size={14} />}
-          iconPosition="left"
-          onClick={onEdit}
-        >
-          Edit trip
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {onSave && (
+            <Button
+              variant="outline"
+              icon={
+                isSaved ? <BookmarkCheck size={14} /> : <BookmarkPlus size={14} />
+              }
+              iconPosition="left"
+              onClick={onSave}
+              disabled={isSaved}
+            >
+              {isSaved ? "Saved" : "Save trip"}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            icon={<Pencil size={14} />}
+            iconPosition="left"
+            onClick={onEdit}
+          >
+            Edit trip
+          </Button>
+        </div>
       </div>
 
       {plan.notes.length > 0 && (

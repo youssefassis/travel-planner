@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -8,10 +8,22 @@ import { useTripIntentStore } from "@/features/planner/store/tripIntentStore";
 import { generateTripPlan } from "@/features/planner/engine";
 import { intentFromShareParams } from "@/features/planner/lib/share";
 import { intentFromHeroParams } from "@/features/planner/lib/heroPrefill";
+import {
+  StoredTrip,
+  loadDraft,
+  loadTrips,
+  removeTrip,
+  saveDraft,
+  saveTrips,
+  tripId,
+  tripName,
+  upsertTrip,
+} from "@/features/planner/lib/tripStorage";
 
 import TripWizard from "@/features/planner/components/wizard/TripWizard";
 import PrintItinerary from "@/features/planner/components/PrintItinerary";
 import PlanHub from "./_components/PlanHub";
+import SavedTrips from "./_components/SavedTrips";
 import { HubTab, HUB_TABS } from "./_components/HubTabs";
 
 import { TripIntent, TripPlan } from "@/features/planner/types";
@@ -39,17 +51,22 @@ function PlannerPageContent() {
   const [loading, setLoading] = useState(false);
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
   const [initialTab, setInitialTab] = useState<HubTab>("itinerary");
+  const [saved, setSaved] = useState<StoredTrip[]>([]);
 
-  const generateFrom = (source: TripIntent) => {
-    setLoading(true);
-    const result = generateTripPlan(source);
-    setTrip(result);
+  /** Show an existing plan as-is — restoring keeps the traveler's edits. */
+  const openPlan = (source: TripIntent, plan: TripPlan) => {
+    setTrip(plan);
     setPlanIntent(source);
-    setActiveDayId(result.itinerary?.[0]?.id ?? null);
-    setLoading(false);
+    setActiveDayId(plan.itinerary?.[0]?.id ?? null);
     setPhase("revealed");
     // The reveal replaces the wizard mid-scroll; start at the trip summary.
     window.scrollTo(0, 0);
+  };
+
+  const generateFrom = (source: TripIntent) => {
+    setLoading(true);
+    openPlan(source, generateTripPlan(source));
+    setLoading(false);
   };
 
   // A share link carries a full intent — regenerate that exact plan and skip
@@ -57,16 +74,66 @@ function PlannerPageContent() {
   // prefill the wizard's answers; everyone else starts at step 1.
   useEffect(() => {
     setInitialTab(parseTab(searchParams.get("tab")));
+    setSaved(loadTrips());
+
     const shared = intentFromShareParams(searchParams);
     if (shared) {
       patchIntent(shared);
       generateFrom(shared);
       return;
     }
+    // A hero link is an explicit "plan this", so it wins over what was here
+    // before; otherwise pick up the trip the traveler was last looking at.
     const prefilled = intentFromHeroParams(searchParams, intent);
-    if (prefilled) patchIntent(prefilled);
+    if (prefilled) {
+      patchIntent(prefilled);
+      return;
+    }
+    const draft = loadDraft();
+    if (draft) {
+      patchIntent(draft.intent);
+      openPlan(draft.intent, draft.plan);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Survive a refresh: whatever is on screen is what comes back.
+  useEffect(() => {
+    if (trip && planIntent) saveDraft(planIntent, trip);
+  }, [trip, planIntent]);
+
+  const currentId = trip && planIntent ? tripId(trip, planIntent) : null;
+
+  // "Saved" has to mean *this* plan, not just this route on these dates —
+  // otherwise editing a saved trip would leave no way to store the change.
+  const isSaved = useMemo(() => {
+    if (!trip || currentId === null) return false;
+    const stored = saved.find((t) => t.id === currentId);
+    return stored !== undefined && JSON.stringify(stored.plan) === JSON.stringify(trip);
+  }, [saved, trip, currentId]);
+
+  const persist = (trips: StoredTrip[]) => {
+    setSaved(trips);
+    saveTrips(trips);
+  };
+
+  const handleSaveTrip = () => {
+    if (!trip || !planIntent || !currentId) return;
+    persist(
+      upsertTrip(saved, {
+        id: currentId,
+        name: tripName(trip, planIntent),
+        savedAt: Date.now(),
+        intent: planIntent,
+        plan: trip,
+      }),
+    );
+  };
+
+  const handleOpenTrip = (entry: StoredTrip) => {
+    patchIntent(entry.intent);
+    openPlan(entry.intent, entry.plan);
+  };
 
   const startEditing = () => {
     setStepIndex(0);
@@ -101,6 +168,11 @@ function PlannerPageContent() {
                     loading={loading}
                     onCancel={trip ? () => setPhase("revealed") : undefined}
                   />
+                  <SavedTrips
+                    trips={saved}
+                    onOpen={handleOpenTrip}
+                    onDelete={(id) => persist(removeTrip(saved, id))}
+                  />
                 </motion.div>
               ) : (
                 trip &&
@@ -119,6 +191,8 @@ function PlannerPageContent() {
                       setActiveDayId={setActiveDayId}
                       onEdit={startEditing}
                       initialTab={initialTab}
+                      onSave={handleSaveTrip}
+                      isSaved={isSaved}
                     />
                   </motion.div>
                 )
