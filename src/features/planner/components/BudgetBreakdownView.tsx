@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Price from "@/components/ui/Price";
+import { allLegs } from "../engine/transport";
 import { TripPlan } from "../types";
 import TransportModeIcon from "./TransportModeIcon";
 
@@ -31,7 +32,9 @@ type CategoryValues = {
 /** The full budget picture: totals, category split, and the per-city and
  *  per-leg figures that add up to it. */
 export default function BudgetBreakdownView({ plan, onGoToFlights, onGoToStays }: Props) {
-  const { budget, stops, legs, notes } = plan;
+  const { budget, stops, notes } = plan;
+  // Home legs included — the flights there and back are part of the trip.
+  const legs = allLegs(plan);
   const categoryMax = Math.max(
     budget.transport,
     budget.stays,
@@ -139,7 +142,7 @@ export default function BudgetBreakdownView({ plan, onGoToFlights, onGoToStays }
             </ul>
           ) : (
             <p className="text-sm text-[var(--muted)]">
-              A single-city trip — no inter-city transport.
+              A stay in your home city — no transport to budget for.
             </p>
           )}
         </Card>

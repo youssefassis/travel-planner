@@ -8,6 +8,7 @@ import FlightSearch, {
   FlightSearchFormData,
 } from "@/features/flights/components/FlightSearch";
 import FlightLegResults from "@/features/flights/components/FlightLegResults";
+import { allLegs } from "@/features/planner/engine";
 import { TripIntent, TripPlan } from "@/features/planner/types";
 import { flightSearchForLeg, partySize } from "../_lib/derive";
 
@@ -23,7 +24,9 @@ function searchKey(s: FlightSearchFormData): string {
 /** Per-leg flight recommendations for the trip's routes, plus a manual search. */
 export default function FlightsTab({ trip, intent }: Props) {
   const travelers = partySize(intent);
-  const flightLegs = trip.legs.filter((leg) => leg.mode === "flight");
+  // Home legs included — the flight out and the flight back are the two the
+  // traveler most needs to book.
+  const flightLegs = allLegs(trip).filter((leg) => leg.mode === "flight");
   const [custom, setCustom] = useState<FlightSearchFormData | null>(null);
   const [showCustom, setShowCustom] = useState(false);
 

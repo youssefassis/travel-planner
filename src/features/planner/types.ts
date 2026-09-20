@@ -119,6 +119,10 @@ export type TripPlan = {
   id: string;
   stops: CityStay[];
   legs: TransportLeg[]; // legs[i] connects stops[i] to stops[i+1]
+  /** Home → the first stop. Absent when the trip starts in your own city. */
+  outbound?: TransportLeg;
+  /** The last stop → home. Absent when the trip ends in your own city. */
+  homebound?: TransportLeg;
   itinerary: ItineraryDay[]; // flattened stops[].dayPlans
   budget: BudgetBreakdown;
   notes: string[];

@@ -18,7 +18,8 @@ export const WIZARD_STEPS: WizardStep[] = [
   {
     id: "route",
     title: "Where & when",
-    blurb: "Where you start, how long, when you're going — and who picks the cities.",
+    blurb:
+      "Where you're travelling from, how long, when you're going — and who picks the cities.",
   },
   {
     id: "party",
