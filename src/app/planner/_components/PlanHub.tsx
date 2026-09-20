@@ -35,6 +35,7 @@ import {
 } from "@/features/planner/types";
 import { getCity } from "@/domain/cities";
 import { dateOfDay } from "@/features/planner/lib/tripDates";
+import { localISODate, tripProgress } from "@/features/planner/lib/today";
 import { fadeInUp } from "@/components/motion";
 
 import HubTabs, { HubTab } from "./HubTabs";
@@ -47,6 +48,7 @@ const FlightsTab = dynamic(() => import("./FlightsTab"), { loading: TabSpinner }
 const StaysTab = dynamic(() => import("./StaysTab"), { loading: TabSpinner });
 const BudgetTab = dynamic(() => import("./BudgetTab"), { loading: TabSpinner });
 const PrepareTab = dynamic(() => import("./PrepareTab"), { loading: TabSpinner });
+const TodayTab = dynamic(() => import("./TodayTab"), { loading: TabSpinner });
 
 function TabSpinner() {
   return <div className="py-20 text-center text-[var(--muted)]">Loading…</div>;
@@ -83,10 +85,21 @@ export default function PlanHub({
   bookings,
   onBooked,
 }: Props) {
-  const [tab, setTab] = useState<HubTab>(initialTab);
+  // A trip that is happening right now opens on Today, unless the URL asked
+  // for something specific. PlanHub only ever renders client-side (a plan has
+  // to exist first), so reading the clock here can't desync hydration.
+  const [tab, setTab] = useState<HubTab>(() => {
+    if (initialTab !== "itinerary") return initialTab;
+    const progress = tripProgress(
+      trip,
+      planIntent.startDate,
+      localISODate(new Date()),
+    );
+    return progress.phase === "during" ? "today" : "itinerary";
+  });
   // Keep-alive: a tab mounts on first visit, then hides — so its entrance
   // animation runs once, while visible, and its local state survives switches.
-  const [mounted, setMounted] = useState<Set<HubTab>>(() => new Set([initialTab]));
+  const [mounted, setMounted] = useState<Set<HubTab>>(() => new Set([tab]));
 
   const [booking, setBooking] = useState<BookingTarget | null>(null);
   const [climateCityId, setClimateCityId] = useState<string | null>(null);
@@ -221,7 +234,7 @@ export default function PlanHub({
         <HubTabs active={tab} onChange={selectTab} />
       </div>
 
-      {/* Itinerary — always mounted (default tab, owns the rail). */}
+      {/* Itinerary — always mounted: it owns the map/route rail. */}
       <div hidden={tab !== "itinerary"}>
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 lg:gap-8">
           <section className="space-y-4">
@@ -312,6 +325,22 @@ export default function PlanHub({
             bookings={bookings}
             onGoToFlights={() => selectTab("flights")}
             onGoToStays={() => selectTab("stays")}
+          />
+        </div>
+      )}
+
+      {/* Today */}
+      {mounted.has("today") && (
+        <div hidden={tab !== "today"}>
+          <TodayTab
+            trip={trip}
+            intent={planIntent}
+            bookings={bookings}
+            onOpenDay={(dayId) => {
+              setActiveDayId(dayId);
+              selectTab("itinerary");
+            }}
+            onEdit={onEdit}
           />
         </div>
       )}

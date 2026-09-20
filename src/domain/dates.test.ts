@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addDays,
+  daysBetween,
   formatDateRange,
   formatDayDate,
   isISODate,
@@ -82,5 +83,19 @@ describe("formatDateRange", () => {
 describe("toICSDate", () => {
   it("strips the dashes", () => {
     expect(toICSDate("2026-05-04")).toBe("20260504");
+  });
+});
+
+describe("daysBetween", () => {
+  it("counts whole days forward and back", () => {
+    expect(daysBetween("2026-05-04", "2026-05-12")).toBe(8);
+    expect(daysBetween("2026-05-12", "2026-05-04")).toBe(-8);
+    expect(daysBetween("2026-05-04", "2026-05-04")).toBe(0);
+  });
+
+  it("crosses months, years, and a DST change without drifting", () => {
+    expect(daysBetween("2026-12-28", "2027-01-03")).toBe(6);
+    expect(daysBetween("2026-03-27", "2026-03-31")).toBe(4);
+    expect(daysBetween("2026-10-23", "2026-10-27")).toBe(4);
   });
 });

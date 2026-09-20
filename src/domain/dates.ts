@@ -82,6 +82,14 @@ export function formatDateRange(startISO: string, endISO: string): string {
   return `${startDay} – ${endDay} ${startMonth} ${startYear}`;
 }
 
+/** Whole days from `fromISO` to `toISO`; negative when `toISO` is earlier. */
+export function daysBetween(fromISO: string, toISO: string): number {
+  const from = toUTC(fromISO);
+  const to = toUTC(toISO);
+  if (!from || !to) return 0;
+  return Math.round((to.getTime() - from.getTime()) / 86_400_000);
+}
+
 /** `YYYYMMDD`, the date form the iCalendar spec wants. */
 export function toICSDate(iso: string): string {
   return iso.replace(/-/g, "");
