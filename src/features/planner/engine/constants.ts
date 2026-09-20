@@ -57,8 +57,14 @@ export const DURATION_BY_CATEGORY: Record<PoiCategory, number> = {
 /** The day starts here (minutes since midnight). */
 export const DAY_START_MIN = 9.5 * 60; // 09:30
 
+/** The far end of the planning window — nothing new is started after this. */
+export const DAY_END_MIN = 22 * 60; // 22:00
+
 export const LUNCH = { earliestMin: 12.5 * 60, durationMin: 60 }; // ~12:30, 1h
 export const DINNER = { earliestMin: 19 * 60, durationMin: 90 }; // ~19:00, 1.5h
+
+/** Arrive after this and lunch has already been and gone. */
+export const LUNCH_LATEST_MIN = 15 * 60; // 15:00
 
 /** Average walking pace between stops, minutes per km. */
 export const WALK_MIN_PER_KM = 12;

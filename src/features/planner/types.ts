@@ -47,9 +47,33 @@ export type Activity = {
   why: string;
 };
 
+export type TransportMode = "car" | "bus" | "train" | "flight";
+
+/** A journey that eats into a day: arriving into a city, or leaving for home. */
+export type DayTravel = {
+  legId: string;
+  mode: TransportMode;
+  from: string;
+  to: string;
+  durationHrs: number;
+};
+
+/** What travel, if any, brackets a single day. */
+export type DayTravelSlots = {
+  arrival?: DayTravel;
+  departure?: DayTravel;
+};
+
 /* ─── Scheduled day (the companion view of an ItineraryDay) ─────── */
 
 export type ScheduleItem =
+  | {
+      kind: "travel";
+      startMin: number;
+      endMin: number;
+      travel: DayTravel;
+      direction: "arrive" | "depart";
+    }
   | {
       kind: "activity";
       startMin: number; // minutes since midnight
@@ -82,6 +106,10 @@ export type ItineraryDay = {
   cityId: string;
   city: string;
   activities: Activity[];
+  /** Getting here — the day's plans only start once this lands. */
+  arrival?: DayTravel;
+  /** Leaving for home — the day's plans have to be done before this. */
+  departure?: DayTravel;
 };
 
 export type CityStay = {
@@ -94,8 +122,6 @@ export type CityStay = {
   stayPerNight: number;
   stayTotal: number;
 };
-
-export type TransportMode = "car" | "bus" | "train" | "flight";
 
 export type TransportLeg = {
   id: string;

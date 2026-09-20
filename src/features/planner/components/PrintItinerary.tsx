@@ -3,7 +3,14 @@
 import { Pace } from "@/domain/types";
 import { formatDateRange, formatDayDate } from "@/domain/dates";
 import { dateOfDay, endDate } from "../lib/tripDates";
-import { TripPlan } from "../types";
+import { ScheduleItem, TripPlan } from "../types";
+
+/** A stable React key for any kind of scheduled item. */
+function scheduleKey(item: ScheduleItem): string {
+  if (item.kind === "activity") return item.activity.id;
+  if (item.kind === "travel") return `${item.direction}-${item.travel.legId}`;
+  return `${item.label}-${item.startMin}`;
+}
 import { buildDaySchedule, formatClock } from "../engine";
 
 /**
@@ -52,12 +59,24 @@ export default function PrintItinerary({
             <table className="w-full text-sm">
               <tbody>
                 {schedule.items.map((item) => (
-                  <tr key={item.kind === "activity" ? item.activity.id : `${item.label}-${item.startMin}`}>
+                  <tr key={scheduleKey(item)}>
                     <td className="align-top w-20 pr-3 whitespace-nowrap">
                       {formatClock(item.startMin)}
                     </td>
                     <td className="pb-1">
-                      {item.kind === "activity" ? (
+                      {item.kind === "travel" ? (
+                        <>
+                          <em>
+                            {item.direction === "arrive" ? "Travel to" : "Home to"}{" "}
+                            {item.travel.to}
+                          </em>
+                          <span className="text-xs">
+                            {" — "}
+                            {item.travel.durationHrs}h {item.travel.mode} from{" "}
+                            {item.travel.from}
+                          </span>
+                        </>
+                      ) : item.kind === "activity" ? (
                         <>
                           {item.activity.name}
                           {item.activity.mustSee ? " ★" : ""}

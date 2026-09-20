@@ -2,9 +2,11 @@ import { Coordinates, Pace } from "@/domain/types";
 import { distanceKm } from "@/domain/geo";
 import { Activity, DaySchedule, ItineraryDay, ScheduleItem } from "../types";
 import {
+  DAY_END_MIN,
   DAY_START_MIN,
   DINNER,
   LUNCH,
+  LUNCH_LATEST_MIN,
   PACE_BUDGET_HRS,
   WALK_MIN_PER_KM,
 } from "./constants";
@@ -28,7 +30,9 @@ export function formatClock(minutesSinceMidnight: number): string {
 
 /**
  * Turns a day's activities into a realistic timed schedule:
- * - daytime stops start at 09:30 with walking time between them,
+ * - daytime stops start at 09:30 — later on a day the traveler arrives,
+ *   since the journey there has to happen first — with walking time between
+ *   them, and nothing new is started once it's time to leave for home,
  * - the plan's restaurants BECOME lunch/dinner (cheaper → lunch, pricier →
  *   dinner) instead of being visited mid-afternoon; generic "somewhere
  *   local" slots only appear when no restaurant is planned,
@@ -56,10 +60,27 @@ export function buildDaySchedule(day: ItineraryDay, pace: Pace): DaySchedule {
     else lunchVenue = food[0];
   }
 
+  // Travel brackets the day: arriving pushes the start back, leaving for
+  // home brings the end forward.
+  const arrivalMin = round5((day.arrival?.durationHrs ?? 0) * 60);
+  const departureMin = round5((day.departure?.durationHrs ?? 0) * 60);
+  const dayStart = DAY_START_MIN + arrivalMin;
+  const dayEnd = Math.max(DAY_END_MIN - departureMin, dayStart + 60);
+
   const items: ScheduleItem[] = [];
-  let clock = DAY_START_MIN;
+  let clock = dayStart;
   let hadLunch = false;
   let prevLocation: Coordinates | null = null;
+
+  if (day.arrival) {
+    items.push({
+      kind: "travel",
+      direction: "arrive",
+      travel: day.arrival,
+      startMin: DAY_START_MIN,
+      endMin: dayStart,
+    });
+  }
 
   const walkFrom = (to: Coordinates): number =>
     prevLocation === null
@@ -85,7 +106,9 @@ export function buildDaySchedule(day: ItineraryDay, pace: Pace): DaySchedule {
     const walkMin = walkFrom(activity.location);
     clock += walkMin;
 
-    if (!hadLunch && clock >= LUNCH.earliestMin) scheduleLunch();
+    if (!hadLunch && clock >= LUNCH.earliestMin && dayStart <= LUNCH_LATEST_MIN) {
+      scheduleLunch();
+    }
 
     const startMin = round5(clock);
     const endMin = round5(startMin + activity.durationHrs * 60);
@@ -94,10 +117,13 @@ export function buildDaySchedule(day: ItineraryDay, pace: Pace): DaySchedule {
     prevLocation = activity.location;
   }
 
-  if (!hadLunch && day.activities.length > 0) scheduleLunch();
+  if (!hadLunch && day.activities.length > 0 && dayStart <= LUNCH_LATEST_MIN) {
+    scheduleLunch();
+  }
 
-  // Dinner closes the daytime — at the planned restaurant when there is one.
-  if (day.activities.length > 0) {
+  // Dinner closes the daytime — at the planned restaurant when there is one,
+  // and not at all on a day the traveler has already left.
+  if (day.activities.length > 0 && DINNER.earliestMin < dayEnd) {
     const startMin = round5(Math.max(clock + 30, DINNER.earliestMin));
     const durationMin = dinnerVenue ? dinnerVenue.durationHrs * 60 : DINNER.durationMin;
     items.push({
@@ -111,14 +137,25 @@ export function buildDaySchedule(day: ItineraryDay, pace: Pace): DaySchedule {
     if (dinnerVenue) prevLocation = dinnerVenue.location;
   }
 
-  // Nightlife belongs after dinner.
+  // Nightlife belongs after dinner — and never after the journey home.
   for (const activity of nightlife) {
     const walkMin = walkFrom(activity.location);
     const startMin = round5(clock + Math.max(walkMin, 15));
+    if (startMin >= dayEnd) break;
     const endMin = round5(startMin + activity.durationHrs * 60);
     items.push({ kind: "activity", activity, startMin, endMin, walkMin });
     clock = endMin;
     prevLocation = activity.location;
+  }
+
+  if (day.departure) {
+    items.push({
+      kind: "travel",
+      direction: "depart",
+      travel: day.departure,
+      startMin: dayEnd,
+      endMin: dayEnd + departureMin,
+    });
   }
 
   const busyMin = items.reduce((sum, item) => {
@@ -128,19 +165,26 @@ export function buildDaySchedule(day: ItineraryDay, pace: Pace): DaySchedule {
   const busyHrs = Math.round((busyMin / 60) * 10) / 10;
 
   const budget = PACE_BUDGET_HRS[pace];
-  const activityHrs = day.activities.reduce((sum, a) => sum + a.durationHrs, 0);
+  const travelHrs = (arrivalMin + departureMin) / 60;
+  // Hours on a train are hours off your feet in the city — they count.
+  const activityHrs =
+    day.activities.reduce((sum, a) => sum + a.durationHrs, 0) + travelHrs;
 
   let load: DaySchedule["load"];
   let loadNote: string;
   if (activityHrs > budget) {
     load = "packed";
-    loadNote = `Packed for a ${pace} pace — consider dropping an optional stop`;
+    loadNote = travelHrs > 0
+      ? `A travel day this full is a stretch — consider dropping a stop`
+      : `Packed for a ${pace} pace — consider dropping an optional stop`;
   } else if (activityHrs < budget * 0.55) {
     load = "relaxed";
     loadNote = "Plenty of breathing room — space for a spontaneous find";
   } else {
     load = "balanced";
-    loadNote = `Comfortable for a ${pace} pace`;
+    loadNote = travelHrs > 0
+      ? `A comfortable travel day`
+      : `Comfortable for a ${pace} pace`;
   }
 
   return { items, busyHrs, load, loadNote };

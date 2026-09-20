@@ -6,6 +6,7 @@ import { OUTDOOR_CATEGORIES, STAY_SHARE } from "./constants";
 import { buildCityDayPlans, orderDayActivities, toActivity } from "./dayPlans";
 import { allLegs, routeLegs } from "./transport";
 import { computeBudget } from "./budget";
+import { annotateTravelDays } from "./travelDays";
 
 const MAX_TRIP_DAYS = 30;
 
@@ -390,19 +391,26 @@ function homeCity(plan: TripPlan, intent: TripIntent, cities: City[]): City | un
   return findCity(cities, homeId);
 }
 
-/** Reconnects the whole round trip after the stops change. */
+/**
+ * Reconnects the whole round trip after the stops change, and re-brackets
+ * the days with the travel that now falls on them — the stop the traveler
+ * arrives into may no longer be the one it was.
+ */
 function rebuildRoute(
   plan: TripPlan,
   stops: CityStay[],
   intent: TripIntent,
   cities: City[]
-): Pick<TripPlan, "legs" | "outbound" | "homebound"> {
+): Pick<TripPlan, "stops" | "legs" | "outbound" | "homebound"> {
   const route = stops
     .map((stop) => findCity(cities, stop.cityId))
     .filter((c): c is City => c !== undefined);
   const home = homeCity(plan, intent, cities);
-  if (!home) return { legs: [], outbound: undefined, homebound: undefined };
-  return routeLegs(route, home, intent);
+  const legs = home
+    ? routeLegs(route, home, intent)
+    : { legs: [], outbound: undefined, homebound: undefined };
+
+  return { ...legs, stops: annotateTravelDays(stops, legs) };
 }
 
 /**
@@ -463,7 +471,7 @@ export function addCity(
   ]);
 
   return rebuildPlan(
-    { ...plan, stops, ...rebuildRoute(plan, stops, intent, cities) },
+    { ...plan, ...rebuildRoute(plan, stops, intent, cities) },
     intent,
     cities,
     `Added ${city.name} (${days} ${days === 1 ? "day" : "days"}) — the trip is now ${
@@ -490,7 +498,7 @@ export function removeCity(
   const remainingDays = stops.reduce((sum, s) => sum + s.days, 0);
 
   return rebuildPlan(
-    { ...plan, stops, ...rebuildRoute(plan, stops, intent, cities) },
+    { ...plan, ...rebuildRoute(plan, stops, intent, cities) },
     intent,
     cities,
     `Removed ${stop.city} — the trip is now ${remainingDays} ${

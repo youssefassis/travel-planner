@@ -161,7 +161,14 @@ export function planToText(
     lines.push(`${day.label}${date ? ` · ${formatDayDate(date)}` : ""} · ${day.city}`);
     const schedule = buildDaySchedule(day, pace);
     for (const item of schedule.items) {
-      if (item.kind === "activity") {
+      if (item.kind === "travel") {
+        const verb = item.direction === "arrive" ? "Travel to" : "Home to";
+        lines.push(
+          `  ${formatClock(item.startMin)}  ${verb} ${item.travel.to} (${
+            item.travel.durationHrs
+          }h ${item.travel.mode})`
+        );
+      } else if (item.kind === "activity") {
         const extras = [
           item.activity.price > 0 ? `€${item.activity.price}` : null,
           item.activity.bookAhead ? "book ahead" : null,

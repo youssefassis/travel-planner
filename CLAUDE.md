@@ -42,11 +42,13 @@ src/
 
 Pure and **deterministic**: the same `TripIntent` always produces the identical `TripPlan`. No `Date.now`/`Math.random`; ids are content-derived. This powers backend-free share links — the URL encodes the intent and the recipient regenerates the exact same plan (`lib/share.ts`).
 
-Pipeline: `selectCities → orderRoute → allocateDays → dayPlans → transport → budget → generatePlan`.
+Pipeline: `selectCities → orderRoute → allocateDays → transport → dayPlans → budget → generatePlan`. **Transport runs before `dayPlans`** on purpose: travel eats into the day it falls on, so a day has to know what it's losing before it knows how much it can hold.
 
 **Home is not a stop.** `intent.originCityId` is where the traveler lives: `selectCities` never picks it as a destination, and `routeLegs` bookends the route with an `outbound` (home → first stop) and a `homebound` (last stop → home), each omitted when home already *is* that stop. They live outside `plan.legs` so the "`legs[i]` connects `stops[i]` to `stops[i+1]`" invariant still holds — use `allLegs(plan)` for everything the traveler actually rides. On edit, `replan` recovers home from those legs, so it survives adding and removing cities.
 
 **Trips persist in `localStorage`** via `lib/tripStorage.ts` — a draft (auto-saved, restored on refresh) and a capped list of saved trips. The **plan** is stored, not just the intent, because `replan` edits aren't reconstructible from the wizard's answers. Keys are versioned (`wanderly.v1.*`): bump on a shape change and old entries are ignored. Stored values are validated on read and every access is try/caught — storage is absent in private windows. On mount, precedence is **share link → hero params → stored draft**.
+
+**Travel days are real.** `travelDays.ts` maps legs onto the days they consume — the traveler arrives on a stay's **first** day (off `outbound` for the first stop, off `legs[i-1]` for the rest) and leaves home on the trip's **last** day, matching how `lib/tripDates.ts` dates those legs. `ItineraryDay.arrival` / `.departure` carry it; `dayPlans` sizes each day's activity count to the hours left after travel (always ≥ 1), and `schedule.ts` starts an arrival day late, ends a departure day early, and emits a `kind: "travel"` `ScheduleItem`. On replan only the bracketing is recomputed, never the activity counts — rebuilding those would discard the traveler's edits.
 
 **Dates sit on top of the engine, not inside it.** The engine plans in Day 1..N and never sees a calendar, which is what keeps share links reproducible. `TripIntent.startDate` (optional, `YYYY-MM-DD`) is mapped onto those days by `lib/tripDates.ts`, and all date arithmetic lives in `domain/dates.ts` in **UTC** so nothing drifts across a timezone or DST boundary. `startDate` and `travelMonth` must agree — write them together via `withStartDate` / `withTravelMonth`, never directly. `lib/calendar.ts` turns a dated plan into `.ics`.
 

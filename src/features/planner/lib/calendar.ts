@@ -50,18 +50,25 @@ function stamp(date: string, minutes: number): string {
 
 function itemTitle(item: ScheduleItem): string {
   if (item.kind === "activity") return item.activity.name;
+  if (item.kind === "travel") {
+    const verb = item.direction === "arrive" ? "Travel to" : "Home to";
+    return `${verb} ${item.travel.to}`;
+  }
   return item.activity ? `${item.label} — ${item.activity.name}` : item.label;
 }
 
 function itemUid(item: ScheduleItem, date: string): string {
-  const key =
-    item.kind === "activity"
-      ? item.activity.id
-      : `${item.label.toLowerCase()}-${item.startMin}`;
+  let key: string;
+  if (item.kind === "activity") key = item.activity.id;
+  else if (item.kind === "travel") key = `${item.direction}-${item.travel.legId}`;
+  else key = `${item.label.toLowerCase()}-${item.startMin}`;
   return `${key}-${toICSDate(date)}@wanderly`;
 }
 
 function itemDescription(item: ScheduleItem): string | null {
+  if (item.kind === "travel") {
+    return `${item.travel.durationHrs}h ${item.travel.mode} from ${item.travel.from}`;
+  }
   if (item.kind !== "activity") return null;
   const parts = [
     item.activity.why,
@@ -104,7 +111,7 @@ export function planToICS(
         `DTSTART:${stamp(date, item.startMin)}`,
         `DTEND:${stamp(date, item.endMin)}`,
         `SUMMARY:${escapeText(itemTitle(item))}`,
-        `LOCATION:${escapeText(day.city)}`,
+        `LOCATION:${escapeText(item.kind === "travel" ? item.travel.to : day.city)}`,
       );
       if (description) lines.push(`DESCRIPTION:${escapeText(description)}`);
       lines.push("END:VEVENT");

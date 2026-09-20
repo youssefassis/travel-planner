@@ -1,11 +1,12 @@
 import { City, Poi, PoiCategory } from "@/domain/types";
 import { distanceKm } from "@/domain/geo";
-import { Activity, ItineraryDay, TripIntent } from "../types";
+import { Activity, DayTravelSlots, ItineraryDay, TripIntent } from "../types";
 import {
   ACTIVITIES_PER_DAY,
   BOOK_AHEAD_PRICE,
   CATEGORY_TO_INTERESTS,
   DURATION_BY_CATEGORY,
+  PACE_BUDGET_HRS,
 } from "./constants";
 
 function matchesInterests(category: PoiCategory, intent: TripIntent): boolean {
@@ -111,13 +112,39 @@ export function orderDayActivities(activities: Activity[], city: City): Activity
   return ordered;
 }
 
+/**
+ * How many stops a day can hold once its travel is paid for. A day that
+ * loses three hours to a flight can't absorb what a free day can — always
+ * at least one, so no day in a city is empty.
+ */
+function activitiesForDay(
+  perDay: number,
+  budgetHrs: number,
+  slot: DayTravelSlots,
+): number {
+  const travelHrs =
+    (slot.arrival?.durationHrs ?? 0) + (slot.departure?.durationHrs ?? 0);
+  if (travelHrs <= 0) return perDay;
+
+  const available = Math.max(0, budgetHrs - travelHrs);
+  const scaled = Math.round((perDay * available) / budgetHrs);
+  return Math.min(perDay, Math.max(1, scaled));
+}
+
 export function buildCityDayPlans(
   city: City,
   days: number,
   intent: TripIntent,
-  startDayIndex: number
+  startDayIndex: number,
+  /** What travel brackets each day of this stay; defaults to none. */
+  travel: DayTravelSlots[] = []
 ): ItineraryDay[] {
   const perDay = ACTIVITIES_PER_DAY[intent.vibe.pace];
+  const budgetHrs = PACE_BUDGET_HRS[intent.vibe.pace];
+  const slotFor = (d: number): DayTravelSlots => travel[d] ?? {};
+  const capacity = Array.from({ length: days }, (_, d) =>
+    activitiesForDay(perDay, budgetHrs, slotFor(d)),
+  );
   const ranked = rankPois(city.pois, intent);
   // The top interest-matched POIs across the stay are the must-sees —
   // roughly one per day. With no stated interests, the city's top-ranked
@@ -132,6 +159,7 @@ export function buildCityDayPlans(
 
   for (let slot = 0; slot < perDay; slot++) {
     for (let d = 0; d < days; d++) {
+      if (slot >= capacity[d]) continue;
       const poi = pickNextPoi(ranked, used, dayCategories[d]);
       if (poi) {
         used.add(poi.id);
@@ -145,12 +173,15 @@ export function buildCityDayPlans(
 
   return dayActivities.map((activities, i) => {
     const dayIndex = startDayIndex + i;
+    const { arrival, departure } = slotFor(i);
     return {
       id: `day-${dayIndex}-${city.id}`,
       label: `Day ${dayIndex}`,
       cityId: city.id,
       city: city.name,
       activities: orderDayActivities(activities, city),
+      arrival,
+      departure,
     };
   });
 }
