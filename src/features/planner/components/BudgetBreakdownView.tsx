@@ -7,6 +7,7 @@ import Card from "@/components/ui/Card";
 import Price from "@/components/ui/Price";
 import { allLegs } from "../engine/transport";
 import { Bookings, TripPlan } from "../types";
+import FootprintCard from "./FootprintCard";
 import TransportModeIcon from "./TransportModeIcon";
 
 type Props = {
@@ -165,6 +166,8 @@ export default function BudgetBreakdownView({
           )}
         </Card>
       </div>
+
+      <FootprintCard plan={plan} />
 
       {notes.length > 0 && (
         <Card padding="lg">

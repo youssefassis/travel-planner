@@ -11,6 +11,7 @@ import FlightLegResults from "@/features/flights/components/FlightLegResults";
 import { allLegs } from "@/features/planner/engine";
 import { TripIntent, TripPlan } from "@/features/planner/types";
 import { legDepartureDates } from "@/features/planner/lib/tripDates";
+import RailAlternative from "./RailAlternative";
 import { flightSearchForLeg, partySize } from "../_lib/derive";
 
 type Props = {
@@ -53,6 +54,7 @@ export default function FlightsTab({ trip, intent, focus }: Props) {
             }}
             className="scroll-mt-40"
           >
+            <RailAlternative leg={leg} />
             <FlightLegResults
               search={flightSearchForLeg(leg, travelers, departures.get(leg.id))}
               heading={`${leg.from} → ${leg.to} · ~${leg.durationHrs}h · plan estimate €${leg.cost}`}
