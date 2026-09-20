@@ -99,3 +99,6 @@ The layering rules, engine internals and design tokens are written up for contri
 
 Destination photography comes from Wikimedia Commons under CC0 and CC BY-SA. Photographers, licences and source pages are listed in [`public/credits.txt`](public/credits.txt), which the site links from its footer.
 
+## Licence
+
+The code is [MIT licensed](LICENSE). The destination photographs are not mine to relicense — they keep the CC0 and CC BY-SA terms listed in [`public/credits.txt`](public/credits.txt).
