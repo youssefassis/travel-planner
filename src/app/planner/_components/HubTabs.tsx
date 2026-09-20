@@ -1,12 +1,19 @@
 "use client";
 
-import { Calendar, Plane, BedDouble, Wallet, Luggage } from "lucide-react";
+import { Calendar, Plane, BedDouble, Wallet, Luggage, Sun } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type HubTab = "itinerary" | "flights" | "stays" | "budget" | "prepare";
+export type HubTab =
+  | "itinerary"
+  | "today"
+  | "flights"
+  | "stays"
+  | "budget"
+  | "prepare";
 
 export const HUB_TABS: { value: HubTab; label: string; Icon: LucideIcon }[] = [
   { value: "itinerary", label: "Itinerary", Icon: Calendar },
+  { value: "today", label: "Today", Icon: Sun },
   { value: "flights", label: "Flights", Icon: Plane },
   { value: "stays", label: "Stays", Icon: BedDouble },
   { value: "budget", label: "Budget", Icon: Wallet },
