@@ -148,6 +148,19 @@ export type BudgetBreakdown = {
   partyTotal: number;
 };
 
+/** A reservation the traveller has actually made, kept with the trip. */
+export type Booking = {
+  activityId: string;
+  reference: string;
+  /** Epoch millis. */
+  bookedAt: number;
+  /** Per-person price at the time it was booked. */
+  price: number;
+};
+
+/** Every booking on a trip, keyed by the activity it covers. */
+export type Bookings = Record<string, Booking>;
+
 export type TripPlan = {
   id: string;
   stops: CityStay[];

@@ -8,7 +8,7 @@ import Modal, {
   PriceBreakdown,
 } from "@/components/ui/Modal";
 import { bookingReference } from "@/domain/booking";
-import { Activity } from "../types";
+import { Activity, Booking } from "../types";
 import { formatClock } from "../engine";
 
 export type BookingTarget = {
@@ -21,14 +21,34 @@ export type BookingTarget = {
 type Props = {
   target: BookingTarget;
   partySize: number;
+  /** Record the reservation on the trip so it survives the session. */
+  onBooked: (booking: Booking) => void;
   onClose: () => void;
 };
 
-export default function BookActivityPanel({ target, partySize, onClose }: Props) {
+export default function BookActivityPanel({
+  target,
+  partySize,
+  onBooked,
+  onClose,
+}: Props) {
   const [confirmed, setConfirmed] = useState(false);
   const { activity, dayLabel, startMin } = target;
   const isTable = activity.category === "food";
   const total = activity.price * partySize;
+  const reference = bookingReference(
+    `${activity.id}|${dayLabel}|${startMin ?? ""}`,
+  );
+
+  const confirm = () => {
+    setConfirmed(true);
+    onBooked({
+      activityId: activity.id,
+      reference,
+      bookedAt: Date.now(),
+      price: activity.price,
+    });
+  };
 
   return (
     <Modal
@@ -39,9 +59,7 @@ export default function BookActivityPanel({ target, partySize, onClose }: Props)
       {confirmed ? (
         <ModalConfirmation
           title={isTable ? "Table reserved" : "Tickets booked"}
-          reference={bookingReference(
-            `${activity.id}|${dayLabel}|${startMin ?? ""}`,
-          )}
+          reference={reference}
           onDone={onClose}
         />
       ) : (
@@ -70,7 +88,7 @@ export default function BookActivityPanel({ target, partySize, onClose }: Props)
             }}
           />
 
-          <Button size="lg" className="w-full" onClick={() => setConfirmed(true)}>
+          <Button size="lg" className="w-full" onClick={confirm}>
             {isTable ? "Confirm reservation" : "Confirm booking"}
             {total > 0 ? ` · €${total}` : ""}
           </Button>

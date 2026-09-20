@@ -1,5 +1,5 @@
 import { formatDateRange } from "@/domain/dates";
-import { TripIntent, TripPlan } from "../types";
+import { Bookings, TripIntent, TripPlan } from "../types";
 import { endDate } from "./tripDates";
 
 /**
@@ -26,6 +26,14 @@ export type StoredTrip = {
   savedAt: number;
   intent: TripIntent;
   plan: TripPlan;
+  bookings: Bookings;
+};
+
+/** The trip the traveller was last looking at, exactly as they left it. */
+export type Draft = {
+  intent: TripIntent;
+  plan: TripPlan;
+  bookings: Bookings;
 };
 
 /* ─── Pure ──────────────────────────────────────────────────────── */
@@ -75,31 +83,44 @@ function isTripLike(value: unknown): value is { intent: TripIntent; plan: TripPl
   );
 }
 
+/** Bookings arrived after the first stored trips — absent means none. */
+function readBookings(value: unknown): Bookings {
+  const bookings = (value as { bookings?: unknown }).bookings;
+  return typeof bookings === "object" && bookings !== null
+    ? (bookings as Bookings)
+    : {};
+}
+
 /** Parses stored JSON, dropping anything that no longer fits the app. */
 export function parseTrips(raw: string | null): StoredTrip[] {
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (entry): entry is StoredTrip =>
-        isTripLike(entry) &&
-        typeof (entry as StoredTrip).id === "string" &&
-        typeof (entry as StoredTrip).name === "string",
-    );
+    return parsed
+      .filter(
+        (entry): entry is StoredTrip =>
+          isTripLike(entry) &&
+          typeof (entry as StoredTrip).id === "string" &&
+          typeof (entry as StoredTrip).name === "string",
+      )
+      .map((entry) => ({ ...entry, bookings: readBookings(entry) }));
   } catch {
     return [];
   }
 }
 
 /** Parses a stored draft, or null when there isn't a usable one. */
-export function parseDraft(
-  raw: string | null,
-): { intent: TripIntent; plan: TripPlan } | null {
+export function parseDraft(raw: string | null): Draft | null {
   if (!raw) return null;
   try {
     const parsed: unknown = JSON.parse(raw);
-    return isTripLike(parsed) ? { intent: parsed.intent, plan: parsed.plan } : null;
+    if (!isTripLike(parsed)) return null;
+    return {
+      intent: parsed.intent,
+      plan: parsed.plan,
+      bookings: readBookings(parsed),
+    };
   } catch {
     return null;
   }
@@ -132,12 +153,12 @@ function clear(key: string): void {
 }
 
 /** The trip the traveler was last looking at, restored after a refresh. */
-export function loadDraft(): { intent: TripIntent; plan: TripPlan } | null {
+export function loadDraft(): Draft | null {
   return parseDraft(read(DRAFT_KEY));
 }
 
-export function saveDraft(intent: TripIntent, plan: TripPlan): void {
-  write(DRAFT_KEY, JSON.stringify({ intent, plan }));
+export function saveDraft(draft: Draft): void {
+  write(DRAFT_KEY, JSON.stringify(draft));
 }
 
 export function clearDraft(): void {

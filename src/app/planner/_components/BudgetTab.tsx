@@ -1,18 +1,20 @@
 "use client";
 
 import BudgetBreakdownView from "@/features/planner/components/BudgetBreakdownView";
-import { TripPlan } from "@/features/planner/types";
+import { Bookings, TripPlan } from "@/features/planner/types";
 
 type Props = {
   trip: TripPlan;
+  bookings: Bookings;
   onGoToFlights: () => void;
   onGoToStays: () => void;
 };
 
-export default function BudgetTab({ trip, onGoToFlights, onGoToStays }: Props) {
+export default function BudgetTab({ trip, bookings, onGoToFlights, onGoToStays }: Props) {
   return (
     <BudgetBreakdownView
       plan={trip}
+      bookings={bookings}
       onGoToFlights={onGoToFlights}
       onGoToStays={onGoToStays}
     />

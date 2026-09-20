@@ -39,6 +39,7 @@ const entry = (id: string, savedAt = 0): StoredTrip => ({
   savedAt,
   intent: INTENT,
   plan: PLAN,
+  bookings: {},
 });
 
 describe("tripName", () => {
@@ -120,9 +121,25 @@ describe("parseTrips", () => {
 });
 
 describe("parseDraft", () => {
-  it("round-trips a saved draft", () => {
-    const draft = { intent: INTENT, plan: PLAN };
+  it("round-trips a saved draft, bookings and all", () => {
+    const draft = {
+      intent: INTENT,
+      plan: PLAN,
+      bookings: {
+        "rome-colosseum": {
+          activityId: "rome-colosseum",
+          reference: "WND-ABC123",
+          bookedAt: 1,
+          price: 18,
+        },
+      },
+    };
     expect(parseDraft(JSON.stringify(draft))).toEqual(draft);
+  });
+
+  it("reads a draft written before bookings existed", () => {
+    const old = JSON.stringify({ intent: INTENT, plan: PLAN });
+    expect(parseDraft(old)?.bookings).toEqual({});
   });
 
   it("returns null for anything unusable", () => {
@@ -158,14 +175,14 @@ afterEach(() => vi.unstubAllGlobals());
 describe("draft storage", () => {
   it("gives back the trip that was last on screen", () => {
     stubStorage();
-    saveDraft(INTENT, PLAN);
-    expect(loadDraft()).toEqual({ intent: INTENT, plan: PLAN });
+    saveDraft({ intent: INTENT, plan: PLAN, bookings: {} });
+    expect(loadDraft()).toEqual({ intent: INTENT, plan: PLAN, bookings: {} });
   });
 
   it("is empty before anything is written, and after clearing", () => {
     stubStorage();
     expect(loadDraft()).toBeNull();
-    saveDraft(INTENT, PLAN);
+    saveDraft({ intent: INTENT, plan: PLAN, bookings: {} });
     clearDraft();
     expect(loadDraft()).toBeNull();
   });
@@ -173,7 +190,7 @@ describe("draft storage", () => {
   it("keeps the traveller's edits, not just the wizard's answers", () => {
     stubStorage();
     const edited = { ...PLAN, notes: [...PLAN.notes, "swapped a stop"] };
-    saveDraft(INTENT, edited);
+    saveDraft({ intent: INTENT, plan: edited, bookings: {} });
     expect(loadDraft()?.plan.notes).toContain("swapped a stop");
   });
 });
@@ -190,7 +207,7 @@ describe("saved trip storage", () => {
 describe("when storage is unavailable", () => {
   it("never throws — a private window costs the session, not the app", () => {
     stubStorage(true);
-    expect(() => saveDraft(INTENT, PLAN)).not.toThrow();
+    expect(() => saveDraft({ intent: INTENT, plan: PLAN, bookings: {} })).not.toThrow();
     expect(() => saveTrips([entry("a")])).not.toThrow();
     expect(() => clearDraft()).not.toThrow();
     expect(loadDraft()).toBeNull();
