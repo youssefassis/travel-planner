@@ -49,9 +49,16 @@ export default function BudgetBreakdownView({ plan, onGoToFlights, onGoToStays }
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <span className="text-caption text-[var(--muted)] block mb-1">
-              Estimated trip budget
+              Estimated trip budget · per person
             </span>
-            <Price amount={`€${budget.total}`} sub={`≈ €${budget.perDay} per day`} />
+            <Price
+              amount={`€${budget.total}`}
+              sub={
+                budget.travelers > 1
+                  ? `≈ €${budget.perDay} per day · €${budget.partyTotal} for ${budget.travelers} travellers`
+                  : `≈ €${budget.perDay} per day`
+              }
+            />
           </div>
           <div className="flex flex-wrap gap-2">
             {onGoToFlights && (

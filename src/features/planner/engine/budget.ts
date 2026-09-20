@@ -1,7 +1,12 @@
 import { City } from "@/domain/types";
 import { BudgetBreakdown, CityStay, TransportLeg, TripIntent } from "../types";
+import { PARTY_SIZE } from "./constants";
 
 /**
+ * Every figure is per person: stays are each traveler's share of a room
+ * (`STAY_SHARE`), food and activities are per head, and leg costs are one
+ * seat. `partyTotal` scales the total to the whole group.
+ *
  * `cities` supplies each stop's `foodPerDay` table (CityStay itself only
  * carries the already-computed stay figures, not the raw city data), keyed
  * by id. Any array containing at least the stopped-at cities works.
@@ -38,5 +43,16 @@ export function computeBudget(
   const days = stops.reduce((sum, s) => sum + s.days, 0);
   const perDay = days > 0 ? Math.round(total / days) : 0;
 
-  return { transport, stays, activities, food, total, perDay };
+  const travelers = PARTY_SIZE[intent.companions];
+
+  return {
+    transport,
+    stays,
+    activities,
+    food,
+    total,
+    perDay,
+    travelers,
+    partyTotal: total * travelers,
+  };
 }

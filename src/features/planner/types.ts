@@ -106,6 +106,8 @@ export type TransportLeg = {
   cost: number;
 };
 
+/** Every figure is € per person — `travelers` and `partyTotal` say what the
+ *  whole party pays. */
 export type BudgetBreakdown = {
   transport: number;
   stays: number;
@@ -113,6 +115,8 @@ export type BudgetBreakdown = {
   food: number;
   total: number;
   perDay: number;
+  travelers: number;
+  partyTotal: number;
 };
 
 export type TripPlan = {

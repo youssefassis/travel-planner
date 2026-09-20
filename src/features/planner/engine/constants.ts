@@ -26,6 +26,13 @@ export const STAY_SHARE: Record<"solo" | "couple" | "group", number> = {
   group: 0.55,
 };
 
+/** How many people a trip is priced and booked for. */
+export const PARTY_SIZE: Record<"solo" | "couple" | "group", number> = {
+  solo: 1,
+  couple: 2,
+  group: 4,
+};
+
 export const CATEGORY_TO_INTERESTS: Record<PoiCategory, Interest[]> = {
   sight: ["culture", "history"],
   museum: ["culture", "art", "history"],

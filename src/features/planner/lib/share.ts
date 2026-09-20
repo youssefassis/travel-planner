@@ -128,7 +128,10 @@ export function planToText(plan: TripPlan, pace: Pace): string {
 
   const lines: string[] = [
     `Trip plan: ${route} (${days} ${days === 1 ? "day" : "days"})`,
-    `Budget ≈ €${plan.budget.total} (€${plan.budget.perDay}/day)`,
+    `Budget ≈ €${plan.budget.total} per person (€${plan.budget.perDay}/day)` +
+      (plan.budget.travelers > 1
+        ? ` · €${plan.budget.partyTotal} for ${plan.budget.travelers}`
+        : ""),
     "",
   ];
 
