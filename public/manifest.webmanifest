@@ -1,0 +1,46 @@
+{
+  "name": "Wanderly — Trip Planner",
+  "short_name": "Wanderly",
+  "description": "Plan a whole trip — route, itinerary, transport, and budget — then carry it with you, online or not.",
+  "start_url": "/planner",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fbf8f5",
+  "theme_color": "#e7651c",
+  "categories": ["travel", "navigation", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today",
+      "short_name": "Today",
+      "description": "What's happening on your trip right now",
+      "url": "/planner?tab=today"
+    },
+    {
+      "name": "Explore",
+      "short_name": "Explore",
+      "description": "Find somewhere to go",
+      "url": "/explore"
+    }
+  ]
+}
