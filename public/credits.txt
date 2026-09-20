@@ -1,31 +1,54 @@
 Photo credits
 =============
 
-Destination photography used on the Wanderly home page.
+Every destination photograph on the Wanderly home page comes from
+Wikimedia Commons under a free licence. Each was resized for the web;
+the resized version is offered under the same licence as the original.
 
-Rome — /images/rome.jpg
+Do not add an image to public/images/cities without recording it here.
+
+Paris — /images/cities/paris.jpg
+  Eiffel tower from trocadero.jpg
+  by NonOmnisMoriar, licensed CC BY-SA 3.0
+  https://commons.wikimedia.org/wiki/File:Eiffel_tower_from_trocadero.jpg
+
+Lisbon — /images/cities/lisbon.jpg
+  Lisboa - Miradouro de Santa Luzia (53851940999).jpg
+  by Jorge Franganillo, licensed CC BY 2.0
+  https://commons.wikimedia.org/wiki/File:Lisboa_-_Miradouro_de_Santa_Luzia_(53851940999).jpg
+
+Barcelona — /images/cities/barcelona.jpg
+  Barcelona - Park Güell (1).jpg
+  by Fred Romero, licensed CC BY 2.0
+  https://commons.wikimedia.org/wiki/File:Barcelona_-_Park_G%C3%BCell_(1).jpg
+
+Naples — /images/cities/naples.jpg
+  Naples from the Castello Sant Elmo with Abbazia San Martino the port and the Vesuv.jpg
+  by Wolfgang Moroder, licensed CC BY-SA 3.0
+  https://commons.wikimedia.org/wiki/File:Naples_from_the_Castello_Sant_Elmo_with_Abbazia_San_Martino_the_port_and_the_Vesuv.jpg
+
+Rome — /images/cities/rome.jpg
   Colosseum of Rome, Italy.jpg
   by Wilfredor, licensed CC0
   https://commons.wikimedia.org/wiki/File:Colosseum_of_Rome,_Italy.jpg
-  Resized for the web; the resized version is offered under the same licence.
 
-Prague — /images/prague.jpg
+Prague — /images/cities/prague.jpg
   North view of Charles Bridge from Mánesův most, Prague 20160808 1.jpg
   by DXR, licensed CC BY-SA 4.0
   https://commons.wikimedia.org/wiki/File:North_view_of_Charles_Bridge_from_M%C3%A1nes%C5%AFv_most,_Prague_20160808_1.jpg
-  Resized for the web; the resized version is offered under the same licence.
 
-Vienna — /images/vienna.jpg
+Vienna — /images/cities/vienna.jpg
   Palacio de Schönbrunn, Viena, Austria, 2020-02-02, DD 07-09 HDR.jpg
   by Diego Delso, licensed CC BY-SA 4.0
   https://commons.wikimedia.org/wiki/File:Palacio_de_Sch%C3%B6nbrunn,_Viena,_Austria,_2020-02-02,_DD_07-09_HDR.jpg
-  Resized for the web; the resized version is offered under the same licence.
 
-Amsterdam — /images/amsterdam.jpg
+Amsterdam — /images/cities/amsterdam.jpg
   Amsterdam (NL), Herengracht -- 2015 -- 7174.jpg
   by Dietmar Rabich, licensed CC BY-SA 4.0
   https://commons.wikimedia.org/wiki/File:Amsterdam_(NL),_Herengracht_--_2015_--_7174.jpg
-  Resized for the web; the resized version is offered under the same licence.
 
-CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
-CC0 1.0:      https://creativecommons.org/publicdomain/zero/1.0/
+Licence texts
+  CC0 1.0      https://creativecommons.org/publicdomain/zero/1.0/
+  CC BY 2.0    https://creativecommons.org/licenses/by/2.0/
+  CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/
+  CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
