@@ -6,11 +6,13 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Price from "@/components/ui/Price";
 import { allLegs } from "../engine/transport";
-import { TripPlan } from "../types";
+import { Bookings, TripPlan } from "../types";
 import TransportModeIcon from "./TransportModeIcon";
 
 type Props = {
   plan: TripPlan;
+  /** What's already reserved, so committed spend reads differently. */
+  bookings?: Bookings;
   onGoToFlights?: () => void;
   onGoToStays?: () => void;
 };
@@ -31,10 +33,16 @@ type CategoryValues = {
 
 /** The full budget picture: totals, category split, and the per-city and
  *  per-leg figures that add up to it. */
-export default function BudgetBreakdownView({ plan, onGoToFlights, onGoToStays }: Props) {
+export default function BudgetBreakdownView({
+  plan,
+  bookings = {},
+  onGoToFlights,
+  onGoToStays,
+}: Props) {
   const { budget, stops, notes } = plan;
   // Home legs included — the flights there and back are part of the trip.
   const legs = allLegs(plan);
+  const booked = Object.values(bookings).reduce((sum, b) => sum + b.price, 0);
   const categoryMax = Math.max(
     budget.transport,
     budget.stays,
@@ -87,6 +95,9 @@ export default function BudgetBreakdownView({ plan, onGoToFlights, onGoToStays }
                   </span>
                   <span className="text-[var(--muted)]">
                     €{value} · {pct}%
+                    {key === "activities" && booked > 0 && (
+                      <span className="text-[var(--success)]"> · €{booked} booked</span>
+                    )}
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-[var(--card-subtle)] overflow-hidden">

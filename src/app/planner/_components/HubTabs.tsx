@@ -1,15 +1,16 @@
 "use client";
 
-import { Calendar, Plane, BedDouble, Wallet } from "lucide-react";
+import { Calendar, Plane, BedDouble, Wallet, Luggage } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type HubTab = "itinerary" | "flights" | "stays" | "budget";
+export type HubTab = "itinerary" | "flights" | "stays" | "budget" | "prepare";
 
 export const HUB_TABS: { value: HubTab; label: string; Icon: LucideIcon }[] = [
   { value: "itinerary", label: "Itinerary", Icon: Calendar },
   { value: "flights", label: "Flights", Icon: Plane },
   { value: "stays", label: "Stays", Icon: BedDouble },
   { value: "budget", label: "Budget", Icon: Wallet },
+  { value: "prepare", label: "Prepare", Icon: Luggage },
 ];
 
 /** The sticky tab bar for the trip hub. Scrolls horizontally on mobile. */

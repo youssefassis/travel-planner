@@ -26,7 +26,7 @@ import PlanHub from "./_components/PlanHub";
 import SavedTrips from "./_components/SavedTrips";
 import { HubTab, HUB_TABS } from "./_components/HubTabs";
 
-import { TripIntent, TripPlan } from "@/features/planner/types";
+import { Booking, Bookings, TripIntent, TripPlan } from "@/features/planner/types";
 
 import Container from "@/components/ui/Container";
 import PageHeader from "@/components/ui/PageHeader";
@@ -52,11 +52,13 @@ function PlannerPageContent() {
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
   const [initialTab, setInitialTab] = useState<HubTab>("itinerary");
   const [saved, setSaved] = useState<StoredTrip[]>([]);
+  const [bookings, setBookings] = useState<Bookings>({});
 
   /** Show an existing plan as-is — restoring keeps the traveler's edits. */
-  const openPlan = (source: TripIntent, plan: TripPlan) => {
+  const openPlan = (source: TripIntent, plan: TripPlan, booked: Bookings = {}) => {
     setTrip(plan);
     setPlanIntent(source);
+    setBookings(booked);
     setActiveDayId(plan.itinerary?.[0]?.id ?? null);
     setPhase("revealed");
     // The reveal replaces the wizard mid-scroll; start at the trip summary.
@@ -92,15 +94,18 @@ function PlannerPageContent() {
     const draft = loadDraft();
     if (draft) {
       patchIntent(draft.intent);
-      openPlan(draft.intent, draft.plan);
+      openPlan(draft.intent, draft.plan, draft.bookings);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Survive a refresh: whatever is on screen is what comes back.
   useEffect(() => {
-    if (trip && planIntent) saveDraft(planIntent, trip);
-  }, [trip, planIntent]);
+    if (trip && planIntent) saveDraft({ intent: planIntent, plan: trip, bookings });
+  }, [trip, planIntent, bookings]);
+
+  const handleBooked = (booking: Booking) =>
+    setBookings((current) => ({ ...current, [booking.activityId]: booking }));
 
   const currentId = trip && planIntent ? tripId(trip, planIntent) : null;
 
@@ -109,8 +114,12 @@ function PlannerPageContent() {
   const isSaved = useMemo(() => {
     if (!trip || currentId === null) return false;
     const stored = saved.find((t) => t.id === currentId);
-    return stored !== undefined && JSON.stringify(stored.plan) === JSON.stringify(trip);
-  }, [saved, trip, currentId]);
+    return (
+      stored !== undefined &&
+      JSON.stringify(stored.plan) === JSON.stringify(trip) &&
+      JSON.stringify(stored.bookings) === JSON.stringify(bookings)
+    );
+  }, [saved, trip, currentId, bookings]);
 
   const persist = (trips: StoredTrip[]) => {
     setSaved(trips);
@@ -126,13 +135,14 @@ function PlannerPageContent() {
         savedAt: Date.now(),
         intent: planIntent,
         plan: trip,
+        bookings,
       }),
     );
   };
 
   const handleOpenTrip = (entry: StoredTrip) => {
     patchIntent(entry.intent);
-    openPlan(entry.intent, entry.plan);
+    openPlan(entry.intent, entry.plan, entry.bookings);
   };
 
   const startEditing = () => {
@@ -193,6 +203,8 @@ function PlannerPageContent() {
                       initialTab={initialTab}
                       onSave={handleSaveTrip}
                       isSaved={isSaved}
+                      bookings={bookings}
+                      onBooked={handleBooked}
                     />
                   </motion.div>
                 )

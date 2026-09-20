@@ -22,12 +22,17 @@ import BudgetOverlay from "@/features/planner/components/BudgetOverlay";
 import RouteStrip from "@/features/planner/components/RouteStrip";
 import DayByDay from "@/features/planner/components/DayByDay";
 import DayDetails from "@/features/planner/components/DayDetails";
-import BeforeYouGo from "@/features/planner/components/BeforeYouGo";
 import ShareTripBar from "@/features/planner/components/ShareTripBar";
 import BookActivityPanel, {
   BookingTarget,
 } from "@/features/planner/components/BookActivityPanel";
-import { TransportLeg, TripIntent, TripPlan } from "@/features/planner/types";
+import {
+  Booking,
+  Bookings,
+  TransportLeg,
+  TripIntent,
+  TripPlan,
+} from "@/features/planner/types";
 import { getCity } from "@/domain/cities";
 import { dateOfDay } from "@/features/planner/lib/tripDates";
 import { fadeInUp } from "@/components/motion";
@@ -41,6 +46,7 @@ import { partySize } from "../_lib/derive";
 const FlightsTab = dynamic(() => import("./FlightsTab"), { loading: TabSpinner });
 const StaysTab = dynamic(() => import("./StaysTab"), { loading: TabSpinner });
 const BudgetTab = dynamic(() => import("./BudgetTab"), { loading: TabSpinner });
+const PrepareTab = dynamic(() => import("./PrepareTab"), { loading: TabSpinner });
 
 function TabSpinner() {
   return <div className="py-20 text-center text-[var(--muted)]">Loading…</div>;
@@ -57,6 +63,9 @@ type Props = {
   /** Keep this trip in the browser so it survives beyond the session. */
   onSave: () => void;
   isSaved: boolean;
+  /** What the traveller has already reserved. */
+  bookings: Bookings;
+  onBooked: (booking: Booking) => void;
 };
 
 /** The revealed trip: a tabbed hub over one plan — itinerary, flights, stays,
@@ -71,6 +80,8 @@ export default function PlanHub({
   initialTab,
   onSave,
   isSaved,
+  bookings,
+  onBooked,
 }: Props) {
   const [tab, setTab] = useState<HubTab>(initialTab);
   // Keep-alive: a tab mounts on first visit, then hides — so its entrance
@@ -242,12 +253,6 @@ export default function PlanHub({
                 onFindStays={goToStays}
               />
             </DayByDay>
-            <BeforeYouGo
-              itinerary={itinerary}
-              onBook={(activity, dayLabel) =>
-                setBooking({ activity, dayLabel, startMin: null })
-              }
-            />
           </section>
 
           <aside>
@@ -304,8 +309,23 @@ export default function PlanHub({
         <div hidden={tab !== "budget"}>
           <BudgetTab
             trip={trip}
+            bookings={bookings}
             onGoToFlights={() => selectTab("flights")}
             onGoToStays={() => selectTab("stays")}
+          />
+        </div>
+      )}
+
+      {/* Prepare */}
+      {mounted.has("prepare") && (
+        <div hidden={tab !== "prepare"}>
+          <PrepareTab
+            trip={trip}
+            intent={planIntent}
+            bookings={bookings}
+            onBook={(activity, dayLabel) =>
+              setBooking({ activity, dayLabel, startMin: null })
+            }
           />
         </div>
       )}
@@ -317,6 +337,7 @@ export default function PlanHub({
             <BookActivityPanel
               target={booking}
               partySize={size}
+              onBooked={onBooked}
               onClose={() => setBooking(null)}
             />
           </motion.div>
