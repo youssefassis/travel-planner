@@ -129,6 +129,41 @@ describe("computeBudget", () => {
   it("returns all zeros for an empty plan", () => {
     const intent = fixtureIntent({ duration: 1 });
     const budget = computeBudget([], [], intent, []);
-    expect(budget).toEqual({ transport: 0, stays: 0, activities: 0, food: 0, total: 0, perDay: 0 });
+    expect(budget).toEqual({
+      transport: 0,
+      stays: 0,
+      activities: 0,
+      food: 0,
+      total: 0,
+      perDay: 0,
+      travelers: 1,
+      partyTotal: 0,
+    });
+  });
+
+  it("prices per person and scales the total to the party", () => {
+    const city = fixtureCity({ id: "a", name: "A" });
+    const stops: CityStay[] = [
+      {
+        cityId: "a",
+        city: "A",
+        country: "A",
+        coords: { lat: 0, lng: 0 },
+        days: 2,
+        dayPlans: [dayPlan("day-1-a", "a", "A", [10]), dayPlan("day-2-a", "a", "A", [10])],
+        stayPerNight: 65,
+        stayTotal: 130,
+      },
+    ];
+
+    const solo = computeBudget(stops, [], fixtureIntent({ companions: "solo" }), [city]);
+    const couple = computeBudget(stops, [], fixtureIntent({ companions: "couple" }), [city]);
+
+    // Same stops, so the same per-person figures — only the party differs.
+    expect(couple.total).toBe(solo.total);
+    expect(solo.travelers).toBe(1);
+    expect(solo.partyTotal).toBe(solo.total);
+    expect(couple.travelers).toBe(2);
+    expect(couple.partyTotal).toBe(couple.total * 2);
   });
 });

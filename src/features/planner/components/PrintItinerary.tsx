@@ -19,10 +19,12 @@ export default function PrintItinerary({ plan, pace }: { plan: TripPlan; pace: P
     <div className="hidden print:block text-black">
       <h1 className="text-2xl font-bold mb-1">Trip plan: {route}</h1>
       <p className="text-sm mb-6">
-        {plan.itinerary.length} days · budget ≈ €{plan.budget.total} (€
+        {plan.itinerary.length} days · budget ≈ €{plan.budget.total} per person (€
         {plan.budget.perDay}/day) · transport €{plan.budget.transport} · stays €
         {plan.budget.stays} · activities €{plan.budget.activities} · food €
         {plan.budget.food}
+        {plan.budget.travelers > 1 &&
+          ` · €${plan.budget.partyTotal} for ${plan.budget.travelers}`}
       </p>
 
       {plan.itinerary.map((day) => {

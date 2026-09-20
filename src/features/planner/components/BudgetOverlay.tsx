@@ -15,9 +15,19 @@ export default function BudgetOverlay({
 }) {
   return (
     <Card padding="sm">
-      <span className="text-caption text-[var(--muted)] block mb-1">Trip budget</span>
+      <span className="text-caption text-[var(--muted)] block mb-1">
+        Trip budget · per person
+      </span>
       <div className="flex items-end justify-between gap-2">
-        <Price amount={`€${budget.total}`} size="md" sub={`€${budget.perDay}/day`} />
+        <Price
+          amount={`€${budget.total}`}
+          size="md"
+          sub={
+            budget.travelers > 1
+              ? `€${budget.perDay}/day · €${budget.partyTotal} for ${budget.travelers}`
+              : `€${budget.perDay}/day`
+          }
+        />
         {onViewDetails && (
           <button
             type="button"

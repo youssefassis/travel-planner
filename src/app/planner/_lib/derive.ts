@@ -1,13 +1,13 @@
 import { FlightSearchFormData } from "@/features/flights/components/FlightSearch";
 import { roundBudget } from "@/features/stays/lib/adviseStays";
 import { StayPreferences, StayStyle, TravelParty } from "@/features/stays/types";
+import { PARTY_SIZE } from "@/features/planner/engine";
 import { CityStay, TransportLeg, TripIntent } from "@/features/planner/types";
 
-/** Booking party size: a table/room for 1, 2, or 4 by who's traveling. */
+/** Booking party size: a table/room for 1, 2, or 4 by who's traveling. The
+ *  budget prices the same party, so both read from one table. */
 export function partySize(intent: TripIntent): number {
-  if (intent.companions === "couple") return 2;
-  if (intent.companions === "group") return 4;
-  return 1;
+  return PARTY_SIZE[intent.companions];
 }
 
 const PARTY_BY_COMPANIONS: Record<TripIntent["companions"], TravelParty> = {
