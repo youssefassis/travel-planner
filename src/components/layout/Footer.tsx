@@ -5,10 +5,22 @@ import Container from "@/components/ui/Container";
 const BRAND_NAME = "Wanderly";
 const YEAR = new Date().getFullYear();
 
-const NAVIGATION = [
-  { label: "Plan a trip", href: "/planner" },
-  { label: "Explore", href: "/explore" },
-  { label: "My trips", href: "/trips" },
+const NAV_GROUPS = [
+  {
+    title: "Plan",
+    links: [
+      { label: "Plan a trip", href: "/planner" },
+      { label: "My trips", href: "/trips" },
+    ],
+  },
+  {
+    title: "Explore",
+    links: [
+      { label: "Spin the globe", href: "/explore?tool=spin" },
+      { label: "Match the weather", href: "/explore?tool=weather" },
+      { label: "What can I afford?", href: "/explore?tool=budget" },
+    ],
+  },
 ];
 
 /** A decorative leg of the route: dot — dotted line — dot. */
@@ -59,15 +71,20 @@ export default function Footer() {
             </p>
           </div>
 
-          <nav className="flex flex-wrap gap-x-8 gap-y-3">
-            {NAVIGATION.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="text-[0.9rem] text-[var(--muted)] hover:text-[var(--fg)] transition-colors duration-base"
-              >
-                {item.label}
-              </Link>
+          <nav className="flex flex-wrap gap-x-14 gap-y-6">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.title} className="flex flex-col gap-3">
+                <span className="text-caption text-[var(--muted)]">{group.title}</span>
+                {group.links.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="text-[0.9rem] text-[var(--muted)] hover:text-[var(--fg)] transition-colors duration-base"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             ))}
           </nav>
         </div>

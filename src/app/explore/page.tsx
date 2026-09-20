@@ -3,7 +3,7 @@
 import { Suspense, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CloudSun, Globe2, Shuffle, Wallet } from "lucide-react";
 
 import { City } from "@/domain/types";
 import { getCity } from "@/domain/cities";
@@ -28,18 +28,38 @@ import {
 
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
+import MotionCard from "@/components/ui/MotionCard";
 import PageHeader from "@/components/ui/PageHeader";
 import ResultsHeader from "@/components/ui/ResultsHeader";
-import SegmentedControl from "@/components/ui/SegmentedControl";
 import { fadeInUp, staggerChildren } from "@/components/motion";
 
 type Panel = "spin" | "weather" | "budget";
 
-const PANEL_OPTIONS: { label: string; value: Panel }[] = [
-  { label: "Spin the globe", value: "spin" },
-  { label: "Match the weather", value: "weather" },
-  { label: "What can I afford?", value: "budget" },
+/** One card per way of deciding — the traveler picks a question, not a UI. */
+const TOOLS: { value: Panel; title: string; blurb: string; Icon: typeof Globe2 }[] = [
+  {
+    value: "spin",
+    title: "Spin the globe",
+    blurb: "No destination in mind? Let chance pick from 41 cities, filtered your way.",
+    Icon: Globe2,
+  },
+  {
+    value: "weather",
+    title: "Match the weather",
+    blurb: "Chase warm, dry or sunny — every city ranked by its real monthly climate.",
+    Icon: CloudSun,
+  },
+  {
+    value: "budget",
+    title: "What can I afford?",
+    blurb: "Name a budget and see how far it reaches, priced as complete trips.",
+    Icon: Wallet,
+  },
 ];
+
+function parseTool(value: string | null): Panel | null {
+  return value === "spin" || value === "weather" || value === "budget" ? value : null;
+}
 
 const DEFAULT_PREFS: WeatherPrefs = {
   warmth: "any",
@@ -68,9 +88,10 @@ function conditionsHeading(prefs: WeatherPrefs): string {
   return `Where to go for ${parts.join(", ")} weather${when}`;
 }
 
-/** Read deep-link params (from /weather redirects) into an initial state. */
+/** Read deep-link params (?tool=, and the /weather redirects) into a start
+ *  state. With nothing asked for, the page opens on the chooser. */
 function readInitial(params: URLSearchParams): {
-  panel: Panel;
+  panel: Panel | null;
   prefs: WeatherPrefs;
   search: WeatherQuery;
 } {
@@ -91,7 +112,7 @@ function readInitial(params: URLSearchParams): {
     monthIndex: parseMonth(params.get("month")),
   };
   return {
-    panel: hasWeatherParams ? "weather" : "spin",
+    panel: hasWeatherParams ? "weather" : parseTool(params.get("tool")),
     prefs,
     search: { mode: "conditions", prefs },
   };
@@ -106,7 +127,17 @@ function ExplorePageContent() {
     [],
   );
 
-  const [panel, setPanel] = useState<Panel>(initial.panel);
+  const [panel, setPanel] = useState<Panel | null>(initial.panel);
+
+  // Keep the open tool in the URL, so refresh and share land on it.
+  const selectPanel = (next: Panel | null) => {
+    setPanel(next);
+    const params = new URLSearchParams(window.location.search);
+    if (next) params.set("tool", next);
+    else params.delete("tool");
+    const query = params.toString();
+    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
+  };
 
   /* ── Spin the globe ──────────────────────────────────────────── */
   const [filters, setFilters] = useState<DiscoverFilters>(DEFAULT_FILTERS);
@@ -151,7 +182,7 @@ function ExplorePageContent() {
   );
 
   const handleSeeMonths = (cityId: string) => {
-    setPanel("weather");
+    selectPanel("weather");
     setWeatherInitCity(cityId);
     setFormKey((k) => k + 1);
     setSearch({ mode: "city", cityId });
@@ -164,12 +195,45 @@ function ExplorePageContent() {
         <Container size="wide">
           <PageHeader
             title="Where to next?"
-            description="Not sure yet? Spin the globe for a surprise, chase the weather you want, or name your budget and see how far it reaches — then turn it into a full trip."
+            description="Not sure yet? Pick the question you're actually asking — chance, weather, or money — and turn the answer into a full trip."
           />
 
-          <div className="mb-10 max-w-2xl">
-            <SegmentedControl options={PANEL_OPTIONS} value={panel} onChange={setPanel} />
-          </div>
+          {panel === null ? (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={staggerChildren(0.08)}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+            >
+              {TOOLS.map(({ value, title, blurb, Icon }) => (
+                <MotionCard key={value} padding="none">
+                  <button
+                    type="button"
+                    onClick={() => selectPanel(value)}
+                    className="flex w-full flex-col items-start gap-4 p-6 text-left cursor-pointer rounded-xl"
+                  >
+                    <Icon className="w-7 h-7 text-[var(--primary)]" />
+                    <div>
+                      <h2 className="text-h3 text-[var(--fg)] mb-1">{title}</h2>
+                      <p className="text-sm text-[var(--muted)]">{blurb}</p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--primary)]">
+                      Start <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </button>
+                </MotionCard>
+              ))}
+            </motion.div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => selectPanel(null)}
+                className="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--muted)] hover:text-[var(--fg)] transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                All ways to decide
+              </button>
 
           {panel === "budget" ? (
             <AffordabilityPanel />
@@ -275,6 +339,8 @@ function ExplorePageContent() {
                     </p>
                   ))}
               </div>
+            </>
+          )}
             </>
           )}
         </Container>
