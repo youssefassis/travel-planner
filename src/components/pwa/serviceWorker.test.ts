@@ -41,7 +41,7 @@ function okResponse(tag: string) {
 function loadWorker({
   cached = {},
   fetchImpl,
-  keys = ["wanderly-v1"],
+  keys = ["wanderly-v2"],
 }: {
   cached?: Record<string, unknown>;
   fetchImpl?: (req: FakeRequest) => Promise<unknown>;
@@ -140,7 +140,7 @@ describe("install", () => {
 
 describe("activate", () => {
   it("retires caches from older versions and keeps the current one", async () => {
-    const worker = loadWorker({ keys: ["wanderly-v0", "wanderly-v1", "other"] });
+    const worker = loadWorker({ keys: ["wanderly-v1", "wanderly-v2", "other"] });
     let work: unknown;
     worker.handlers.activate({
       respondWith: () => {},
@@ -150,7 +150,7 @@ describe("activate", () => {
     });
     await work;
 
-    expect(worker.deleted).toEqual(["wanderly-v0", "other"]);
+    expect(worker.deleted).toEqual(["wanderly-v1", "other"]);
     expect(worker.self.clients.claim).toHaveBeenCalled();
   });
 });
