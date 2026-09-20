@@ -9,6 +9,7 @@ import { buildCityDayPlans } from "./dayPlans";
 import { allLegs, routeLegs } from "./transport";
 import { computeBudget } from "./budget";
 import { weatherWarnings } from "./weatherNotes";
+import { travelSlotsByStop } from "./travelDays";
 
 function findCity(cities: City[], id: string): City | undefined {
   return cities.find((c) => c.id === id);
@@ -54,11 +55,18 @@ export function generateTripPlan(intent: TripIntent, cities: City[] = CITIES): T
   const { allocations, notes: allocNotes } = allocateDays(ordered, intent.duration);
   notes.push(...allocNotes);
 
+  // Legs are worked out before the days are filled: travel eats into the
+  // day it falls on, so a day has to know what it's losing before it knows
+  // how much it can hold.
+  const route = allocations.map((a) => a.city);
+  const { legs, outbound, homebound } = routeLegs(route, origin, intent);
+  const travelSlots = travelSlotsByStop(allocations, { legs, outbound, homebound });
+
   const stops: CityStay[] = [];
   let dayIndex = 1;
 
-  for (const { city, days } of allocations) {
-    const dayPlans = buildCityDayPlans(city, days, intent, dayIndex);
+  for (const [index, { city, days }] of allocations.entries()) {
+    const dayPlans = buildCityDayPlans(city, days, intent, dayIndex, travelSlots[index]);
     const stayPerNight = city.stayPerNight[intent.vibe.budget] * STAY_SHARE[intent.companions];
     const stayTotal = Math.round(stayPerNight * days);
 
@@ -75,9 +83,6 @@ export function generateTripPlan(intent: TripIntent, cities: City[] = CITIES): T
 
     dayIndex += days;
   }
-
-  const route = allocations.map((a) => a.city);
-  const { legs, outbound, homebound } = routeLegs(route, origin, intent);
 
   if (intent.travelMonth != null) {
     notes.push(...weatherWarnings(stops, intent.travelMonth));

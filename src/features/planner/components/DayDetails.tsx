@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Plus,
   RefreshCw,
+  Route,
   Star,
   Sun,
   Ticket,
@@ -90,16 +91,18 @@ const Rail = ({
   first,
   last,
   meal,
+  travel,
 }: {
   first: boolean;
   last: boolean;
   meal?: boolean;
+  travel?: boolean;
 }) => (
   <div className="shrink-0 w-7 flex flex-col items-center self-stretch">
     <span className={`w-px h-2.5 ${first ? "" : "bg-[var(--border)]"}`} />
-    {meal ? (
+    {meal || travel ? (
       <span className="shrink-0 w-6 h-6 rounded-full bg-[var(--card-subtle)] border border-[var(--border)] text-[var(--muted)] flex items-center justify-center">
-        <UtensilsCrossed className="w-3 h-3" />
+        {travel ? <Route className="w-3 h-3" /> : <UtensilsCrossed className="w-3 h-3" />}
       </span>
     ) : (
       <span className="shrink-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--primary)] bg-[var(--card)]" />
@@ -397,6 +400,24 @@ export default function DayDetails({
         {schedule.items.map((item, i) => {
           const first = i === 0;
           const last = i === schedule.items.length - 1;
+
+          if (item.kind === "travel") {
+            return (
+              <div key={`${item.direction}-${item.travel.legId}`} className="flex gap-3">
+                <TimeCell item={item} />
+                <Rail first={first} last={last} travel />
+                <p className="flex-1 text-sm text-[var(--muted)] pb-6 pt-1">
+                  <span className="text-[var(--fg)] font-medium">
+                    {item.direction === "arrive"
+                      ? `Travel to ${item.travel.to}`
+                      : `Head home to ${item.travel.to}`}
+                  </span>{" "}
+                  · {item.travel.durationHrs}h {item.travel.mode} from{" "}
+                  {item.travel.from}
+                </p>
+              </div>
+            );
+          }
 
           if (item.kind === "meal") {
             return (

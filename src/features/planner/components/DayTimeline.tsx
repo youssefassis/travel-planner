@@ -75,6 +75,8 @@ export default function DayTimeline({
       {itinerary.map((day, i) => {
         const isActive = activeDayId === day.id;
         const date = dateOfDay(startDate, i + 1);
+        // A day that loses hours to a journey says so before it's opened.
+        const travel = day.arrival ?? day.departure;
         return (
           <Fragment key={day.id}>
             {i > 0 && <Connector prev={itinerary[i - 1]} day={day} />}
@@ -107,6 +109,14 @@ export default function DayTimeline({
               <span className="block text-xs text-[var(--muted)] truncate">
                 {date ? `${formatDayDate(date)} · ${day.city}` : day.city}
               </span>
+              {travel && (
+                <span className="mt-1 flex items-center gap-1 text-[var(--muted)]">
+                  <TransportModeIcon mode={travel.mode} size={11} />
+                  <span className="text-xs truncate">
+                    {travel.durationHrs}h {day.arrival ? "to here" : "home"}
+                  </span>
+                </span>
+              )}
             </button>
           </Fragment>
         );
