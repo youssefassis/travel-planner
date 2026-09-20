@@ -5,6 +5,8 @@ import { Pencil } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { MONTH_NAMES } from "@/domain/climate";
+import { formatDateRange } from "@/domain/dates";
+import { endDate } from "../lib/tripDates";
 import { TripIntent, TripPlan } from "../types";
 import {
   BUDGET_OPTIONS,
@@ -36,7 +38,13 @@ export default function TripSummaryHeader({
     labelFor(BUDGET_OPTIONS, intent.vibe.budget),
     `${labelFor(PACE_OPTIONS, intent.vibe.pace)} pace`,
   ];
-  if (intent.travelMonth != null) chips.push(`In ${MONTH_NAMES[intent.travelMonth]}`);
+  // Exact dates say more than the month they fall in.
+  const lastDay = endDate(intent.startDate, days);
+  if (intent.startDate && lastDay) {
+    chips.push(formatDateRange(intent.startDate, lastDay));
+  } else if (intent.travelMonth != null) {
+    chips.push(`In ${MONTH_NAMES[intent.travelMonth]}`);
+  }
   if (intent.mode === "surprise") {
     chips.push("Surprise route");
     if (intent.region && intent.region !== "any")

@@ -10,6 +10,7 @@ import FlightSearch, {
 import FlightLegResults from "@/features/flights/components/FlightLegResults";
 import { allLegs } from "@/features/planner/engine";
 import { TripIntent, TripPlan } from "@/features/planner/types";
+import { legDepartureDates } from "@/features/planner/lib/tripDates";
 import { flightSearchForLeg, partySize } from "../_lib/derive";
 
 type Props = {
@@ -29,6 +30,7 @@ export default function FlightsTab({ trip, intent, focus }: Props) {
   // Home legs included — the flight out and the flight back are the two the
   // traveler most needs to book.
   const flightLegs = allLegs(trip).filter((leg) => leg.mode === "flight");
+  const departures = legDepartureDates(trip, intent.startDate);
   const [custom, setCustom] = useState<FlightSearchFormData | null>(null);
   const [showCustom, setShowCustom] = useState(false);
 
@@ -52,7 +54,7 @@ export default function FlightsTab({ trip, intent, focus }: Props) {
             className="scroll-mt-40"
           >
             <FlightLegResults
-              search={flightSearchForLeg(leg, travelers)}
+              search={flightSearchForLeg(leg, travelers, departures.get(leg.id))}
               heading={`${leg.from} → ${leg.to} · ~${leg.durationHrs}h · plan estimate €${leg.cost}`}
             />
           </section>

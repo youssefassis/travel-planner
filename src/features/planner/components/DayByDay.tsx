@@ -20,12 +20,15 @@ export default function DayByDay({
   activeDayId,
   setActiveDayId,
   legs,
+  startDate,
   children,
 }: {
   itinerary: ItineraryDay[];
   activeDayId: string | null;
   setActiveDayId: (id: string) => void;
   legs: TransportLeg[];
+  /** First day of the trip; when set, the strip shows real dates. */
+  startDate?: string;
   /** The selected day's content — re-animated on every day change. */
   children: ReactNode;
 }) {
@@ -53,6 +56,7 @@ export default function DayByDay({
             activeDayId={activeDayId}
             setActiveDayId={setActiveDayId}
             legs={legs}
+            startDate={startDate}
           />
         </div>
         <button

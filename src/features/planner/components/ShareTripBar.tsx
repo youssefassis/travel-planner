@@ -36,7 +36,7 @@ export default function ShareTripBar({ plan, intent, pace }: Props) {
 
   const share = async () => {
     const url = buildShareUrl(intent, window.location.origin);
-    const text = planToText(plan, pace);
+    const text = planToText(plan, pace, intent.startDate);
     if (navigator.share) {
       try {
         await navigator.share({ title: "Trip plan", text, url });

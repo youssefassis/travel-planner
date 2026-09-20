@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Pace, Poi } from "@/domain/types";
 import { getMonthNormal, MONTH_NAMES, tempWord } from "@/domain/climate";
+import { formatDayDate } from "@/domain/dates";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { Activity, CityStay, DayLoad, ItineraryDay, ScheduleItem } from "../types";
@@ -37,6 +38,8 @@ type Props = {
   pace: Pace;
   /** Selected travel month (0-11); when set, shows the city's expected weather. */
   travelMonth?: number;
+  /** This day's calendar date, when the trip has dates. */
+  date?: string | null;
   /** What "Add a stop" can offer — the city's POIs not yet in the plan. */
   availablePois: Poi[];
   /** Returns false when no alternative was available. */
@@ -125,6 +128,7 @@ export default function DayDetails({
   stops,
   pace,
   travelMonth,
+  date,
   availablePois,
   onSwap,
   onRainDay,
@@ -342,7 +346,8 @@ export default function DayDetails({
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
           <h3 className="text-h3 text-[var(--fg)]">
-            {day.label} · {day.city}
+            {day.label}
+            {date && ` · ${formatDayDate(date)}`} · {day.city}
           </h3>
           <p className="text-small text-[var(--muted)] mt-0.5">
             {schedule.loadNote} · ~{schedule.busyHrs}h on your feet

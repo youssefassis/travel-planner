@@ -1,8 +1,14 @@
 import { Interest, Pace, Region } from "@/domain/types";
 import { getCity } from "@/domain/cities";
-import { isISODate, monthOfISODate } from "@/domain/dates";
+import {
+  formatDateRange,
+  formatDayDate,
+  isISODate,
+  monthOfISODate,
+} from "@/domain/dates";
 import { CityStay, TripIntent, TripPlan } from "../types";
 import { buildDaySchedule, formatClock } from "../engine";
+import { dateOfDay, endDate } from "./tripDates";
 
 /**
  * Sharing works without a backend because the trip engine is deterministic:
@@ -131,12 +137,18 @@ export function googleMapsRouteUrl(stops: CityStay[]): string {
 }
 
 /** A compact plain-text itinerary — pasteable into any chat app. */
-export function planToText(plan: TripPlan, pace: Pace): string {
+export function planToText(
+  plan: TripPlan,
+  pace: Pace,
+  startDate?: string,
+): string {
   const route = plan.stops.map((s) => s.city).join(" → ");
   const days = plan.itinerary.length;
+  const lastDay = endDate(startDate, days);
+  const when = startDate && lastDay ? `, ${formatDateRange(startDate, lastDay)}` : "";
 
   const lines: string[] = [
-    `Trip plan: ${route} (${days} ${days === 1 ? "day" : "days"})`,
+    `Trip plan: ${route} (${days} ${days === 1 ? "day" : "days"}${when})`,
     `Budget ≈ €${plan.budget.total} per person (€${plan.budget.perDay}/day)` +
       (plan.budget.travelers > 1
         ? ` · €${plan.budget.partyTotal} for ${plan.budget.travelers}`
@@ -144,8 +156,9 @@ export function planToText(plan: TripPlan, pace: Pace): string {
     "",
   ];
 
-  for (const day of plan.itinerary) {
-    lines.push(`${day.label} · ${day.city}`);
+  plan.itinerary.forEach((day, i) => {
+    const date = dateOfDay(startDate, i + 1);
+    lines.push(`${day.label}${date ? ` · ${formatDayDate(date)}` : ""} · ${day.city}`);
     const schedule = buildDaySchedule(day, pace);
     for (const item of schedule.items) {
       if (item.kind === "activity") {
@@ -171,7 +184,7 @@ export function planToText(plan: TripPlan, pace: Pace): string {
       }
     }
     lines.push("");
-  }
+  });
 
   const bookings = plan.itinerary.flatMap((day) =>
     day.activities.filter((a) => a.bookAhead).map((a) => `  ${a.name} (${day.label})`)

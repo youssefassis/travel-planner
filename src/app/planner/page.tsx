@@ -128,7 +128,11 @@ function PlannerPageContent() {
 
           {/* Print / PDF layout */}
           {trip && planIntent && (
-            <PrintItinerary plan={trip} pace={planIntent.vibe.pace} />
+            <PrintItinerary
+              plan={trip}
+              pace={planIntent.vibe.pace}
+              startDate={planIntent.startDate}
+            />
           )}
         </Container>
       </div>

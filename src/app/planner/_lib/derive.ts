@@ -24,10 +24,14 @@ const INTEREST_TO_STAY_STYLE: Partial<Record<string, StayStyle>> = {
   art: "art",
 };
 
-/** A one-way flight search for a single transport leg, priced for the party. */
+/**
+ * A one-way flight search for a single transport leg, priced for the party.
+ * `departDate` is "" for an undated trip, which searches flexible dates.
+ */
 export function flightSearchForLeg(
   leg: TransportLeg,
   travelers: number,
+  departDate = "",
 ): FlightSearchFormData {
   return {
     fromCityId: leg.fromCityId,
@@ -35,7 +39,7 @@ export function flightSearchForLeg(
     travelers,
     stops: "any",
     tripType: "oneway",
-    departDate: "",
+    departDate,
     returnDate: "",
   };
 }
