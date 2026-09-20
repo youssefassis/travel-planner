@@ -7,11 +7,13 @@ import Section from "@/components/ui/Section";
 import Container from "@/components/ui/Container";
 import { VIEWPORT_ONCE } from "@/components/motion";
 
+// Mirrored pairs on purpose: an asymmetric scatter drags the eye off-axis
+// and the centered column stops reading as centered.
 const FLOATING_PILLS = [
-  { label: "🗺️ Paris · 5 days", delay: 0, x: "-30%", y: "20%", rotate: -8 },
-  { label: "🏝️ Bali · 8 days", delay: 0.15, x: "28%", y: "15%", rotate: 6 },
-  { label: "🏯 Tokyo · 7 days", delay: 0.3, x: "-22%", y: "65%", rotate: -5 },
-  { label: "🌆 NYC · 4 days", delay: 0.45, x: "35%", y: "62%", rotate: 7 },
+  { label: "🗺️ Paris · 5 days", delay: 0, left: "-8%", top: "-10%", rotate: -8 },
+  { label: "🏝️ Lisbon · 8 days", delay: 0.15, left: "108%", top: "-10%", rotate: 8 },
+  { label: "🏯 Prague · 7 days", delay: 0.3, left: "-8%", top: "110%", rotate: -7 },
+  { label: "🌆 Rome · 4 days", delay: 0.45, left: "108%", top: "110%", rotate: 7 },
 ];
 
 export default function CTA() {
@@ -31,22 +33,23 @@ export default function CTA() {
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Floating trip pills */}
-      {FLOATING_PILLS.map((pill, i) => (
-        <motion.div
-          key={i}
-          className="hidden md:flex absolute items-center px-4 py-2 rounded-full bg-[var(--card)] border border-[var(--border)] text-[var(--fg)] text-sm font-medium shadow-md select-none pointer-events-none"
-          style={{ left: "50%", top: "50%", x: pill.x, y: pill.y, rotate: pill.rotate }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={VIEWPORT_ONCE}
-          transition={{ duration: 0.5, delay: pill.delay + 0.3, ease: "easeOut" }}
-        >
-          {pill.label}
-        </motion.div>
-      ))}
-
       <Container size="narrow" className="relative text-center">
+        {/* Floating trip pills — anchored to the text column so they scatter
+            around it (not the whole padded section) without covering it. */}
+        {FLOATING_PILLS.map((pill, i) => (
+          <motion.div
+            key={i}
+            className="hidden md:flex absolute items-center px-4 py-2 rounded-full bg-[var(--card)] border border-[var(--border)] text-[var(--fg)] text-sm font-medium shadow-md select-none pointer-events-none whitespace-nowrap"
+            style={{ left: pill.left, top: pill.top, x: "-50%", y: "-50%", rotate: pill.rotate }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={VIEWPORT_ONCE}
+            transition={{ duration: 0.5, delay: pill.delay + 0.3, ease: "easeOut" }}
+          >
+            {pill.label}
+          </motion.div>
+        ))}
+
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -61,7 +64,7 @@ export default function CTA() {
             ?
           </h2>
 
-          <p className="text-body-lg text-[var(--muted)] text-center mx-auto mb-10 max-w-xl">
+          <p className="text-body-lg text-[var(--muted)] text-balance mx-auto mb-10 max-w-xl">
             Plan routes, compare stays, and receive recommendations adapted to your
             journey.
           </p>

@@ -9,7 +9,8 @@ import { City } from "@/domain/types";
 import { getCity } from "@/domain/cities";
 import { filterCities, pickDestination } from "@/features/discover/lib/pickDestination";
 import { DEFAULT_FILTERS, DiscoverFilters } from "@/features/discover/types";
-import GlobeSpinner from "@/features/discover/components/GlobeSpinner";
+import DepartureBoard from "@/features/discover/components/DepartureBoard";
+import DestinationGlobe from "@/features/discover/components/DestinationGlobe";
 import FilterBar from "@/features/discover/components/FilterBar";
 import DestinationReveal from "@/features/discover/components/DestinationReveal";
 import AffordabilityPanel from "./_components/AffordabilityPanel";
@@ -159,7 +160,7 @@ function ExplorePageContent() {
   };
 
   const spinLabel = spinning
-    ? "Spinning…"
+    ? "Checking departures…"
     : spinToken === 0
       ? "Spin the globe"
       : "Spin again";
@@ -240,15 +241,17 @@ function ExplorePageContent() {
           ) : panel === "spin" ? (
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-6 lg:gap-8 items-start">
               <div className="space-y-4">
-                <GlobeSpinner
-                  pool={pool}
+                <DepartureBoard
                   spinToken={spinToken}
                   winner={winner}
-                  onLanded={(city) => {
+                  onSettled={(city) => {
                     setRevealed(city);
                     setSpinning(false);
                   }}
                 />
+                {/* The globe follows the board: it only flies once the last
+                    flap has locked, so the reveal has one moment, not two. */}
+                <DestinationGlobe pool={pool} focus={revealed} />
                 <div className="flex justify-center">
                   <Button
                     size="lg"
@@ -262,7 +265,7 @@ function ExplorePageContent() {
                 </div>
                 {empty && (
                   <p className="text-center text-small text-[var(--muted)]">
-                    Nothing matches those filters — loosen them to fill the globe.
+                    Nothing matches those filters — loosen them to fill the board.
                   </p>
                 )}
               </div>
@@ -285,8 +288,8 @@ function ExplorePageContent() {
                       className="text-center text-[var(--muted)] py-8"
                     >
                       {spinning
-                        ? "Rounding the globe…"
-                        : "Your destination will appear here once the globe lands."}
+                        ? "The board is still flapping…"
+                        : "Your destination will appear here once the board settles."}
                     </motion.p>
                   )}
                 </AnimatePresence>

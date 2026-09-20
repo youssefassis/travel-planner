@@ -10,34 +10,64 @@ import Container from "@/components/ui/Container";
 import { fadeInUp, VIEWPORT_ONCE, DUR, EASE_OUT } from "@/components/motion";
 
 // Only cities from the planner dataset — every card starts a real trip.
+// Photography lives in /images/cities and is licence-cleared; see
+// public/credits.txt before adding a card.
 const DESTINATIONS = [
   {
     cityId: "paris-fr",
     name: "Paris",
     country: "France",
     climate: "Spring 🌸",
-    image: "/images/paris.jpg",
+    image: "/images/cities/paris.jpg",
   },
   {
     cityId: "lisbon-pt",
     name: "Lisbon",
     country: "Portugal",
     climate: "Sunny Coast ☀️",
-    image: "/images/portugal.jpg",
+    image: "/images/cities/lisbon.jpg",
   },
   {
     cityId: "barcelona-es",
     name: "Barcelona",
     country: "Spain",
     climate: "Summer ☀️",
-    image: "/images/barcelona.jpg",
+    image: "/images/cities/barcelona.jpg",
   },
   {
     cityId: "naples-it",
     name: "Naples",
     country: "Italy",
     climate: "Mediterranean 🍋",
-    image: "/images/italy.jpg",
+    image: "/images/cities/naples.jpg",
+  },
+  {
+    cityId: "rome-it",
+    name: "Rome",
+    country: "Italy",
+    climate: "Golden Hour 🏛️",
+    image: "/images/cities/rome.jpg",
+  },
+  {
+    cityId: "prague-cz",
+    name: "Prague",
+    country: "Czech Republic",
+    climate: "River Summer ⛵",
+    image: "/images/cities/prague.jpg",
+  },
+  {
+    cityId: "vienna-at",
+    name: "Vienna",
+    country: "Austria",
+    climate: "Clear Winter ❄️",
+    image: "/images/cities/vienna.jpg",
+  },
+  {
+    cityId: "amsterdam-nl",
+    name: "Amsterdam",
+    country: "Netherlands",
+    climate: "Canal Days 🚲",
+    image: "/images/cities/amsterdam.jpg",
   },
 ];
 
@@ -120,6 +150,7 @@ export default function FeaturedDestinations() {
             <DestinationCard key={dest.cityId} {...dest} index={i} />
           ))}
         </div>
+
       </Container>
     </Section>
   );

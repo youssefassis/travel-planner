@@ -95,7 +95,15 @@ export default function Footer() {
           </p>
           <p className="text-xs text-[var(--muted)]">
             Built as a demo — plans are generated in your browser, no account
-            needed.
+            needed.{" "}
+            {/* CC BY-SA requires the credit to be visible to the reader, not
+                just recorded in the repo. */}
+            <a
+              href="/credits.txt"
+              className="underline underline-offset-2 hover:text-[var(--fg)] transition-colors"
+            >
+              Photo credits
+            </a>
           </p>
         </div>
       </Container>
