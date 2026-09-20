@@ -2,6 +2,8 @@
 
 import { Fragment, useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
+import { formatDayDate } from "@/domain/dates";
+import { dateOfDay } from "../lib/tripDates";
 import { ItineraryDay, TransportLeg } from "../types";
 import TransportModeIcon from "./TransportModeIcon";
 
@@ -10,6 +12,8 @@ type Props = {
   activeDayId: string | null;
   setActiveDayId: (id: string) => void;
   legs?: TransportLeg[];
+  /** First day of the trip; when set, each card shows its real date. */
+  startDate?: string;
 };
 
 /**
@@ -22,6 +26,7 @@ export default function DayTimeline({
   activeDayId,
   setActiveDayId,
   legs = [],
+  startDate,
 }: Props) {
   const prefersReducedMotion = useReducedMotion();
   const activeTabRef = useRef<HTMLButtonElement | null>(null);
@@ -69,6 +74,7 @@ export default function DayTimeline({
     >
       {itinerary.map((day, i) => {
         const isActive = activeDayId === day.id;
+        const date = dateOfDay(startDate, i + 1);
         return (
           <Fragment key={day.id}>
             {i > 0 && <Connector prev={itinerary[i - 1]} day={day} />}
@@ -99,7 +105,7 @@ export default function DayTimeline({
                 </span>
               </div>
               <span className="block text-xs text-[var(--muted)] truncate">
-                {day.city}
+                {date ? `${formatDayDate(date)} · ${day.city}` : day.city}
               </span>
             </button>
           </Fragment>

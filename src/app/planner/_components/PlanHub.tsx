@@ -29,6 +29,7 @@ import BookActivityPanel, {
 } from "@/features/planner/components/BookActivityPanel";
 import { TransportLeg, TripIntent, TripPlan } from "@/features/planner/types";
 import { getCity } from "@/domain/cities";
+import { dateOfDay } from "@/features/planner/lib/tripDates";
 import { fadeInUp } from "@/components/motion";
 
 import HubTabs, { HubTab } from "./HubTabs";
@@ -79,7 +80,9 @@ export default function PlanHub({
   );
 
   const itinerary = trip.itinerary;
-  const activeDay = itinerary.find((day) => day.id === activeDayId) ?? null;
+  const activeDayIndex = itinerary.findIndex((day) => day.id === activeDayId);
+  const activeDay = activeDayIndex === -1 ? null : itinerary[activeDayIndex];
+  const activeDayDate = dateOfDay(planIntent.startDate, activeDayIndex + 1);
 
   const selectTab = (next: HubTab) => {
     setTab(next);
@@ -209,12 +212,14 @@ export default function PlanHub({
               activeDayId={activeDayId}
               setActiveDayId={setActiveDayId}
               legs={trip.legs}
+              startDate={planIntent.startDate}
             >
               <DayDetails
                 day={activeDay}
                 stops={trip.stops}
                 pace={planIntent.vibe.pace}
                 travelMonth={planIntent.travelMonth}
+                date={activeDayDate}
                 availablePois={availablePois}
                 onSwap={handleSwap}
                 onRainDay={handleRainDay}

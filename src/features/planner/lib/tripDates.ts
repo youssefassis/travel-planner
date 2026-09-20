@@ -1,5 +1,5 @@
 import { addDays, isISODate, monthOfISODate } from "@/domain/dates";
-import { TripIntent } from "../types";
+import { TripIntent, TripPlan } from "../types";
 
 /**
  * The trip's calendar. `startDate` is optional — a plan works without it —
@@ -40,4 +40,33 @@ export function endDate(
   totalDays: number,
 ): string | null {
   return dateOfDay(startDate, totalDays);
+}
+
+/**
+ * When the traveler leaves for each leg, keyed by leg id. The outbound goes
+ * on day 1, an inter-city leg on the day its destination's stay begins, and
+ * the homebound on the trip's last day. Empty when the trip has no dates.
+ */
+export function legDepartureDates(
+  plan: TripPlan,
+  startDate: string | undefined,
+): Map<string, string> {
+  const dates = new Map<string, string>();
+  if (!isISODate(startDate)) return dates;
+
+  if (plan.outbound) dates.set(plan.outbound.id, startDate);
+
+  let day = 1;
+  plan.stops.forEach((stop, i) => {
+    day += stop.days;
+    const leg = plan.legs[i];
+    if (leg) dates.set(leg.id, addDays(startDate, day - 1));
+  });
+
+  const lastDay = plan.itinerary.length;
+  if (plan.homebound && lastDay > 0) {
+    dates.set(plan.homebound.id, addDays(startDate, lastDay - 1));
+  }
+
+  return dates;
 }
