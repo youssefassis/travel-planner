@@ -38,6 +38,7 @@ import { dateOfDay } from "@/features/planner/lib/tripDates";
 import { localISODate, tripProgress } from "@/features/planner/lib/today";
 import { fadeInUp } from "@/components/motion";
 
+import CompareVariants from "./CompareVariants";
 import HubTabs, { HubTab } from "./HubTabs";
 import ClimatePanel from "./ClimatePanel";
 import { partySize } from "../_lib/derive";
@@ -65,6 +66,8 @@ type Props = {
   /** Keep this trip in the browser so it survives beyond the session. */
   onSave: () => void;
   isSaved: boolean;
+  /** Swap the plan (and the intent behind it) for an alternative. */
+  onAdoptVariant: (plan: TripPlan, intent: TripIntent) => void;
   /** What the traveller has already reserved. */
   bookings: Bookings;
   onBooked: (booking: Booking) => void;
@@ -84,6 +87,7 @@ export default function PlanHub({
   isSaved,
   bookings,
   onBooked,
+  onAdoptVariant,
 }: Props) {
   // A trip that is happening right now opens on Today, unless the URL asked
   // for something specific. PlanHub only ever renders client-side (a plan has
@@ -104,6 +108,7 @@ export default function PlanHub({
   const [booking, setBooking] = useState<BookingTarget | null>(null);
   const [climateCityId, setClimateCityId] = useState<string | null>(null);
   const [flightFocus, setFlightFocus] = useState<{ legId: string } | null>(null);
+  const [comparing, setComparing] = useState(false);
   const [staysCityId, setStaysCityId] = useState<string>(
     () => trip.stops[0]?.cityId ?? "",
   );
@@ -225,6 +230,7 @@ export default function PlanHub({
         onEdit={onEdit}
         onSave={onSave}
         isSaved={isSaved}
+        onCompare={() => setComparing(true)}
         actions={
           <ShareTripBar plan={trip} intent={planIntent} pace={planIntent.vibe.pace} />
         }
@@ -372,6 +378,19 @@ export default function PlanHub({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Other ways to take the same trip */}
+      {comparing && (
+        <CompareVariants
+          trip={trip}
+          intent={planIntent}
+          onAdopt={(variant) => {
+            onAdoptVariant(variant.plan, variant.intent);
+            setComparing(false);
+          }}
+          onClose={() => setComparing(false)}
+        />
+      )}
 
       {/* Best time to visit */}
       {climateCityId && (

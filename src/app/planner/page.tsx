@@ -140,6 +140,13 @@ function PlannerPageContent() {
     );
   };
 
+  // Adopting an alternative replaces the plan and the intent behind it, so a
+  // later edit or share reproduces the version the traveller chose.
+  const handleAdoptVariant = (plan: TripPlan, source: TripIntent) => {
+    patchIntent(source);
+    openPlan(source, plan, bookings);
+  };
+
   const handleOpenTrip = (entry: StoredTrip) => {
     patchIntent(entry.intent);
     openPlan(entry.intent, entry.plan, entry.bookings);
@@ -205,6 +212,7 @@ function PlannerPageContent() {
                       isSaved={isSaved}
                       bookings={bookings}
                       onBooked={handleBooked}
+                      onAdoptVariant={handleAdoptVariant}
                     />
                   </motion.div>
                 )

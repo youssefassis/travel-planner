@@ -11,3 +11,4 @@ export * from "./weatherNotes";
 export * from "./travelDays";
 export * from "./schedule";
 export * from "./replan";
+export * from "./variants";
