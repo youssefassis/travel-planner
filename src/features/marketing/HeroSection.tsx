@@ -51,7 +51,7 @@ export default function HeroSection() {
   const [destinationCityId, setDestinationCityId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [travelers, setTravelers] = useState("Solo");
-  const [budget, setBudget] = useState("Standard");
+  const [budget, setBudget] = useState(BUDGET_OPTIONS[1]);
 
   const cycleTravelers = () => {
     const idx = TRAVELER_OPTIONS.indexOf(travelers);
@@ -63,8 +63,15 @@ export default function HeroSection() {
     setBudget(BUDGET_OPTIONS[(idx + 1) % BUDGET_OPTIONS.length]);
   };
 
-  const plannerUrl = (cityId: string) =>
-    `/planner?destination=${encodeURIComponent(cityId)}&date=${startDate}&travelers=${travelers.toLowerCase()}&budget=${budget.toLowerCase()}`;
+  const plannerUrl = (cityId: string) => {
+    const params = new URLSearchParams({
+      destination: cityId,
+      travelers: travelers.toLowerCase(),
+      budget: budget.toLowerCase(),
+    });
+    if (startDate) params.set("date", startDate);
+    return `/planner?${params.toString()}`;
+  };
 
   const handleSearch = () => {
     if (getCity(destinationCityId)) {

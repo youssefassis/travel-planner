@@ -73,6 +73,7 @@ export default function PlanHub({
 
   const [booking, setBooking] = useState<BookingTarget | null>(null);
   const [climateCityId, setClimateCityId] = useState<string | null>(null);
+  const [flightFocus, setFlightFocus] = useState<{ legId: string } | null>(null);
   const [staysCityId, setStaysCityId] = useState<string>(
     () => trip.stops[0]?.cityId ?? "",
   );
@@ -173,9 +174,10 @@ export default function PlanHub({
     selectTab("stays");
   };
 
+  // A fresh object each click, so re-clicking the same leg scrolls again.
   const goToFlights = (leg?: TransportLeg) => {
+    setFlightFocus(leg ? { legId: leg.id } : null);
     selectTab("flights");
-    void leg; // the Flights tab lists every leg; selecting jumps there.
   };
 
   // Keep the Stays selection valid as cities are added/removed.
@@ -269,7 +271,7 @@ export default function PlanHub({
       {/* Flights */}
       {mounted.has("flights") && (
         <div hidden={tab !== "flights"}>
-          <FlightsTab trip={trip} intent={planIntent} />
+          <FlightsTab trip={trip} intent={planIntent} focus={flightFocus} />
         </div>
       )}
 

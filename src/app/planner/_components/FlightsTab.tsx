@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plane } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ResultsHeader from "@/components/ui/ResultsHeader";
@@ -15,6 +15,8 @@ import { flightSearchForLeg, partySize } from "../_lib/derive";
 type Props = {
   trip: TripPlan;
   intent: TripIntent;
+  /** A leg to scroll to on arrival — set when the route strip sends you here. */
+  focus?: { legId: string } | null;
 };
 
 function searchKey(s: FlightSearchFormData): string {
@@ -22,7 +24,7 @@ function searchKey(s: FlightSearchFormData): string {
 }
 
 /** Per-leg flight recommendations for the trip's routes, plus a manual search. */
-export default function FlightsTab({ trip, intent }: Props) {
+export default function FlightsTab({ trip, intent, focus }: Props) {
   const travelers = partySize(intent);
   // Home legs included — the flight out and the flight back are the two the
   // traveler most needs to book.
@@ -30,11 +32,25 @@ export default function FlightsTab({ trip, intent }: Props) {
   const [custom, setCustom] = useState<FlightSearchFormData | null>(null);
   const [showCustom, setShowCustom] = useState(false);
 
+  const sections = useRef(new Map<string, HTMLElement>());
+  useEffect(() => {
+    if (focus) {
+      sections.current.get(focus.legId)?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [focus]);
+
   return (
     <div className="space-y-12">
       {flightLegs.length > 0 ? (
         flightLegs.map((leg) => (
-          <section key={leg.id}>
+          <section
+            key={leg.id}
+            ref={(el) => {
+              if (el) sections.current.set(leg.id, el);
+              else sections.current.delete(leg.id);
+            }}
+            className="scroll-mt-40"
+          >
             <FlightLegResults
               search={flightSearchForLeg(leg, travelers)}
               heading={`${leg.from} → ${leg.to} · ~${leg.durationHrs}h · plan estimate €${leg.cost}`}

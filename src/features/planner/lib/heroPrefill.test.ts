@@ -14,7 +14,7 @@ const BASE: TripIntent = {
 };
 
 describe("intentFromHeroParams", () => {
-  it("maps destination, travelers, and budget onto the base intent", () => {
+  it("maps destination, date, travelers, and budget onto the base intent", () => {
     const intent = intentFromHeroParams(
       new URLSearchParams(
         "destination=barcelona-es&date=2026-08-01&travelers=couple&budget=luxury",
@@ -26,6 +26,7 @@ describe("intentFromHeroParams", () => {
       mode: "custom",
       selectedCityIds: ["barcelona-es"],
       companions: "couple",
+      travelMonth: 7,
       vibe: { ...BASE.vibe, budget: "luxury" },
     });
   });
@@ -87,7 +88,7 @@ describe("intentFromHeroParams", () => {
     ).toBe("rome-it");
   });
 
-  it("returns null for share links, no relevant params, or date alone", () => {
+  it("returns null for share links and for no relevant params", () => {
     expect(
       intentFromHeroParams(
         new URLSearchParams("plan=1&destination=rome-it"),
@@ -95,9 +96,30 @@ describe("intentFromHeroParams", () => {
       ),
     ).toBeNull();
     expect(intentFromHeroParams(new URLSearchParams(""), BASE)).toBeNull();
+  });
+
+  it("narrows a picked date to its travel month", () => {
     expect(
-      intentFromHeroParams(new URLSearchParams("date=2026-08-01"), BASE),
-    ).toBeNull();
+      intentFromHeroParams(new URLSearchParams("date=2026-08-01"), BASE)
+        ?.travelMonth,
+    ).toBe(7);
+    expect(
+      intentFromHeroParams(
+        new URLSearchParams("destination=rome-it&date=2026-01-15"),
+        BASE,
+      )?.travelMonth,
+    ).toBe(0);
+  });
+
+  it("ignores a malformed date and falls back to an explicit month", () => {
+    expect(
+      intentFromHeroParams(new URLSearchParams("date=next-summer"), BASE)
+        ?.travelMonth,
+    ).toBeUndefined();
+    expect(
+      intentFromHeroParams(new URLSearchParams("date=2026-13-01&month=4"), BASE)
+        ?.travelMonth,
+    ).toBe(4);
   });
 
   it("does not mutate the base intent", () => {
