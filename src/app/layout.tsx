@@ -4,6 +4,8 @@ import { Inter, Playfair_Display } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ThemeProvider from "@/components/theme/ThemeProvider";
+import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
+import OfflineNotice from "@/components/pwa/OfflineNotice";
 
 import "./globals.css";
 
@@ -37,6 +39,20 @@ export const metadata: Metadata = {
   description:
     "Plan routes, compare stays, and organize travel — a full itinerary, route, and budget in seconds.",
   keywords: ["travel", "planner", "trip", "itinerary", "flights", "stays"],
+  manifest: "/manifest.webmanifest",
+  applicationName: "Wanderly",
+  appleWebApp: {
+    capable: true,
+    title: "Wanderly",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
   openGraph: {
     title: "Wanderly — Trip Planner",
     description:
@@ -79,6 +95,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <OfflineNotice />
+          <ServiceWorkerRegistration />
         </ThemeProvider>
       </body>
     </html>
