@@ -12,6 +12,7 @@ import { DEFAULT_FILTERS, DiscoverFilters } from "@/features/discover/types";
 import GlobeSpinner from "@/features/discover/components/GlobeSpinner";
 import FilterBar from "@/features/discover/components/FilterBar";
 import DestinationReveal from "@/features/discover/components/DestinationReveal";
+import AffordabilityPanel from "./_components/AffordabilityPanel";
 
 import WeatherSearchForm from "@/features/weather/components/WeatherSearchForm";
 import WeatherMatchCard from "@/features/weather/components/WeatherMatchCard";
@@ -32,11 +33,12 @@ import ResultsHeader from "@/components/ui/ResultsHeader";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import { fadeInUp, staggerChildren } from "@/components/motion";
 
-type Panel = "spin" | "weather";
+type Panel = "spin" | "weather" | "budget";
 
 const PANEL_OPTIONS: { label: string; value: Panel }[] = [
   { label: "Spin the globe", value: "spin" },
   { label: "Match the weather", value: "weather" },
+  { label: "What can I afford?", value: "budget" },
 ];
 
 const DEFAULT_PREFS: WeatherPrefs = {
@@ -162,14 +164,16 @@ function ExplorePageContent() {
         <Container size="wide">
           <PageHeader
             title="Where to next?"
-            description="Not sure yet? Spin the globe for a surprise, or chase the weather you want — then turn it into a full trip."
+            description="Not sure yet? Spin the globe for a surprise, chase the weather you want, or name your budget and see how far it reaches — then turn it into a full trip."
           />
 
-          <div className="mb-10 max-w-md">
+          <div className="mb-10 max-w-2xl">
             <SegmentedControl options={PANEL_OPTIONS} value={panel} onChange={setPanel} />
           </div>
 
-          {panel === "spin" ? (
+          {panel === "budget" ? (
+            <AffordabilityPanel />
+          ) : panel === "spin" ? (
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-6 lg:gap-8 items-start">
               <div className="space-y-4">
                 <GlobeSpinner
