@@ -175,11 +175,15 @@ export default function HeroSection() {
                     {formatDate(startDate) ?? "Pick a date"}
                   </div>
                 </div>
-                {/* Invisible overlay input — clicking the cell opens the native date picker */}
+                {/* Invisible overlay input — clicking the cell opens the native
+                    date picker. Browsers only open it from the calendar icon,
+                    which opacity-0 hides, so the click has to ask for it. */}
                 <input
                   type="date"
+                  aria-label="Trip start date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
               </div>
