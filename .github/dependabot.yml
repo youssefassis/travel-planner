@@ -10,6 +10,11 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Node types must match the Node we run on (CI and `engines`: 20), or
+      # they advertise APIs the runtime doesn't have. Bump with the runtime.
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
